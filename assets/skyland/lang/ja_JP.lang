@@ -1,0 +1,32 @@
+# Localization file : ja_JP
+
+skyland.version.message=%s の新しいバージョンが利用可能です
+
+skyland.config.title=Skylandの設定
+skyland.config.general.versionNotify=バージョン通知
+skyland.config.general.versionNotify.tooltip=Skylandの新しいバージョンが利用可能な場合、チャットログで通知します。
+skyland.config.skyland.dimensionSkyland=Skyland ディメンションID
+skyland.config.skyland.dimensionSkyland.tooltip=SkylandのディメンションIDを指定します。0を指定すると、Skylandのワールドタイプが追加され、Skyland ディメンションは追加されません。
+skyland.config.skyland.generateCaves=洞窟の生成
+skyland.config.skyland.generateCaves.tooltip=Skylandに洞窟を生成します。
+skyland.config.skyland.generateLakes=湖の生成
+skyland.config.skyland.generateLakes.tooltip=Skylandに湖を生成します。
+skyland.config.options.skyborn=スカイボーンオプション
+skyland.config.options.skyborn.tooltip=初めてワールドに入った際に、Skyland ディメンションへ転送します。
+
+skyland.regenerate.regenerating=Skyland ディメンションを再生成しています...
+skyland.regenerate.backingup=Skyland ディメンションフォルダをバックアップしています...
+skyland.regenerate.backedup=Skyland ディメンションフォルダをバックアップしました
+skyland.regenerate.backup.failed=Skyland ディメンションフォルダのバックアップに失敗しました
+skyland.regenerate.regenerated=Skyland ディメンションを再生成しました
+skyland.regenerate.failed=Skyland ディメンションの再生成に失敗しました
+skyland.regenerate.gui.title=Skylandの再生成
+skyland.regenerate.gui.info=再生成開始後のキャンセルはできません
+skyland.regenerate.gui.regenerate=再生成
+skyland.regenerate.gui.backup=バックアップ
+skyland.regenerate.gui.backup.tooltip=再生成前にディメンションデータをバックアップします。
+skyland.regenerate.gui.backup.open=バックアップフォルダを開く
+skyland.regenerate.gui.progress.regenerating=再生成しています...
+skyland.regenerate.gui.progress.backingup=バックアップしています..
+skyland.regenerate.gui.progress.regenerated=再生成しました
+skyland.regenerate.gui.progress.failed=再生成に失敗しました

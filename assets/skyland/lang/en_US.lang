@@ -1,0 +1,34 @@
+# Localization file : en_US
+
+generator.skyland=Skyland
+
+skyland.version.message=A new %s version is available
+
+skyland.config.title=Skyland Configuration
+skyland.config.general.versionNotify=Version Notify
+skyland.config.general.versionNotify.tooltip=Whether or not to notify when a new Skyland version is available.
+skyland.config.skyland.dimensionSkyland=Skyland Dimension ID
+skyland.config.skyland.dimensionSkyland.tooltip=Specify the dimension ID of Skyland. If you specify 0, adds the world type of Skyland, but the Skyland dimension is not added.
+skyland.config.skyland.generateCaves=Generate Caves
+skyland.config.skyland.generateCaves.tooltip=Whether or not to generate caves to Skyland.
+skyland.config.skyland.generateLakes=Generate Lakes
+skyland.config.skyland.generateLakes.tooltip=Whether or not to generate lakes to Skyland.
+skyland.config.options.skyborn=Skyborn Option
+skyland.config.options.skyborn.tooltip=Transfer to the Skyland dimension when join to world for the first time.
+
+skyland.regenerate.regenerating=Regenerating the Skyland dimension...
+skyland.regenerate.backingup=Backing up the Skyland dimension folder...
+skyland.regenerate.backedup=Skyland dimension folder was backed up
+skyland.regenerate.backup.failed=Failed to backing up the Skyland dimension folder
+skyland.regenerate.regenerated=Skyland dimension was regenerated
+skyland.regenerate.failed=Failed to regenerating the Skyland dimension
+skyland.regenerate.gui.title=Skyland Regeneration
+skyland.regenerate.gui.info=Cannot be canceled after the regeneration starts
+skyland.regenerate.gui.regenerate=Regenerate
+skyland.regenerate.gui.backup=Backup
+skyland.regenerate.gui.backup.tooltip=If checked, backing up the Skyland dimension data before the regeneration.
+skyland.regenerate.gui.backup.open=Open the backup folder...
+skyland.regenerate.gui.progress.regenerating=Regenerating...
+skyland.regenerate.gui.progress.backingup=Backing up..
+skyland.regenerate.gui.progress.regenerated=Regenerated
+skyland.regenerate.gui.progress.failed=Failed
