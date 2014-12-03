@@ -37,14 +37,12 @@ import net.minecraft.world.WorldProviderSurface;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.IChunkProvider;
-import net.minecraft.world.storage.DerivedWorldInfo;
 import net.minecraft.world.storage.WorldInfo;
 import net.minecraftforge.client.IRenderHandler;
 import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.FMLCommonHandler;
-import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -176,11 +174,13 @@ public class WorldProviderSkyland extends WorldProviderSurface
 
 		for (Object obj : server.getConfigurationManager().playerEntityList.toArray())
 		{
-			if (obj != null && ((EntityPlayerMP)obj).dimension == SkylandAPI.getDimension())
-			{
-				SkyUtils.teleportPlayer((EntityPlayerMP)obj, 0);
+			EntityPlayerMP player = (EntityPlayerMP)obj;
 
-				target.add((EntityPlayerMP)obj);
+			if (SkylandAPI.isEntityInSkyland(player))
+			{
+				SkyUtils.teleportPlayer(player, 0);
+
+				target.add(player);
 			}
 		}
 
@@ -334,16 +334,13 @@ public class WorldProviderSkyland extends WorldProviderSurface
 			}
 		});
 
-		if (result)
+		if (result && Config.skyborn)
 		{
-			if (Config.skyborn)
+			for (EntityPlayerMP player : target)
 			{
-				for (EntityPlayerMP player : target)
+				if (!SkylandAPI.isEntityInSkyland(player))
 				{
-					if (player.dimension != SkylandAPI.getDimension())
-					{
-						SkyUtils.teleportPlayer(player, SkylandAPI.getDimension());
-					}
+					SkyUtils.teleportPlayer(player, SkylandAPI.getDimension());
 				}
 			}
 		}
@@ -469,7 +466,7 @@ public class WorldProviderSkyland extends WorldProviderSurface
 
 		if (worldObj.getGameRules().getGameRuleBooleanValue("doDaylightCycle"))
 		{
-			WorldInfo worldInfo = ObfuscationReflectionHelper.getPrivateValue(DerivedWorldInfo.class, (DerivedWorldInfo)worldObj.getWorldInfo(), "theWorldInfo", "field_76115_a");
+			WorldInfo worldInfo = SkyUtils.getWorldInfo(worldObj);
 			long i = worldInfo.getWorldTime() + 24000L;
 
 			worldInfo.setWorldTime(i - i % 24000L);
@@ -483,7 +480,7 @@ public class WorldProviderSkyland extends WorldProviderSurface
 		{
 			loadDimData(getDimData());
 
-			Skyland.network.sendToAll(new DimSyncMessage(SkylandAPI.getDimension(), getDimData()));
+			Skyland.network.sendToAll(new DimSyncMessage(getDimData()));
 		}
 
 		return dimensionSeed;

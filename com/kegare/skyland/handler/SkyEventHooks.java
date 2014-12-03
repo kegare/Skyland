@@ -12,12 +12,14 @@ package com.kegare.skyland.handler;
 import java.util.Set;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.monster.IMob;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.event.ClickEvent;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
-import net.minecraft.network.play.server.S02PacketChat;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.ChatComponentTranslation;
@@ -26,6 +28,7 @@ import net.minecraft.util.IChatComponent;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
+import net.minecraftforge.event.entity.living.LivingAttackEvent;
 import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
 import net.minecraftforge.event.entity.living.LivingFallEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
@@ -33,23 +36,30 @@ import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.client.FMLClientHandler;
 import net.minecraftforge.fml.client.event.ConfigChangedEvent;
 import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerChangedDimensionEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedOutEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerRespawnEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.fml.common.gameevent.TickEvent.ServerTickEvent;
 import net.minecraftforge.fml.common.network.FMLNetworkEvent.ClientConnectedToServerEvent;
+import net.minecraftforge.fml.common.network.FMLNetworkEvent.ClientDisconnectionFromServerEvent;
 import net.minecraftforge.fml.common.network.FMLNetworkEvent.ServerConnectionFromClientEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+
+import org.apache.commons.lang3.StringUtils;
 
 import com.google.common.collect.Sets;
 import com.kegare.skyland.api.SkylandAPI;
 import com.kegare.skyland.core.Config;
 import com.kegare.skyland.core.Skyland;
+import com.kegare.skyland.item.SkyItems;
 import com.kegare.skyland.network.DimSyncMessage;
 import com.kegare.skyland.network.FallTeleportMessage;
+import com.kegare.skyland.network.PlaySoundMessage;
 import com.kegare.skyland.util.SkyUtils;
 import com.kegare.skyland.util.Version;
 import com.kegare.skyland.util.Version.Status;
@@ -113,14 +123,22 @@ public class SkyEventHooks
 			component.appendText(" : " + EnumChatFormatting.YELLOW + Version.getLatest());
 			component.getChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, Skyland.metadata.url));
 
-			event.handler.handleChat(new S02PacketChat(component));
+			FMLClientHandler.instance().getClient().ingameGUI.getChatGUI().printChatMessage(component);
 		}
+	}
+
+	@SideOnly(Side.CLIENT)
+	@SubscribeEvent
+	public void onClientDisconnected(ClientDisconnectionFromServerEvent event)
+	{
+		Config.syncConfig();
 	}
 
 	@SubscribeEvent
 	public void onServerConnected(ServerConnectionFromClientEvent event)
 	{
-		event.manager.sendPacket(Skyland.network.getPacketFrom(new DimSyncMessage(SkylandAPI.getDimension(), WorldProviderSkyland.getDimData())));
+		event.manager.sendPacket(Skyland.network.getPacketFrom(new Config()));
+		event.manager.sendPacket(Skyland.network.getPacketFrom(new DimSyncMessage(WorldProviderSkyland.getDimData())));
 	}
 
 	@SubscribeEvent
@@ -128,7 +146,7 @@ public class SkyEventHooks
 	{
 		for (String str : event.playerDirectory.list())
 		{
-			if (str.startsWith(event.playerUUID))
+			if (StringUtils.startsWith(str, event.playerUUID))
 			{
 				return;
 			}
@@ -161,6 +179,8 @@ public class SkyEventHooks
 				if (result)
 				{
 					player.setSpawnChunk(player.getPosition(), true, player.dimension);
+
+					Skyland.network.sendTo(new PlaySoundMessage("skyland:music.game.skyland"), player);
 				}
 			}
 		}
@@ -185,10 +205,33 @@ public class SkyEventHooks
 
 			if (SkylandAPI.isEntityInSkyland(player))
 			{
-				if (player.getServerForPlayer().isAirBlock(player.getPosition().offsetDown()))
+				if (player.getServerForPlayer().isAirBlock(player.getPosition().down()))
 				{
 					SkyUtils.teleportPlayer(player, player.dimension);
 				}
+			}
+		}
+	}
+
+	@SubscribeEvent
+	public void onPlayerChangedDimension(PlayerChangedDimensionEvent event)
+	{
+		if (event.player instanceof EntityPlayerMP)
+		{
+			EntityPlayerMP player = (EntityPlayerMP)event.player;
+
+			if (event.toDim == SkylandAPI.getDimension())
+			{
+				WorldServer world = player.getServerForPlayer();
+				NBTTagCompound data = player.getEntityData();
+				String key = "Skyland:LastTeleportTime";
+
+				if (!data.hasKey(key) || data.getLong(key) + 18000L < world.getTotalWorldTime())
+				{
+					Skyland.network.sendTo(new PlaySoundMessage("skyland:music.game.skyland"), player);
+				}
+
+				data.setLong(key, world.getTotalWorldTime());
 			}
 		}
 	}
@@ -229,7 +272,7 @@ public class SkyEventHooks
 
 			if (player.dimension == 0)
 			{
-				if (player.isPlayerSleeping() && player.getSleepTimer() >= 75 && feather)
+				if (player.isPlayerSleeping() && (int)ObfuscationReflectionHelper.getPrivateValue(EntityPlayer.class, player, "sleepTimer", "field_71076_b") >= 75 && feather)
 				{
 					if (!player.capabilities.isCreativeMode && --current.stackSize <= 0)
 					{
@@ -304,6 +347,20 @@ public class SkyEventHooks
 				}
 
 				event.setCanceled(true);
+			}
+		}
+	}
+
+	@SubscribeEvent
+	public void onLivingAttack(LivingAttackEvent event)
+	{
+		EntityLivingBase entity = event.entityLiving;
+
+		if (SkylandAPI.isEntityInSkyland(entity) && entity instanceof IMob && event.source.getDamageType().equalsIgnoreCase("player"))
+		{
+			if (Config.recordSkyland && entity.getRNG().nextInt(100) == 0)
+			{
+				entity.dropItem(SkyItems.record_skyland, 1);
 			}
 		}
 	}

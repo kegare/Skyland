@@ -15,7 +15,6 @@ import java.util.Random;
 import net.minecraft.block.BlockFalling;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.block.state.pattern.BlockHelper;
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.BlockPos;
@@ -45,6 +44,7 @@ import net.minecraftforge.fml.common.eventhandler.Event.Result;
 
 import com.kegare.skyland.core.Config;
 import com.kegare.skyland.world.gen.MapGenCavesSkyland;
+import com.kegare.skyland.world.gen.WorldGenSkylandStone;
 
 public class ChunkProviderSkyland implements IChunkProvider
 {
@@ -68,9 +68,10 @@ public class ChunkProviderSkyland implements IChunkProvider
 	private final MapGenBase caveGenerator = new MapGenCavesSkyland();
 	private final WorldGenerator lakeWaterGen = new WorldGenLakes(Blocks.water);
 	private final WorldGenerator lakeLavaGen = new WorldGenLakes(Blocks.lava);
-	private final WorldGenMinable worldGenStone = new WorldGenMinable(Blocks.stone.getDefaultState(), 60, BlockHelper.forBlock(Blocks.dirt));
-	private final WorldGenMinable worldGenEmerald = new WorldGenMinable(Blocks.emerald_ore.getDefaultState(), 4);
-	private final WorldGenMinable worldGenDiamond = new WorldGenMinable(Blocks.diamond_ore.getDefaultState(), 3);
+	private final WorldGenerator worldGenStone = new WorldGenSkylandStone();
+	private final WorldGenerator worldGenIron = new WorldGenMinable(Blocks.iron_ore.getDefaultState(), 7);
+	private final WorldGenerator worldGenEmerald = new WorldGenMinable(Blocks.emerald_ore.getDefaultState(), 4);
+	private final WorldGenerator worldGenDiamond = new WorldGenMinable(Blocks.diamond_ore.getDefaultState(), 3);
 
 	public ChunkProviderSkyland(World world)
 	{
@@ -371,7 +372,7 @@ public class ChunkProviderSkyland implements IChunkProvider
 	}
 
 	@Override
-	public Chunk func_177459_a(BlockPos pos)
+	public Chunk provideChunk(BlockPos pos)
 	{
 		return provideChunk(pos.getX() >> 4, pos.getZ() >> 4);
 	}
@@ -452,7 +453,7 @@ public class ChunkProviderSkyland implements IChunkProvider
 			}
 		}
 
-		for (i = 0; i < 50; ++i)
+		for (i = 0; i < 60; ++i)
 		{
 			genX = rand.nextInt(16);
 			genY = rand.nextInt(70) + 10;
@@ -461,8 +462,18 @@ public class ChunkProviderSkyland implements IChunkProvider
 			worldGenStone.generate(worldObj, rand, pos.add(genX, genY, genZ));
 		}
 
-		boolean doGen = TerrainGen.generateOre(worldObj, rand, worldGenEmerald, pos, EventType.CUSTOM);
+		boolean doGen = TerrainGen.generateOre(worldObj, rand, worldGenIron, pos, EventType.IRON);
 		for (i = 0; doGen && i < 8; ++i)
+		{
+			genX = rand.nextInt(16);
+			genY = rand.nextInt(50) + 20;
+			genZ = rand.nextInt(16);
+
+			worldGenIron.generate(worldObj, rand, pos.add(genX, genY, genZ));
+		}
+
+		doGen = TerrainGen.generateOre(worldObj, rand, worldGenEmerald, pos, EventType.CUSTOM);
+		for (i = 0; doGen && i < 6; ++i)
 		{
 			genX = rand.nextInt(16);
 			genY = rand.nextInt(50) + 10;
@@ -481,7 +492,7 @@ public class ChunkProviderSkyland implements IChunkProvider
 			worldGenDiamond.generate(worldObj, rand, pos.add(genX, genY, genZ));
 		}
 
-		biome.func_180624_a(worldObj, rand, pos);
+		biome.decorate(worldObj, rand, pos);
 
 		if (TerrainGen.populate(chunkProvider, worldObj, rand, chunkX, chunkZ, false, Populate.EventType.ANIMALS))
 		{
@@ -495,7 +506,7 @@ public class ChunkProviderSkyland implements IChunkProvider
 		{
 			for (genZ = 0; genZ < 16; ++ genZ)
 			{
-				BlockPos pos1 = worldObj.func_175725_q(pos.add(genX, 0, genZ)).offsetDown();
+				BlockPos pos1 = worldObj.getPrecipitationHeight(pos.add(genX, 0, genZ)).down();
 
 				if (worldObj.func_175675_v(pos1))
 				{
@@ -551,7 +562,7 @@ public class ChunkProviderSkyland implements IChunkProvider
 	}
 
 	@Override
-	public BlockPos func_180513_a(World world, String name, BlockPos pos)
+	public BlockPos getStrongholdGen(World world, String name, BlockPos pos)
 	{
 		return null;
 	}
@@ -563,5 +574,5 @@ public class ChunkProviderSkyland implements IChunkProvider
 	}
 
 	@Override
-	public void func_180514_a(Chunk chunk, int chunkX, int chunkZ) {}
+	public void recreateStructures(Chunk chunk, int chunkX, int chunkZ) {}
 }

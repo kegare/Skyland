@@ -1,0 +1,22 @@
+{
+  "music.game.skyland": {
+    "category": "music",
+    "sounds": [
+      {
+        "name": "music/game/skyland/skyland",
+        "volume": 0.35,
+        "stream": true
+      }
+    ]
+  },
+  "record.skyland": {
+    "category": "record",
+    "sounds": [
+      {
+        "name": "music/game/skyland/skyland",
+        "volume": 0.5,
+        "stream": true
+      }
+    ]
+  }
+}

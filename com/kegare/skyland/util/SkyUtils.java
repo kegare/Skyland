@@ -27,12 +27,16 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.BlockPos;
+import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
+import net.minecraft.world.storage.DerivedWorldInfo;
+import net.minecraft.world.storage.WorldInfo;
 import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.fml.common.DummyModContainer;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.ModContainer;
+import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 
 import com.google.common.collect.Maps;
 import com.kegare.skyland.api.SkylandAPI;
@@ -188,23 +192,23 @@ public class SkyUtils
 		}
 		else if (world.getWorldInfo().getTerrainType() == SkylandAPI.getWorldType())
 		{
-			pos = BlockPos.ORIGIN.offsetUp(64);
+			pos = BlockPos.ORIGIN.up(64);
 		}
 		else
 		{
 			pos = world.getSpawnPoint();
 		}
 
-		if (world.isAirBlock(pos) && world.isAirBlock(pos.offsetUp()))
+		if (world.isAirBlock(pos) && world.isAirBlock(pos.up()))
 		{
 			do
 			{
-				pos = pos.offsetDown();
+				pos = pos.down();
 			}
-			while (world.isAirBlock(pos.offsetDown()));
+			while (world.isAirBlock(pos.down()));
 
 			BlockPos pos2 = pos;
-			pos = pos.offsetUp();
+			pos = pos.up();
 
 			if (!world.isAirBlock(pos2) && !world.getBlockState(pos2).getBlock().getMaterial().isLiquid())
 			{
@@ -237,20 +241,20 @@ public class SkyUtils
 					{
 						BlockPos pos2 = new BlockPos(x, y, z);
 
-						if (world.isAirBlock(pos2) && world.isAirBlock(pos2.offsetUp()) &&
-							world.isAirBlock(pos2.offsetNorth()) && world.isAirBlock(pos2.offsetNorth().offsetUp()) &&
-							world.isAirBlock(pos2.offsetSouth()) && world.isAirBlock(pos2.offsetSouth().offsetUp()) &&
-							world.isAirBlock(pos2.offsetWest()) && world.isAirBlock(pos2.offsetWest().offsetUp()) &&
-							world.isAirBlock(pos2.offsetEast()) && world.isAirBlock(pos2.offsetEast().offsetUp()))
+						if (world.isAirBlock(pos2) && world.isAirBlock(pos2.up()) &&
+							world.isAirBlock(pos2.north()) && world.isAirBlock(pos2.north().up()) &&
+							world.isAirBlock(pos2.south()) && world.isAirBlock(pos2.south().up()) &&
+							world.isAirBlock(pos2.west()) && world.isAirBlock(pos2.west().up()) &&
+							world.isAirBlock(pos2.east()) && world.isAirBlock(pos2.east().up()))
 						{
 							do
 							{
-								pos2 = pos2.offsetDown();
+								pos2 = pos2.down();
 							}
-							while (world.isAirBlock(pos2.offsetDown()));
+							while (world.isAirBlock(pos2.down()));
 
 							BlockPos pos3 = pos2;
-							pos2 = pos2.offsetUp();
+							pos2 = pos2.up();
 
 							if (!world.isAirBlock(pos3) && !world.getBlockState(pos3).getBlock().getMaterial().isLiquid())
 							{
@@ -275,10 +279,10 @@ public class SkyUtils
 				}
 			}
 
-			pos = BlockPos.ORIGIN.offsetUp(64);
+			pos = BlockPos.ORIGIN.up(64);
 			setPlayerLocation(player, pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D);
 			world.setBlockToAir(pos);
-			world.setBlockToAir(pos.offsetUp());
+			world.setBlockToAir(pos.up());
 			world.setBlockState(pos, Blocks.dirt.getDefaultState());
 		}
 
@@ -299,14 +303,14 @@ public class SkyUtils
 			WorldServer world = player.getServerForPlayer();
 			BlockPos pos = new BlockPos(posX, posY, posZ);
 
-			if (world.isAirBlock(pos) && world.isAirBlock(pos.offsetUp()))
+			if (world.isAirBlock(pos) && world.isAirBlock(pos.up()))
 			{
-				while (world.isAirBlock(pos.offsetDown()))
+				while (world.isAirBlock(pos.down()))
 				{
-					pos = pos.offsetDown();
+					pos = pos.down();
 				}
 
-				BlockPos pos2 = pos.offsetDown();
+				BlockPos pos2 = pos.down();
 
 				if (!world.isAirBlock(pos2) && !world.getBlockState(pos2).getBlock().getMaterial().isLiquid())
 				{
@@ -324,5 +328,17 @@ public class SkyUtils
 		}
 
 		return teleportPlayer(player, dim);
+	}
+
+	public static WorldInfo getWorldInfo(World world)
+	{
+		WorldInfo worldInfo = world.getWorldInfo();
+
+		if (worldInfo instanceof DerivedWorldInfo)
+		{
+			worldInfo = ObfuscationReflectionHelper.getPrivateValue(DerivedWorldInfo.class, (DerivedWorldInfo)worldInfo, "theWorldInfo", "field_76115_a");
+		}
+
+		return worldInfo;
 	}
 }

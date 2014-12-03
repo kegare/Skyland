@@ -38,11 +38,11 @@ public class CommandSkyland implements ICommand
 	@Override
 	public int compareTo(Object obj)
 	{
-		return getCommandName().compareTo(((ICommand)obj).getCommandName());
+		return getName().compareTo(((ICommand)obj).getName());
 	}
 
 	@Override
-	public String getCommandName()
+	public String getName()
 	{
 		return "skyland";
 	}
@@ -54,13 +54,13 @@ public class CommandSkyland implements ICommand
 	}
 
 	@Override
-	public List getCommandAliases()
+	public List getAliases()
 	{
 		return Collections.emptyList();
 	}
 
 	@Override
-	public void processCommand(ICommandSender sender, final String[] args)
+	public void execute(ICommandSender sender, final String[] args)
 	{
 		if (args.length <= 0 || args[0].equalsIgnoreCase("version"))
 		{
@@ -147,7 +147,7 @@ public class CommandSkyland implements ICommand
 	}
 
 	@Override
-	public boolean canCommandSenderUseCommand(ICommandSender sender)
+	public boolean canCommandSenderUse(ICommandSender sender)
 	{
 		return sender instanceof MinecraftServer || sender instanceof EntityPlayerMP;
 	}
