@@ -193,7 +193,7 @@ public class WorldProviderSkyland extends WorldProviderSurface
 
 				try
 				{
-					component = new ChatComponentText(StatCollector.translateToLocalFormatted("skyland.regenerate.regenerating"));
+					component = new ChatComponentText(StatCollector.translateToLocal("skyland.regenerate.regenerating"));
 					component.getChatStyle().setColor(EnumChatFormatting.GRAY).setItalic(true);
 					server.getConfigurationManager().sendChatMsg(component);
 
@@ -273,7 +273,7 @@ public class WorldProviderSkyland extends WorldProviderSurface
 								FileUtils.deleteQuietly(bak);
 							}
 
-							component = new ChatComponentText(StatCollector.translateToLocalFormatted("skyland.regenerate.backingup"));
+							component = new ChatComponentText(StatCollector.translateToLocal("skyland.regenerate.backingup"));
 							component.getChatStyle().setColor(EnumChatFormatting.GRAY).setItalic(true);
 							server.getConfigurationManager().sendChatMsg(component);
 
@@ -283,13 +283,13 @@ public class WorldProviderSkyland extends WorldProviderSurface
 							{
 								ClickEvent click = new ClickEvent(ClickEvent.Action.OPEN_FILE, FilenameUtils.normalize(bak.getParentFile().getPath()));
 
-								component = new ChatComponentText(StatCollector.translateToLocalFormatted("skyland.regenerate.backedup"));
+								component = new ChatComponentText(StatCollector.translateToLocal("skyland.regenerate.backedup"));
 								component.getChatStyle().setColor(EnumChatFormatting.GRAY).setItalic(true).setChatClickEvent(click);
 								server.getConfigurationManager().sendChatMsg(component);
 							}
 							else
 							{
-								component = new ChatComponentText(StatCollector.translateToLocalFormatted("skyland.regenerate.backup.failed"));
+								component = new ChatComponentText(StatCollector.translateToLocal("skyland.regenerate.backup.failed"));
 								component.getChatStyle().setColor(EnumChatFormatting.RED).setItalic(true);
 								server.getConfigurationManager().sendChatMsg(component);
 							}
@@ -306,12 +306,13 @@ public class WorldProviderSkyland extends WorldProviderSurface
 
 						if (world != null)
 						{
+							world = (WorldServer)world.init();
 							world.saveAllChunks(true, null);
 							world.flush();
 						}
 					}
 
-					component = new ChatComponentText(StatCollector.translateToLocalFormatted("skyland.regenerate.regenerated"));
+					component = new ChatComponentText(StatCollector.translateToLocal("skyland.regenerate.regenerated"));
 					component.getChatStyle().setColor(EnumChatFormatting.GRAY).setItalic(true);
 					server.getConfigurationManager().sendChatMsg(component);
 
@@ -321,7 +322,7 @@ public class WorldProviderSkyland extends WorldProviderSurface
 				}
 				catch (Exception e)
 				{
-					component = new ChatComponentText(StatCollector.translateToLocalFormatted("skyland.regenerate.failed"));
+					component = new ChatComponentText(StatCollector.translateToLocal("skyland.regenerate.failed"));
 					component.getChatStyle().setColor(EnumChatFormatting.RED).setItalic(true);
 					server.getConfigurationManager().sendChatMsg(component);
 

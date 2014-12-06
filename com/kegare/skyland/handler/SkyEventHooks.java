@@ -27,6 +27,7 @@ import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.IChatComponent;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
+import net.minecraft.world.storage.WorldInfo;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.event.entity.living.LivingAttackEvent;
 import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
@@ -34,7 +35,7 @@ import net.minecraftforge.event.entity.living.LivingFallEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.client.FMLClientHandler;
-import net.minecraftforge.fml.client.event.ConfigChangedEvent;
+import net.minecraftforge.fml.client.event.ConfigChangedEvent.OnConfigChangedEvent;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -81,7 +82,7 @@ public class SkyEventHooks
 
 	@SideOnly(Side.CLIENT)
 	@SubscribeEvent
-	public void onConfigChanged(ConfigChangedEvent event)
+	public void onConfigChanged(OnConfigChangedEvent event)
 	{
 		if (event.modID.equals(Skyland.MODID))
 		{
@@ -270,34 +271,50 @@ public class SkyEventHooks
 			ItemStack current = player.getCurrentEquippedItem();
 			boolean feather = current != null && current.getItem() == Items.feather;
 
-			if (player.dimension == 0)
+			if (player.dimension == 0 || SkylandAPI.isEntityInSkyland(player))
 			{
-				if (player.isPlayerSleeping() && (int)ObfuscationReflectionHelper.getPrivateValue(EntityPlayer.class, player, "sleepTimer", "field_71076_b") >= 75 && feather)
+				if (player.isPlayerSleeping() && feather && (int)ObfuscationReflectionHelper.getPrivateValue(EntityPlayer.class, player, "sleepTimer", "field_71076_b") >= 75)
 				{
+					player.wakeUpPlayer(false, false, true);
+
 					if (!player.capabilities.isCreativeMode && --current.stackSize <= 0)
 					{
 						player.inventory.setInventorySlotContents(player.inventory.currentItem, null);
 					}
 
-					BlockPos pos = player.getBedLocation(SkylandAPI.getDimension());
+					int dim = player.dimension == 0 ? SkylandAPI.getDimension() : 0;
+					BlockPos pos = player.getBedLocation(dim);
 					boolean result;
 
 					if (pos == null)
 					{
-						result = SkyUtils.teleportPlayer(player, SkylandAPI.getDimension());
+						result = SkyUtils.teleportPlayer(player, dim);
 					}
 					else
 					{
-						result = SkyUtils.teleportPlayer(player, SkylandAPI.getDimension(), pos, player.rotationYaw, player.rotationPitch, true);
+						result = SkyUtils.teleportPlayer(player, dim, pos, player.rotationYaw, player.rotationPitch, true);
 					}
 
 					if (result && player.mcServer.getConfigurationManager().getCurrentPlayerCount() <= 1)
 					{
-						player.getServerForPlayer().provider.resetRainAndThunder();
+						WorldServer world = player.getServerForPlayer();
+
+						world.provider.resetRainAndThunder();
+
+						if (!SkylandAPI.isEntityInSkyland(player) && world.getGameRules().getGameRuleBooleanValue("doDaylightCycle"))
+						{
+							WorldInfo worldInfo = SkyUtils.getWorldInfo(world);
+							long i = worldInfo.getWorldTime() + 24000L;
+
+							worldInfo.setWorldTime(i - i % 24000L);
+						}
 					}
+
+					return;
 				}
 			}
-			else if (SkylandAPI.isEntityInSkyland(player))
+
+			if (SkylandAPI.isEntityInSkyland(player))
 			{
 				if (!player.onGround && player.getEntityBoundingBox().minY <= -30.0D)
 				{
