@@ -39,8 +39,6 @@ public class Config implements IMessage, IMessageHandler<Config, IMessage>
 
 	public static boolean versionNotify;
 
-	public static boolean recordSkyland;
-
 	public static int dimensionSkyland;
 	public static boolean generateCaves;
 	public static boolean generateLakes;
@@ -140,19 +138,9 @@ public class Config implements IMessage, IMessageHandler<Config, IMessage>
 
 		config.setCategoryPropertyOrder(category, propOrder);
 
-//		category = "items";
-//		prop = config.get(category, "recordSkyland", false);
-//		prop.setRequiresMcRestart(true).setLanguageKey(Skyland.CONFIG_LANG + category + "." + prop.getName());
-//		prop.comment = StatCollector.translateToLocal(prop.getLanguageKey() + ".tooltip");
-//		prop.comment += " [default: " + prop.getDefault() + "]";
-//		propOrder.add(prop.getName());
-//		recordSkyland = prop.getBoolean(recordSkyland);
-//
-//		config.addCustomCategoryComment(category, "If multiplayer, values must match on client-side and server-side.");
-//		config.setCategoryPropertyOrder(category, propOrder);
-//		config.setCategoryRequiresMcRestart(category, true);
-
 		category = "skyland";
+		propOrder = Lists.newArrayList();
+
 		prop = config.get(category, "dimensionSkyland", -4);
 		prop.setLanguageKey(Skyland.CONFIG_LANG + category + "." + prop.getName());
 		prop.comment = StatCollector.translateToLocal(prop.getLanguageKey() + ".tooltip");
@@ -175,6 +163,8 @@ public class Config implements IMessage, IMessageHandler<Config, IMessage>
 		config.setCategoryPropertyOrder(category, propOrder);
 
 		category = "options";
+		propOrder = Lists.newArrayList();
+
 		prop = config.get(category, "skyborn", false);
 		prop.setLanguageKey(Skyland.CONFIG_LANG + category + "." + prop.getName());
 		prop.comment = StatCollector.translateToLocal(prop.getLanguageKey() + ".tooltip");

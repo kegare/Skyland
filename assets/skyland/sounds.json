@@ -1,10 +1,10 @@
 {
-  "music.game.skyland": {
-    "category": "music",
+  "skyland": {
+    "category": "neutral",
     "sounds": [
       {
-        "name": "music/game/skyland/skyland",
-        "volume": 0.35,
+        "name": "skyland",
+        "volume": 0.25,
         "stream": true
       }
     ]
@@ -13,10 +13,16 @@
     "category": "record",
     "sounds": [
       {
-        "name": "music/game/skyland/skyland",
-        "volume": 0.5,
+        "name": "skyland",
+        "volume": 0.35,
         "stream": true
       }
+    ]
+  },
+  "falling": {
+    "category": "player",
+    "sounds": [
+      "falling"
     ]
   }
 }

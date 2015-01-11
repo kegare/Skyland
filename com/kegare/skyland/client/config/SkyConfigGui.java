@@ -37,7 +37,7 @@ public class SkyConfigGui extends GuiConfig
 		List<IConfigElement> list = Lists.newArrayList();
 
 		list.addAll(new ConfigElement(SkylandAPI.getConfig().getCategory(Configuration.CATEGORY_GENERAL)).getChildElements());
-//		list.addAll(new ConfigElement(SkylandAPI.getConfig().getCategory("items")).getChildElements());
+		list.addAll(new ConfigElement(SkylandAPI.getConfig().getCategory("items")).getChildElements());
 		list.addAll(new ConfigElement(SkylandAPI.getConfig().getCategory("skyland")).getChildElements());
 		list.addAll(new ConfigElement(SkylandAPI.getConfig().getCategory("options")).getChildElements());
 

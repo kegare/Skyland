@@ -27,7 +27,6 @@ import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkPrimer;
 import net.minecraft.world.chunk.IChunkProvider;
 import net.minecraft.world.gen.MapGenBase;
-import net.minecraft.world.gen.NoiseGenerator;
 import net.minecraft.world.gen.NoiseGeneratorOctaves;
 import net.minecraft.world.gen.feature.WorldGenLakes;
 import net.minecraft.world.gen.feature.WorldGenMinable;
@@ -35,12 +34,10 @@ import net.minecraft.world.gen.feature.WorldGenerator;
 import net.minecraftforge.common.BiomeDictionary;
 import net.minecraftforge.common.BiomeDictionary.Type;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.terraingen.ChunkProviderEvent;
 import net.minecraftforge.event.terraingen.OreGenEvent.GenerateMinable.EventType;
 import net.minecraftforge.event.terraingen.PopulateChunkEvent;
 import net.minecraftforge.event.terraingen.PopulateChunkEvent.Populate;
 import net.minecraftforge.event.terraingen.TerrainGen;
-import net.minecraftforge.fml.common.eventhandler.Event.Result;
 
 import com.kegare.skyland.core.Config;
 import com.kegare.skyland.world.gen.MapGenCavesSkyland;
@@ -82,14 +79,6 @@ public class ChunkProviderSkyland implements IChunkProvider
 		this.noiseGen3 = new NoiseGeneratorOctaves(rand, 8);
 		this.noiseGen4 = new NoiseGeneratorOctaves(rand, 10);
 		this.noiseGen5 = new NoiseGeneratorOctaves(rand, 16);
-
-		NoiseGenerator[] noiseGens = {noiseGen1, noiseGen2, noiseGen3, noiseGen4, noiseGen5};
-		noiseGens = TerrainGen.getModdedNoiseGenerators(world, rand, noiseGens);
-		this.noiseGen1 = (NoiseGeneratorOctaves)noiseGens[0];
-		this.noiseGen2 = (NoiseGeneratorOctaves)noiseGens[1];
-		this.noiseGen3 = (NoiseGeneratorOctaves)noiseGens[2];
-		this.noiseGen4 = (NoiseGeneratorOctaves)noiseGens[3];
-		this.noiseGen5 = (NoiseGeneratorOctaves)noiseGens[4];
 	}
 
 	public void generateTerrain(int chunkX, int chunkZ, ChunkPrimer data)
@@ -163,14 +152,6 @@ public class ChunkProviderSkyland implements IChunkProvider
 
 	private double[] initializeNoiseField(double[] densities, int posX, int posY, int posZ, int sizeX, int sizeY, int sizeZ)
 	{
-		ChunkProviderEvent.InitNoiseField event = new ChunkProviderEvent.InitNoiseField(this, densities, posX, posY, posZ, sizeX, sizeY, sizeZ);
-		MinecraftForge.EVENT_BUS.post(event);
-
-		if (event.getResult() == Result.DENY)
-		{
-			return event.noisefield;
-		}
-
 		if (densities == null)
 		{
 			densities = new double[sizeX * sizeY * sizeZ];
@@ -307,14 +288,6 @@ public class ChunkProviderSkyland implements IChunkProvider
 
 	public void replaceBiomeBlocks(int chunkX, int chunkZ, ChunkPrimer data, BiomeGenBase[] biomes)
 	{
-		ChunkProviderEvent.ReplaceBiomeBlocks event = new ChunkProviderEvent.ReplaceBiomeBlocks(this, chunkX, chunkZ, data, worldObj);
-		MinecraftForge.EVENT_BUS.post(event);
-
-		if (event.getResult() == Result.DENY)
-		{
-			return;
-		}
-
 		for (int x = 0; x < 16; ++x)
 		{
 			for (int z = 0; z < 16; ++z)
@@ -397,7 +370,7 @@ public class ChunkProviderSkyland implements IChunkProvider
 
 		for (int index = 0; index < biomes.length; ++index)
 		{
-			biomes[index] = (byte) biomesForGeneration[index].biomeID;
+			biomes[index] = (byte)biomesForGeneration[index].biomeID;
 		}
 
 		chunk.generateSkylightMap();
@@ -463,7 +436,7 @@ public class ChunkProviderSkyland implements IChunkProvider
 		}
 
 		boolean doGen = TerrainGen.generateOre(worldObj, rand, worldGenIron, pos, EventType.IRON);
-		for (i = 0; doGen && i < 8; ++i)
+		for (i = 0; doGen && i < 12; ++i)
 		{
 			genX = rand.nextInt(16);
 			genY = rand.nextInt(50) + 20;
@@ -483,7 +456,7 @@ public class ChunkProviderSkyland implements IChunkProvider
 		}
 
 		doGen = TerrainGen.generateOre(worldObj, rand, worldGenDiamond, pos, EventType.DIAMOND);
-		for (i = 0; doGen && i < 6; ++i)
+		for (i = 0; doGen && i < 7; ++i)
 		{
 			genX = rand.nextInt(16);
 			genY = rand.nextInt(50) + 10;

@@ -306,7 +306,6 @@ public class WorldProviderSkyland extends WorldProviderSurface
 
 						if (world != null)
 						{
-							world = (WorldServer)world.init();
 							world.saveAllChunks(true, null);
 							world.flush();
 						}

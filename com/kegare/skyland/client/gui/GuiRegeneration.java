@@ -14,13 +14,13 @@ import java.io.IOException;
 
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.resources.I18n;
 import net.minecraftforge.fml.client.config.GuiButtonExt;
 import net.minecraftforge.fml.client.config.GuiCheckBox;
 import net.minecraftforge.fml.client.config.HoverChecker;
 
 import org.lwjgl.input.Keyboard;
+import org.lwjgl.opengl.GL11;
 
 import com.kegare.skyland.core.Skyland;
 import com.kegare.skyland.network.RegenerateMessage;
@@ -85,7 +85,10 @@ public class GuiRegeneration extends GuiScreen
 		buttonList.add(cancelButton);
 		buttonList.add(backupCheckBox);
 
-		backupHoverChecker = new HoverChecker(backupCheckBox, 800);
+		if (backupHoverChecker == null)
+		{
+			backupHoverChecker = new HoverChecker(backupCheckBox, 800);
+		}
 	}
 
 	@Override
@@ -106,6 +109,7 @@ public class GuiRegeneration extends GuiScreen
 		if (code == Keyboard.KEY_ESCAPE)
 		{
 			mc.displayGuiScreen(null);
+			mc.setIngameFocus();
 		}
 	}
 
@@ -143,10 +147,10 @@ public class GuiRegeneration extends GuiScreen
 	{
 		drawGradientRect(0, 0, width, height, Integer.MIN_VALUE, Integer.MAX_VALUE);
 
-		GlStateManager.pushMatrix();
-		GlStateManager.scale(1.5F, 1.5F, 1.0F);
+		GL11.glPushMatrix();
+		GL11.glScalef(1.5F, 1.5F, 1.0F);
 		drawCenteredString(fontRendererObj, I18n.format("skyland.regenerate.gui.title"), width / 3, 30, 0xFFFFFF);
-		GlStateManager.popMatrix();
+		GL11.glPopMatrix();
 
 		drawCenteredString(fontRendererObj, I18n.format("skyland.regenerate.gui.info"), width / 2, 90, 0xEEEEEE);
 

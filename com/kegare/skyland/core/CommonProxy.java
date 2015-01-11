@@ -11,5 +11,5 @@ package com.kegare.skyland.core;
 
 public class CommonProxy
 {
-	public void registerModels() {}
+	public void playSoundSkyJump() {}
 }

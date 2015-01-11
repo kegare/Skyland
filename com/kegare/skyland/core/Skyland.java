@@ -81,16 +81,11 @@ public class Skyland
 		network.registerMessage(RegenerateMessage.class, RegenerateMessage.class, id++, Side.SERVER);
 		network.registerMessage(RegenerateProgressMessage.class, RegenerateProgressMessage.class, id++, Side.CLIENT);
 		network.registerMessage(FallTeleportMessage.class, FallTeleportMessage.class, id++, Side.CLIENT);
-		network.registerMessage(FallTeleportMessage.class, FallTeleportMessage.class, id++, Side.SERVER);
-
-//		SkyItems.registerItems();
 	}
 
 	@EventHandler
 	public void init(FMLInitializationEvent event)
 	{
-//		proxy.registerModels();
-
 		FMLCommonHandler.instance().bus().register(SkyEventHooks.instance);
 
 		MinecraftForge.EVENT_BUS.register(SkyEventHooks.instance);

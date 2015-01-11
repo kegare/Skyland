@@ -23,9 +23,9 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Map;
 import java.util.concurrent.ForkJoinPool;
 
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
-import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
@@ -39,7 +39,6 @@ import net.minecraftforge.fml.common.ModContainer;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 
 import com.google.common.collect.Maps;
-import com.kegare.skyland.api.SkylandAPI;
 import com.kegare.skyland.core.Skyland;
 import com.kegare.skyland.world.TeleporterDummy;
 
@@ -163,6 +162,7 @@ public class SkyUtils
 
 			player.isDead = false;
 			player.forceSpawn = true;
+			player.timeUntilPortal = player.getPortalCooldown();
 			player.mcServer.getConfigurationManager().transferPlayerToDimension(player, dim, new TeleporterDummy(player.mcServer.worldServerForDimension(dim)));
 			player.addExperienceLevel(0);
 
@@ -177,26 +177,16 @@ public class SkyUtils
 		transferPlayer(player, dim);
 
 		WorldServer world = player.getServerForPlayer();
-		BlockPos pos;
-		String key = "Skyland:LastTeleport." + dim;
+		BlockPos pos = null;
 
-		if (player.getEntityData().hasKey(key))
+		if (player.getBedLocation(dim) != null)
 		{
-			NBTTagCompound data = player.getEntityData().getCompoundTag(key);
+			pos = EntityPlayer.getBedSpawnLocation(world, player.getBedLocation(dim), true);
+		}
 
-			pos = new BlockPos(data.getInteger("PosX"), data.getInteger("PosY"), data.getInteger("PosZ"));
-		}
-		else if (player.getBedLocation(dim) != null)
-		{
-			pos = player.getBedLocation(dim);
-		}
-		else if (world.getWorldInfo().getTerrainType() == SkylandAPI.getWorldType())
+		if (pos == null)
 		{
 			pos = BlockPos.ORIGIN.up(64);
-		}
-		else
-		{
-			pos = world.getSpawnPoint();
 		}
 
 		if (world.isAirBlock(pos) && world.isAirBlock(pos.up()))
@@ -205,7 +195,7 @@ public class SkyUtils
 			{
 				pos = pos.down();
 			}
-			while (world.isAirBlock(pos.down()));
+			while (pos.getY() > 0 && world.isAirBlock(pos.down()));
 
 			BlockPos pos2 = pos;
 			pos = pos.up();
@@ -214,44 +204,28 @@ public class SkyUtils
 			{
 				setPlayerLocation(player, pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D);
 
-				NBTTagCompound data = player.getEntityData().getCompoundTag(key);
-
-				if (data == null)
-				{
-					data = new NBTTagCompound();
-				}
-
-				data.setInteger("PosX", pos.getX());
-				data.setInteger("PosY", pos.getY());
-				data.setInteger("PosZ", pos.getZ());
-				player.getEntityData().setTag(key, data);
-
 				return true;
 			}
 		}
 		else
 		{
-			int range = 16;
+			int range = 32;
 
 			for (int x = pos.getX() - range; x < pos.getX() + range; ++x)
 			{
 				for (int z = pos.getZ() - range; z < pos.getZ() + range; ++z)
 				{
-					for (int y = world.getActualHeight() - 3; y > world.provider.getAverageGroundLevel(); --y)
+					for (int y = world.getActualHeight(); y > 0; --y)
 					{
 						BlockPos pos2 = new BlockPos(x, y, z);
 
-						if (world.isAirBlock(pos2) && world.isAirBlock(pos2.up()) &&
-							world.isAirBlock(pos2.north()) && world.isAirBlock(pos2.north().up()) &&
-							world.isAirBlock(pos2.south()) && world.isAirBlock(pos2.south().up()) &&
-							world.isAirBlock(pos2.west()) && world.isAirBlock(pos2.west().up()) &&
-							world.isAirBlock(pos2.east()) && world.isAirBlock(pos2.east().up()))
+						if (world.isAirBlock(pos2) && world.isAirBlock(pos2.up()))
 						{
 							do
 							{
 								pos2 = pos2.down();
 							}
-							while (world.isAirBlock(pos2.down()));
+							while (pos2.getY() > 0 && world.isAirBlock(pos2.down()));
 
 							BlockPos pos3 = pos2;
 							pos2 = pos2.up();
@@ -259,18 +233,6 @@ public class SkyUtils
 							if (!world.isAirBlock(pos3) && !world.getBlockState(pos3).getBlock().getMaterial().isLiquid())
 							{
 								setPlayerLocation(player, pos2.getX() + 0.5D, pos2.getY() + 0.5D, pos2.getZ() + 0.5D);
-
-								NBTTagCompound data = player.getEntityData().getCompoundTag(key);
-
-								if (data == null)
-								{
-									data = new NBTTagCompound();
-								}
-
-								data.setInteger("PosX", x);
-								data.setInteger("PosY", y);
-								data.setInteger("PosZ", z);
-								player.getEntityData().setTag(key, data);
 
 								return true;
 							}
@@ -289,11 +251,6 @@ public class SkyUtils
 		return false;
 	}
 
-	public static boolean teleportPlayer(EntityPlayerMP player, int dim, BlockPos pos, float yaw, float pitch, boolean safe)
-	{
-		return teleportPlayer(player, dim, pos.getX() + 0.5D, pos.getY(), pos.getZ() + 0.5D, yaw, pitch, safe);
-	}
-
 	public static boolean teleportPlayer(EntityPlayerMP player, int dim, double posX, double posY, double posZ, float yaw, float pitch, boolean safe)
 	{
 		transferPlayer(player, dim);
@@ -305,7 +262,7 @@ public class SkyUtils
 
 			if (world.isAirBlock(pos) && world.isAirBlock(pos.up()))
 			{
-				while (world.isAirBlock(pos.down()))
+				while (pos.getY() > 1 && world.isAirBlock(pos.down()))
 				{
 					pos = pos.down();
 				}
