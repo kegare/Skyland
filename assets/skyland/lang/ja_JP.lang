@@ -5,8 +5,6 @@ skyland.version.message=%s の新しいバージョンが利用可能です
 skyland.config.title=Skylandの設定
 skyland.config.general.versionNotify=バージョン通知
 skyland.config.general.versionNotify.tooltip=Skylandの新しいバージョンが利用可能な場合、チャットログで通知します。
-skyland.config.items.recordSkyland=音楽ディスク Skyland
-skyland.config.items.recordSkyland.tooltip=Skylandの音楽ディスクを追加します。
 skyland.config.skyland.dimensionSkyland=Skyland ディメンションID
 skyland.config.skyland.dimensionSkyland.tooltip=SkylandのディメンションIDを指定します。0を指定すると、Skylandのワールドタイプが追加され、Skyland ディメンションは追加されません。
 skyland.config.skyland.generateCaves=洞窟の生成
@@ -32,3 +30,5 @@ skyland.regenerate.gui.progress.regenerating=再生成しています...
 skyland.regenerate.gui.progress.backingup=バックアップしています..
 skyland.regenerate.gui.progress.regenerated=再生成しました
 skyland.regenerate.gui.progress.failed=再生成に失敗しました
+
+item.skyFeather.name=空の羽

@@ -1,0 +1,6 @@
+{
+    "variants": {
+        "axis=z": { "model": "skyland:sky_portal_ew" },
+        "axis=x": { "model": "skyland:sky_portal_ns" }
+    }
+}
