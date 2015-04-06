@@ -9,7 +9,6 @@
 
 package skyland.item;
 
-import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -24,7 +23,7 @@ public class ItemSkyFeather extends Item
 	public ItemSkyFeather()
 	{
 		this.setUnlocalizedName("skyFeather");
-		this.setCreativeTab(CreativeTabs.tabMaterials);
+		this.setCreativeTab(Skyland.tabSkyland);
 	}
 
 	@Override

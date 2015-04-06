@@ -23,9 +23,12 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Map;
 import java.util.concurrent.ForkJoinPool;
 
+import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
@@ -36,6 +39,7 @@ import net.minecraftforge.fml.common.DummyModContainer;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.ModContainer;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
+import net.minecraftforge.oredict.OreDictionary;
 import skyland.core.Skyland;
 import skyland.world.TeleporterDummy;
 
@@ -135,6 +139,30 @@ public class SkyUtils
 	public static int compareWithNull(Object o1, Object o2)
 	{
 		return (o1 == null ? 1 : 0) - (o2 == null ? 1 : 0);
+	}
+
+	public static void registerOreDict(Item item, String... names)
+	{
+		for (String name : names)
+		{
+			OreDictionary.registerOre(name, item);
+		}
+	}
+
+	public static void registerOreDict(Block block, String... names)
+	{
+		for (String name : names)
+		{
+			OreDictionary.registerOre(name, block);
+		}
+	}
+
+	public static void registerOreDict(ItemStack item, String... names)
+	{
+		for (String name : names)
+		{
+			OreDictionary.registerOre(name, item);
+		}
 	}
 
 	public static void setPlayerLocation(EntityPlayerMP player, double posX, double posY, double posZ)

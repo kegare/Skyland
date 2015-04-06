@@ -11,6 +11,7 @@ package skyland.item;
 
 import net.minecraft.item.ItemRecord;
 import net.minecraft.util.ResourceLocation;
+import skyland.core.Skyland;
 
 public class ItemRecordSkyland extends ItemRecord
 {
@@ -18,6 +19,7 @@ public class ItemRecordSkyland extends ItemRecord
 	{
 		super("skyland");
 		this.setUnlocalizedName("record");
+		this.setCreativeTab(Skyland.tabSkyland);
 	}
 
 	@Override

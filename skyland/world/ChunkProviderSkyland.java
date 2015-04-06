@@ -38,6 +38,7 @@ import net.minecraftforge.event.terraingen.OreGenEvent.GenerateMinable.EventType
 import net.minecraftforge.event.terraingen.PopulateChunkEvent;
 import net.minecraftforge.event.terraingen.PopulateChunkEvent.Populate;
 import net.minecraftforge.event.terraingen.TerrainGen;
+import skyland.block.SkyBlocks;
 import skyland.core.Config;
 import skyland.world.gen.MapGenCavesSkyland;
 
@@ -66,6 +67,7 @@ public class ChunkProviderSkyland implements IChunkProvider
 	private final WorldGenerator worldGenIron = new WorldGenMinable(Blocks.iron_ore.getDefaultState(), 7);
 	private final WorldGenerator worldGenEmerald = new WorldGenMinable(Blocks.emerald_ore.getDefaultState(), 4);
 	private final WorldGenerator worldGenDiamond = new WorldGenMinable(Blocks.diamond_ore.getDefaultState(), 3);
+	private final WorldGenerator worldGenSkyrite = new WorldGenMinable(SkyBlocks.skyrite_ore.getDefaultState(), 5);
 
 	public ChunkProviderSkyland(World world)
 	{
@@ -422,7 +424,7 @@ public class ChunkProviderSkyland implements IChunkProvider
 		}
 
 		boolean doGen = TerrainGen.generateOre(worldObj, rand, worldGenIron, pos, EventType.IRON);
-		for (i = 0; doGen && i < 15; ++i)
+		for (i = 0; doGen && i < 14; ++i)
 		{
 			genX = rand.nextInt(16);
 			genY = rand.nextInt(50) + 20;
@@ -449,6 +451,16 @@ public class ChunkProviderSkyland implements IChunkProvider
 			genZ = rand.nextInt(16);
 
 			worldGenDiamond.generate(worldObj, rand, pos.add(genX, genY, genZ));
+		}
+
+		doGen = TerrainGen.generateOre(worldObj, rand, worldGenSkyrite, pos, EventType.CUSTOM);
+		for (i = 0; doGen && i < 10; ++i)
+		{
+			genX = rand.nextInt(16);
+			genY = rand.nextInt(50) + 10;
+			genZ = rand.nextInt(16);
+
+			worldGenSkyrite.generate(worldObj, rand, pos.add(genX, genY, genZ));
 		}
 
 		biome.decorate(worldObj, rand, pos);

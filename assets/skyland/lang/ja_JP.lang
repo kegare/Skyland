@@ -31,4 +31,13 @@ skyland.regenerate.gui.progress.backingup=バックアップしています..
 skyland.regenerate.gui.progress.regenerated=再生成しました
 skyland.regenerate.gui.progress.failed=再生成に失敗しました
 
+tile.oreSkyrite.name=スカイライト鉱石
+tile.blockSkyrite.name=スカイライトブロック
+
 item.skyFeather.name=空の羽
+item.skyrite.name=スカイライト
+item.swordSkyrite.name=スカイライトの剣
+item.shovelSkyrite.name=スカイライトのシャベル
+item.pickaxeSkyrite.name=スカイライトのツルハシ
+item.axeSkyrite.name=スカイライトの斧
+item.hoeSkyrite.name=スカイライトのクワ

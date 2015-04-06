@@ -19,11 +19,10 @@ import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Comparator;
-import java.util.Set;
-import java.util.concurrent.RecursiveTask;
+import java.util.concurrent.RecursiveAction;
 import java.util.regex.Pattern;
 
-import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.event.ClickEvent;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
@@ -52,7 +51,6 @@ import org.apache.logging.log4j.Level;
 
 import skyland.api.SkylandAPI;
 import skyland.client.renderer.EmptyRenderer;
-import skyland.core.Config;
 import skyland.core.Skyland;
 import skyland.network.DimSyncMessage;
 import skyland.network.RegenerateMessage;
@@ -61,7 +59,6 @@ import skyland.util.SkyLog;
 import skyland.util.SkyUtils;
 
 import com.google.common.base.Joiner;
-import com.google.common.collect.Sets;
 
 public class WorldProviderSkyland extends WorldProviderSurface
 {
@@ -171,24 +168,21 @@ public class WorldProviderSkyland extends WorldProviderSurface
 	public static void regenerate(final boolean backup)
 	{
 		final MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
-		Set<EntityPlayerMP> target = Sets.newHashSet();
 
 		for (Object obj : server.getConfigurationManager().playerEntityList.toArray())
 		{
-			EntityPlayerMP player = (EntityPlayerMP)obj;
-
-			if (SkylandAPI.isEntityInSkyland(player))
+			if (SkylandAPI.isEntityInSkyland((EntityPlayer)obj))
 			{
-				SkyUtils.teleportPlayer(player, 0);
+				Skyland.network.sendToAll(new RegenerateProgressMessage(3));
 
-				target.add(player);
+				return;
 			}
 		}
 
-		boolean result = SkyUtils.getPool().invoke(new RecursiveTask<Boolean>()
+		SkyUtils.getPool().execute(new RecursiveAction()
 		{
 			@Override
-			protected Boolean compute()
+			protected void compute()
 			{
 				IChatComponent component;
 
@@ -317,8 +311,6 @@ public class WorldProviderSkyland extends WorldProviderSurface
 					server.getConfigurationManager().sendChatMsg(component);
 
 					Skyland.network.sendToAll(new RegenerateProgressMessage(2));
-
-					return true;
 				}
 				catch (Exception e)
 				{
@@ -330,21 +322,8 @@ public class WorldProviderSkyland extends WorldProviderSurface
 
 					SkyLog.log(Level.ERROR, e, component.getUnformattedText());
 				}
-
-				return false;
 			}
 		});
-
-		if (result && Config.skyborn)
-		{
-			for (EntityPlayerMP player : target)
-			{
-				if (!SkylandAPI.isEntityInSkyland(player))
-				{
-					SkyUtils.teleportPlayer(player, SkylandAPI.getDimension());
-				}
-			}
-		}
 	}
 
 	public WorldProviderSkyland()

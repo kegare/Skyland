@@ -11,6 +11,10 @@ package skyland.core;
 
 import static skyland.core.Skyland.*;
 import net.minecraft.client.resources.model.ModelResourceLocation;
+import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.crafting.FurnaceRecipes;
 import net.minecraft.util.StatCollector;
 import net.minecraft.world.WorldType;
 import net.minecraftforge.client.model.ModelLoader;
@@ -27,7 +31,10 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 import net.minecraftforge.fml.common.event.FMLServerStoppedEvent;
 import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
+import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.oredict.ShapedOreRecipe;
+import net.minecraftforge.oredict.ShapelessOreRecipe;
 import skyland.api.SkylandAPI;
 import skyland.block.SkyBlocks;
 import skyland.handler.SkyEventHooks;
@@ -60,6 +67,8 @@ public class Skyland
 
 	public static final SimpleNetworkWrapper network = new SimpleNetworkWrapper(MODID);
 
+	public static final CreativeTabs tabSkyland = new CreativeTabSkyland();
+
 	public static WorldType SKYLAND;
 
 	@EventHandler
@@ -80,8 +89,16 @@ public class Skyland
 
 		if (event.getSide().isClient())
 		{
+			ModelLoader.setCustomModelResourceLocation(Item.getItemFromBlock(SkyBlocks.skyrite_ore), 0, new ModelResourceLocation(MODID + ":" + "skyrite_ore", "inventory"));
+			ModelLoader.setCustomModelResourceLocation(Item.getItemFromBlock(SkyBlocks.skyrite_block), 0, new ModelResourceLocation(MODID + ":" + "skyrite_block", "inventory"));
 			ModelLoader.setCustomModelResourceLocation(SkyItems.sky_feather, 0, new ModelResourceLocation(MODID + ":" + "sky_feather", "inventory"));
 			ModelLoader.setCustomModelResourceLocation(SkyItems.record_skyland, 0, new ModelResourceLocation(MODID + ":" + "record_skyland", "inventory"));
+			ModelLoader.setCustomModelResourceLocation(SkyItems.skyrite, 0, new ModelResourceLocation(MODID + ":" + "skyrite", "inventory"));
+			ModelLoader.setCustomModelResourceLocation(SkyItems.skyrite_sword, 0, new ModelResourceLocation(MODID + ":" + "skyrite_sword", "inventory"));
+			ModelLoader.setCustomModelResourceLocation(SkyItems.skyrite_shovel, 0, new ModelResourceLocation(MODID + ":" + "skyrite_shovel", "inventory"));
+			ModelLoader.setCustomModelResourceLocation(SkyItems.skyrite_pickaxe, 0, new ModelResourceLocation(MODID + ":" + "skyrite_pickaxe", "inventory"));
+			ModelLoader.setCustomModelResourceLocation(SkyItems.skyrite_axe, 0, new ModelResourceLocation(MODID + ":" + "skyrite_axe", "inventory"));
+			ModelLoader.setCustomModelResourceLocation(SkyItems.skyrite_hoe, 0, new ModelResourceLocation(MODID + ":" + "skyrite_hoe", "inventory"));
 		}
 
 		int id = 0;
@@ -100,6 +117,39 @@ public class Skyland
 		FMLCommonHandler.instance().bus().register(SkyEventHooks.instance);
 
 		MinecraftForge.EVENT_BUS.register(SkyEventHooks.instance);
+
+		GameRegistry.addRecipe(new ShapedOreRecipe(SkyBlocks.skyrite_block,
+			"XXX", "XXX", "XXX",
+			'X', "skyrite"
+		));
+		GameRegistry.addRecipe(new ShapelessOreRecipe(new ItemStack(SkyItems.skyrite, 9), "blockSkyrite"));
+		GameRegistry.addRecipe(new ShapedOreRecipe(SkyItems.skyrite_sword,
+			"X", "X", "Y",
+			'X', "skyrite",
+			'Y', "stickWood"
+		));
+		GameRegistry.addRecipe(new ShapedOreRecipe(SkyItems.skyrite_shovel,
+			"X", "Y", "Y",
+			'X', "skyrite",
+			'Y', "stickWood"
+		));
+		GameRegistry.addRecipe(new ShapedOreRecipe(SkyItems.skyrite_pickaxe,
+			"XXX", " Y ", " Y ",
+			'X', "skyrite",
+			'Y', "stickWood"
+		));
+		GameRegistry.addRecipe(new ShapedOreRecipe(SkyItems.skyrite_axe,
+			"XX", "XY", " Y",
+			'X', "skyrite",
+			'Y', "stickWood"
+		));
+		GameRegistry.addRecipe(new ShapedOreRecipe(SkyItems.skyrite_hoe,
+			"XX", " Y", " Y",
+			'X', "skyrite",
+			'Y', "stickWood"
+		));
+
+		FurnaceRecipes.instance().addSmeltingRecipeForBlock(SkyBlocks.skyrite_ore, new ItemStack(SkyItems.skyrite), 1.0F);
 	}
 
 	@EventHandler

@@ -34,6 +34,14 @@ skyland.regenerate.gui.progress.regenerated=Regenerated
 skyland.regenerate.gui.progress.failed=Failed
 
 tile.skyPortal.name=Sky Portal
+tile.oreSkyrite.name=Skyrite Ore
+tile.blockSkyrite.name=Block of Skyrite
 
 item.skyFeather.name=Sky Feather
 item.record.skyland.desc=Skyland
+item.skyrite.name=Skyrite
+item.swordSkyrite.name=Skyrite Sword
+item.shovelSkyrite.name=Skyrite Shovel
+item.pickaxeSkyrite.name=Skyrite Pickaxe
+item.axeSkyrite.name=Skyrite Axe
+item.hoeSkyrite.name=Skyrite Hoe
