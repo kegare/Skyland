@@ -357,25 +357,28 @@ public class SkyEventHooks
 				return;
 			}
 
-			int rate = 0;
+			if (!entity.worldObj.isRemote)
+			{
+				int rate = 0;
 
-			if (entity.dimension == 0)
-			{
-				rate = 20;
-			}
-			else if (SkylandAPI.isEntityInSkyland(entity))
-			{
-				rate = 5;
-			}
+				if (entity.dimension == 0)
+				{
+					rate = 15;
+				}
+				else if (SkylandAPI.isEntityInSkyland(entity))
+				{
+					rate = 5;
+				}
 
-			if (rate > 0 && entity.getRNG().nextInt(rate) == 0)
-			{
-				entity.dropItem(SkyItems.sky_feather, 1);
+				if (rate > 0 && entity.getRNG().nextInt(rate) == 0)
+				{
+					entity.dropItem(SkyItems.sky_feather, 1);
+				}
 			}
 		}
 		else if (entity instanceof EntityCreeper)
 		{
-			if (SkylandAPI.isEntityInSkyland(entity) && entity.getRNG().nextInt(20) == 0)
+			if (!entity.worldObj.isRemote && SkylandAPI.isEntityInSkyland(entity) && entity.getRNG().nextInt(20) == 0)
 			{
 				entity.dropItem(SkyItems.record_skyland, 1);
 			}

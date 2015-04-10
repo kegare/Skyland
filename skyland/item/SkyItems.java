@@ -45,7 +45,7 @@ public class SkyItems
 		GameRegistry.registerItem(skyrite_axe, "skyrite_axe");
 		GameRegistry.registerItem(skyrite_hoe, "skyrite_hoe");
 
-		SkyUtils.registerOreDict(sky_feather, "feather");
+		SkyUtils.registerOreDict(sky_feather, "feather", "skyFeather");
 		SkyUtils.registerOreDict(record_skyland, "record");
 		SkyUtils.registerOreDict(skyrite, "skyrite", "gemSkyrite");
 		SkyUtils.registerOreDict(skyrite_sword, "sword", "swordSkyrite");

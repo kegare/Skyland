@@ -12,6 +12,7 @@ package skyland.core;
 import static skyland.core.Skyland.*;
 import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.FurnaceRecipes;
@@ -147,6 +148,12 @@ public class Skyland
 			"XX", " Y", " Y",
 			'X', "skyrite",
 			'Y', "stickWood"
+		));
+		GameRegistry.addRecipe(new ShapedOreRecipe(Items.arrow,
+			"X", "#", "Y",
+			'X', Items.flint,
+			'#', "stickWood",
+			'Y', "skyFeather"
 		));
 
 		FurnaceRecipes.instance().addSmeltingRecipeForBlock(SkyBlocks.skyrite_ore, new ItemStack(SkyItems.skyrite), 1.0F);
