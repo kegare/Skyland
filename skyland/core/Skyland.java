@@ -90,6 +90,7 @@ public class Skyland
 
 		if (event.getSide().isClient())
 		{
+			ModelLoader.setCustomModelResourceLocation(Item.getItemFromBlock(SkyBlocks.sky_portal), 0, new ModelResourceLocation(MODID + ":" + "sky_portal", "inventory"));
 			ModelLoader.setCustomModelResourceLocation(Item.getItemFromBlock(SkyBlocks.skyrite_ore), 0, new ModelResourceLocation(MODID + ":" + "skyrite_ore", "inventory"));
 			ModelLoader.setCustomModelResourceLocation(Item.getItemFromBlock(SkyBlocks.skyrite_block), 0, new ModelResourceLocation(MODID + ":" + "skyrite_block", "inventory"));
 			ModelLoader.setCustomModelResourceLocation(SkyItems.sky_feather, 0, new ModelResourceLocation(MODID + ":" + "sky_feather", "inventory"));

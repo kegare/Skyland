@@ -19,6 +19,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
+import net.minecraft.item.Item;
 import net.minecraft.potion.Potion;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.BlockPos;
@@ -30,6 +31,7 @@ import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import skyland.api.SkylandAPI;
+import skyland.core.Skyland;
 import skyland.world.TeleporterSkyland;
 
 public class BlockSkyPortal extends BlockPortal
@@ -40,6 +42,7 @@ public class BlockSkyPortal extends BlockPortal
 		this.setUnlocalizedName("skyPortal");
 		this.setStepSound(soundTypeGlass);
 		this.setTickRandomly(false);
+		this.setCreativeTab(Skyland.tabSkyland);
 	}
 
 	@Override
@@ -173,6 +176,13 @@ public class BlockSkyPortal extends BlockPortal
 	@SideOnly(Side.CLIENT)
 	@Override
 	public void randomDisplayTick(World worldIn, BlockPos pos, IBlockState state, Random rand) {}
+
+	@SideOnly(Side.CLIENT)
+	@Override
+	public Item getItem(World worldIn, BlockPos pos)
+	{
+		return Item.getItemFromBlock(this);
+	}
 
 	public class Size
 	{

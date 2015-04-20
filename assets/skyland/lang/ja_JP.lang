@@ -31,6 +31,7 @@ skyland.regenerate.gui.progress.backingup=バックアップしています..
 skyland.regenerate.gui.progress.regenerated=再生成しました
 skyland.regenerate.gui.progress.failed=再生成に失敗しました
 
+tile.skyPortal.name=スカイポータル
 tile.oreSkyrite.name=スカイライト鉱石
 tile.blockSkyrite.name=スカイライトブロック
 

@@ -15,6 +15,7 @@ import net.minecraft.item.ItemAxe;
 import net.minecraft.item.ItemHoe;
 import net.minecraft.item.ItemPickaxe;
 import net.minecraft.item.ItemSpade;
+import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemSword;
 import net.minecraftforge.common.util.EnumHelper;
 import net.minecraftforge.fml.common.registry.GameRegistry;
@@ -23,11 +24,12 @@ import skyland.util.SkyUtils;
 
 public class SkyItems
 {
-	public static final ToolMaterial SKYRITE = EnumHelper.addToolMaterial("SKYRITE", 3, 3000, 6.0F, 2.5F, 12);
-
 	public static final ItemSkyFeather sky_feather = new ItemSkyFeather();
 	public static final ItemRecordSkyland record_skyland = new ItemRecordSkyland();
 	public static final Item skyrite = new Item().setUnlocalizedName("skyrite").setCreativeTab(Skyland.tabSkyland);
+
+	public static final ToolMaterial SKYRITE = EnumHelper.addToolMaterial("SKYRITE", 3, 3000, 6.0F, 2.5F, 12).setRepairItem(new ItemStack(skyrite));
+
 	public static final ItemSword skyrite_sword = (ItemSword)new ItemSword(SKYRITE).setUnlocalizedName("swordSkyrite").setCreativeTab(Skyland.tabSkyland);
 	public static final ItemSpade skyrite_shovel = (ItemSpade)new ItemSpade(SKYRITE).setUnlocalizedName("shovelSkyrite").setCreativeTab(Skyland.tabSkyland);
 	public static final ItemPickaxe skyrite_pickaxe = (ItemPickaxe)new ItemPickaxeSkyland(SKYRITE).setUnlocalizedName("pickaxeSkyrite").setCreativeTab(Skyland.tabSkyland);

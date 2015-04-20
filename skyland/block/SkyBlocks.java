@@ -14,6 +14,7 @@ import net.minecraft.block.BlockCompressed;
 import net.minecraft.block.material.MapColor;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 import skyland.core.Skyland;
+import skyland.item.ItemSkyPortal;
 import skyland.util.SkyUtils;
 
 public class SkyBlocks
@@ -24,7 +25,7 @@ public class SkyBlocks
 
 	public static void register()
 	{
-		GameRegistry.registerBlock(sky_portal, "sky_portal");
+		GameRegistry.registerBlock(sky_portal, ItemSkyPortal.class, "sky_portal");
 		GameRegistry.registerBlock(skyrite_ore, "skyrite_ore");
 		GameRegistry.registerBlock(skyrite_block, "skyrite_block");
 

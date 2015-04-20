@@ -203,18 +203,21 @@ public class SkyUtils
 
 		WorldServer world = player.getServerForPlayer();
 		BlockPos pos = null;
+		boolean flag = false;
 
 		if (player.getBedLocation(dim) != null)
 		{
 			pos = EntityPlayer.getBedSpawnLocation(world, player.getBedLocation(dim), true);
+			flag = true;
 		}
 
 		if (pos == null)
 		{
 			pos = BlockPos.ORIGIN.up(64);
+			flag = false;
 		}
 
-		if (world.isAirBlock(pos) && world.isAirBlock(pos.up()))
+		if (flag && world.isAirBlock(pos) && world.isAirBlock(pos.up()))
 		{
 			do
 			{
