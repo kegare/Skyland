@@ -14,10 +14,6 @@ import java.net.URI;
 import java.util.Collections;
 import java.util.List;
 
-import skyland.api.SkylandAPI;
-import skyland.network.RegenerateMessage;
-import skyland.util.Version;
-import skyland.world.WorldProviderSkyland;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommand;
@@ -31,6 +27,10 @@ import net.minecraft.util.ChatComponentTranslation;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.IChatComponent;
 import net.minecraftforge.fml.common.Loader;
+import skyland.api.SkylandAPI;
+import skyland.network.RegenerateMessage;
+import skyland.util.Version;
+import skyland.world.WorldProviderSkyland;
 
 public class CommandSkyland implements ICommand
 {
@@ -53,7 +53,7 @@ public class CommandSkyland implements ICommand
 	}
 
 	@Override
-	public List getAliases()
+	public List<?> getAliases()
 	{
 		return Collections.emptyList();
 	}
@@ -152,7 +152,7 @@ public class CommandSkyland implements ICommand
 	}
 
 	@Override
-	public List addTabCompletionOptions(ICommandSender sender, String[] args, BlockPos pos)
+	public List<?> addTabCompletionOptions(ICommandSender sender, String[] args, BlockPos pos)
 	{
 		return args.length == 1 ? CommandBase.getListOfStringsMatchingLastWord(args, "version", "forum", "regenerate") : null;
 	}

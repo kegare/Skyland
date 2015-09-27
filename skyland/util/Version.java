@@ -117,6 +117,7 @@ public class Version extends RecursiveAction
 		return getStatus() == Status.OUTDATED;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	protected void compute()
 	{

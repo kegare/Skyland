@@ -20,21 +20,30 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ForkJoinPool;
 
+import com.google.common.collect.Maps;
+
 import net.minecraft.block.Block;
+import net.minecraft.client.Minecraft;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.BlockPos;
+import net.minecraft.util.MovingObjectPosition;
+import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.storage.DerivedWorldInfo;
 import net.minecraft.world.storage.WorldInfo;
 import net.minecraftforge.common.DimensionManager;
+import net.minecraftforge.fml.client.FMLClientHandler;
 import net.minecraftforge.fml.common.DummyModContainer;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.ModContainer;
@@ -42,8 +51,6 @@ import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.minecraftforge.oredict.OreDictionary;
 import skyland.core.Skyland;
 import skyland.world.TeleporterDummy;
-
-import com.google.common.collect.Maps;
 
 public class SkyUtils
 {
@@ -325,5 +332,72 @@ public class SkyUtils
 		}
 
 		return worldInfo;
+	}
+
+	public static MovingObjectPosition getMouseOverExtended(float dist)
+	{
+		Minecraft mc = FMLClientHandler.instance().getClient();
+		Entity renderEntity = mc.getRenderViewEntity();
+		AxisAlignedBB boundingBox = new AxisAlignedBB(renderEntity.posX - 0.5D, renderEntity.posY - 0.0D, renderEntity.posZ - 0.5D, renderEntity.posX + 0.5D, renderEntity.posY + 1.5D, renderEntity.posZ + 0.5D);
+		MovingObjectPosition mop = null;
+
+		if (mc.theWorld != null)
+		{
+			double var1 = dist;
+			mop = renderEntity.rayTrace(var1, 0);
+			double calcdist = var1;
+			Vec3 pos = renderEntity.getPositionEyes(0);
+			var1 = calcdist;
+
+			if (mop != null)
+			{
+				calcdist = mop.hitVec.distanceTo(pos);
+			}
+
+			Vec3 lookvec = renderEntity.getLook(0);
+			Vec3 var2 = pos.addVector(lookvec.xCoord * var1, lookvec.yCoord * var1, lookvec.zCoord * var1);
+			Entity pointedEntity = null;
+			float range = 1.0F;
+			@SuppressWarnings("unchecked")
+			List<Entity> list = mc.theWorld.getEntitiesWithinAABBExcludingEntity(renderEntity, boundingBox.addCoord(lookvec.xCoord * var1, lookvec.yCoord * var1, lookvec.zCoord * var1).expand(range, range, range));
+			double d = calcdist;
+
+			for (Entity entity : list)
+			{
+				if (entity.canBeCollidedWith())
+				{
+					float size = entity.getCollisionBorderSize();
+					AxisAlignedBB axis = new AxisAlignedBB(entity.posX - entity.width / 2, entity.posY, entity.posZ - entity.width / 2, entity.posX + entity.width / 2, entity.posY + entity.height, entity.posZ + entity.width / 2);
+					axis.expand(size, size, size);
+					MovingObjectPosition mop1 = axis.calculateIntercept(pos, var2);
+
+					if (axis.isVecInside(pos))
+					{
+						if (0.0D < d || d == 0.0D)
+						{
+							pointedEntity = entity;
+							d = 0.0D;
+						}
+					}
+					else if (mop1 != null)
+					{
+						double d1 = pos.distanceTo(mop1.hitVec);
+
+						if (d1 < d || d == 0.0D)
+						{
+							pointedEntity = entity;
+							d = d1;
+						}
+					}
+				}
+			}
+
+			if (pointedEntity != null && (d < calcdist || mop == null))
+			{
+				mop = new MovingObjectPosition(pointedEntity);
+			}
+		}
+
+		return mop;
 	}
 }

@@ -44,6 +44,7 @@ public class GuiRegeneration extends GuiScreen
 		this.backup = backup;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public void initGui()
 	{

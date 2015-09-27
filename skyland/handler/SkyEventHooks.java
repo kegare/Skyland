@@ -11,6 +11,10 @@ package skyland.handler;
 
 import java.util.Set;
 
+import org.apache.commons.lang3.StringUtils;
+
+import com.google.common.collect.Sets;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.monster.EntityCreeper;
@@ -24,8 +28,10 @@ import net.minecraft.util.BlockPos;
 import net.minecraft.util.ChatComponentTranslation;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.IChatComponent;
+import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
+import net.minecraftforge.client.event.MouseEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
@@ -47,23 +53,20 @@ import net.minecraftforge.fml.common.network.FMLNetworkEvent.ClientDisconnection
 import net.minecraftforge.fml.common.network.FMLNetworkEvent.ServerConnectionFromClientEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
-
-import org.apache.commons.lang3.StringUtils;
-
 import skyland.api.SkylandAPI;
 import skyland.core.Config;
 import skyland.core.Skyland;
 import skyland.item.ItemSkyFeather;
 import skyland.item.SkyItems;
 import skyland.network.DimSyncMessage;
+import skyland.network.ExtendedReachAttackMessage;
 import skyland.network.FallTeleportMessage;
 import skyland.network.PlaySoundMessage;
+import skyland.util.IExtendedReach;
 import skyland.util.SkyUtils;
 import skyland.util.Version;
 import skyland.util.Version.Status;
 import skyland.world.WorldProviderSkyland;
-
-import com.google.common.collect.Sets;
 
 public class SkyEventHooks
 {
@@ -400,6 +403,52 @@ public class SkyEventHooks
 			if (world.provider.getDimensionId() == SkylandAPI.getDimension())
 			{
 				WorldProviderSkyland.saveDimData();
+			}
+		}
+	}
+
+	@SideOnly(Side.CLIENT)
+	@SubscribeEvent(receiveCanceled = true)
+	public void onEvent(MouseEvent event)
+	{
+		if (event.button == 0 && event.buttonstate)
+		{
+			Minecraft mc = Minecraft.getMinecraft();
+			EntityPlayer thePlayer = mc.thePlayer;
+
+			if (thePlayer != null)
+			{
+				ItemStack itemstack = thePlayer.getCurrentEquippedItem();
+				IExtendedReach extended;
+
+				if (itemstack != null)
+				{
+					if (itemstack.getItem() instanceof IExtendedReach)
+					{
+						extended = (IExtendedReach) itemstack.getItem();
+					}
+					else
+					{
+						extended = null;
+					}
+
+					if (extended != null)
+					{
+						float reach = extended.getReach();
+						MovingObjectPosition mov = SkyUtils.getMouseOverExtended(reach);
+
+						if (mov != null)
+						{
+							if (mov.entityHit != null && mov.entityHit.hurtResistantTime == 0)
+							{
+								if (mov.entityHit != thePlayer )
+								{
+									Skyland.network.sendToServer(new ExtendedReachAttackMessage(mov.entityHit.getEntityId()));
+								}
+							}
+						}
+					}
+				}
 			}
 		}
 	}

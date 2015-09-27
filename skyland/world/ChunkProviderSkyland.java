@@ -291,7 +291,7 @@ public class ChunkProviderSkyland implements IChunkProvider
 		{
 			for (int z = 0; z < 16; ++z)
 			{
-				byte b0 = 1;
+				byte b = 1;
 				int i = -1;
 				BiomeGenBase biome = biomes[z + x * 16];
 				IBlockState top = biome.topBlock;
@@ -309,13 +309,13 @@ public class ChunkProviderSkyland implements IChunkProvider
 					{
 						if (i == -1)
 						{
-							if (b0 <= 0)
+							if (b <= 0)
 							{
 								top = Blocks.air.getDefaultState();
 								filler = biome.fillerBlock;
 							}
 
-							i = b0;
+							i = b;
 
 							if (y >= 0)
 							{
@@ -424,6 +424,7 @@ public class ChunkProviderSkyland implements IChunkProvider
 		}
 
 		boolean doGen = TerrainGen.generateOre(worldObj, rand, worldGenIron, pos, EventType.IRON);
+
 		for (i = 0; doGen && i < 14; ++i)
 		{
 			genX = rand.nextInt(16);
@@ -433,8 +434,7 @@ public class ChunkProviderSkyland implements IChunkProvider
 			worldGenIron.generate(worldObj, rand, pos.add(genX, genY, genZ));
 		}
 
-		doGen = TerrainGen.generateOre(worldObj, rand, worldGenEmerald, pos, EventType.CUSTOM);
-		for (i = 0; doGen && i < 6; ++i)
+		for (i = 0, doGen = TerrainGen.generateOre(worldObj, rand, worldGenEmerald, pos, EventType.CUSTOM); doGen && i < 6; ++i)
 		{
 			genX = rand.nextInt(16);
 			genY = rand.nextInt(50) + 10;
@@ -443,8 +443,7 @@ public class ChunkProviderSkyland implements IChunkProvider
 			worldGenEmerald.generate(worldObj, rand, pos.add(genX, genY, genZ));
 		}
 
-		doGen = TerrainGen.generateOre(worldObj, rand, worldGenDiamond, pos, EventType.DIAMOND);
-		for (i = 0; doGen && i < 7; ++i)
+		for (i = 0, doGen = TerrainGen.generateOre(worldObj, rand, worldGenDiamond, pos, EventType.DIAMOND); doGen && i < 7; ++i)
 		{
 			genX = rand.nextInt(16);
 			genY = rand.nextInt(50) + 10;
@@ -453,8 +452,7 @@ public class ChunkProviderSkyland implements IChunkProvider
 			worldGenDiamond.generate(worldObj, rand, pos.add(genX, genY, genZ));
 		}
 
-		doGen = TerrainGen.generateOre(worldObj, rand, worldGenSkyrite, pos, EventType.CUSTOM);
-		for (i = 0; doGen && i < 10; ++i)
+		for (i = 0, doGen = TerrainGen.generateOre(worldObj, rand, worldGenSkyrite, pos, EventType.CUSTOM); doGen && i < 10; ++i)
 		{
 			genX = rand.nextInt(16);
 			genY = rand.nextInt(50) + 10;
@@ -472,8 +470,7 @@ public class ChunkProviderSkyland implements IChunkProvider
 
 		pos = pos.add(8, 0, 8);
 
-		doGen = TerrainGen.populate(chunkProvider, worldObj, rand, chunkX, chunkZ, false, Populate.EventType.ICE);
-		for (genX = 0; doGen && genX < 16; ++genX)
+		for (genX = 0, doGen = TerrainGen.populate(chunkProvider, worldObj, rand, chunkX, chunkZ, false, Populate.EventType.ICE); doGen && genX < 16; ++genX)
 		{
 			for (genZ = 0; genZ < 16; ++ genZ)
 			{
@@ -525,11 +522,11 @@ public class ChunkProviderSkyland implements IChunkProvider
 	}
 
 	@Override
-	public List func_177458_a(EnumCreatureType creature, BlockPos pos)
+	public List<?> func_177458_a(EnumCreatureType type, BlockPos pos)
 	{
 		BiomeGenBase biome = worldObj.getBiomeGenForCoords(pos);
 
-		return biome == null ? null : biome.getSpawnableList(creature);
+		return biome == null ? null : biome.getSpawnableList(type);
 	}
 
 	@Override

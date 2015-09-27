@@ -28,9 +28,9 @@ public class SkyItems
 	public static final ItemRecordSkyland record_skyland = new ItemRecordSkyland();
 	public static final Item skyrite = new Item().setUnlocalizedName("skyrite").setCreativeTab(Skyland.tabSkyland);
 
-	public static final ToolMaterial SKYRITE = EnumHelper.addToolMaterial("SKYRITE", 3, 3000, 6.0F, 2.5F, 12).setRepairItem(new ItemStack(skyrite));
+	public static final ToolMaterial SKYRITE = EnumHelper.addToolMaterial("SKYRITE", 3, 3000, 6.0F, 2.0F, 12).setRepairItem(new ItemStack(skyrite));
 
-	public static final ItemSword skyrite_sword = (ItemSword)new ItemSword(SKYRITE).setUnlocalizedName("swordSkyrite").setCreativeTab(Skyland.tabSkyland);
+	public static final ItemSword skyrite_sword = (ItemSword)new ItemSkyriteSword(SKYRITE).setUnlocalizedName("swordSkyrite").setCreativeTab(Skyland.tabSkyland);
 	public static final ItemSpade skyrite_shovel = (ItemSpade)new ItemSpade(SKYRITE).setUnlocalizedName("shovelSkyrite").setCreativeTab(Skyland.tabSkyland);
 	public static final ItemPickaxe skyrite_pickaxe = (ItemPickaxe)new ItemPickaxeSkyland(SKYRITE).setUnlocalizedName("pickaxeSkyrite").setCreativeTab(Skyland.tabSkyland);
 	public static final ItemAxe skyrite_axe = (ItemAxe)new ItemAxeSkyland(SKYRITE).setUnlocalizedName("axeSkyrite").setCreativeTab(Skyland.tabSkyland);

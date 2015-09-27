@@ -10,6 +10,7 @@
 package skyland.core;
 
 import static skyland.core.Skyland.*;
+
 import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.init.Items;
@@ -31,6 +32,7 @@ import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 import net.minecraftforge.fml.common.event.FMLServerStoppedEvent;
+import net.minecraftforge.fml.common.network.NetworkRegistry;
 import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.fml.relauncher.Side;
@@ -42,6 +44,7 @@ import skyland.handler.SkyEventHooks;
 import skyland.handler.SkylandAPIHandler;
 import skyland.item.SkyItems;
 import skyland.network.DimSyncMessage;
+import skyland.network.ExtendedReachAttackMessage;
 import skyland.network.FallTeleportMessage;
 import skyland.network.PlaySoundMessage;
 import skyland.network.RegenerateMessage;
@@ -66,7 +69,7 @@ public class Skyland
 	@SidedProxy(modId = MODID, clientSide = "skyland.client.ClientProxy", serverSide = "skyland.core.CommonProxy")
 	public static CommonProxy proxy;
 
-	public static final SimpleNetworkWrapper network = new SimpleNetworkWrapper(MODID);
+	public static final SimpleNetworkWrapper network = NetworkRegistry.INSTANCE.newSimpleChannel(MODID);
 
 	public static final CreativeTabs tabSkyland = new CreativeTabSkyland();
 
@@ -111,6 +114,7 @@ public class Skyland
 		network.registerMessage(RegenerateMessage.class, RegenerateMessage.class, id++, Side.SERVER);
 		network.registerMessage(RegenerateProgressMessage.class, RegenerateProgressMessage.class, id++, Side.CLIENT);
 		network.registerMessage(FallTeleportMessage.class, FallTeleportMessage.class, id++, Side.CLIENT);
+		network.registerMessage(ExtendedReachAttackMessage.class, ExtendedReachAttackMessage.class, id++, Side.SERVER);
 	}
 
 	@EventHandler

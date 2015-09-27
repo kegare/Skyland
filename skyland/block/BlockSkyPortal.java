@@ -338,7 +338,7 @@ public class BlockSkyPortal extends BlockPortal
 
 				for (int j = 0; j < field_150862_g; ++j)
 				{
-					world.setBlockState(pos.up(j), getDefaultState().withProperty(BlockPortal.AXIS, axis), 2);
+					world.setBlockState(pos.up(j), getDefaultState().withProperty(AXIS, axis), 2);
 				}
 			}
 		}
