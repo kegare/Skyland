@@ -13,6 +13,8 @@ import java.util.Iterator;
 import java.util.Random;
 import java.util.Set;
 
+import com.google.common.collect.Sets;
+
 import net.minecraft.block.BlockPortal;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
@@ -29,8 +31,6 @@ import net.minecraft.world.Teleporter;
 import net.minecraft.world.WorldServer;
 import skyland.api.SkylandAPI;
 import skyland.block.SkyBlocks;
-
-import com.google.common.collect.Sets;
 
 public class TeleporterSkyland extends Teleporter
 {
@@ -174,7 +174,7 @@ public class TeleporterSkyland extends Teleporter
 				enumfacing = EnumFacing.WEST;
 			}
 
-			EnumFacing enumfacing1 = EnumFacing.getHorizontal(entity.getTeleportDirection());
+			EnumFacing enumfacing1 = EnumFacing.getHorizontal(0);
 
 			if (enumfacing != null)
 			{

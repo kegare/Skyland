@@ -133,7 +133,7 @@ public class MapGenCavesSkyland extends MapGenCaves
 	}
 
 	@Override
-	protected void func_180701_a(World world, int x, int z, int chunkX, int chunkZ, ChunkPrimer data)
+	protected void recursiveGenerate(World world, int x, int z, int chunkX, int chunkZ, ChunkPrimer data)
 	{
 		int chance = rand.nextInt(rand.nextInt(rand.nextInt(15) + 1) + 1);
 

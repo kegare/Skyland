@@ -22,6 +22,12 @@ import java.util.Comparator;
 import java.util.concurrent.RecursiveAction;
 import java.util.regex.Pattern;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.logging.log4j.Level;
+
+import com.google.common.base.Joiner;
+
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.event.ClickEvent;
 import net.minecraft.nbt.CompressedStreamTools;
@@ -44,11 +50,6 @@ import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
-
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
-import org.apache.logging.log4j.Level;
-
 import skyland.api.SkylandAPI;
 import skyland.client.renderer.EmptyRenderer;
 import skyland.core.Skyland;
@@ -57,8 +58,6 @@ import skyland.network.RegenerateMessage;
 import skyland.network.RegenerateProgressMessage;
 import skyland.util.SkyLog;
 import skyland.util.SkyUtils;
-
-import com.google.common.base.Joiner;
 
 public class WorldProviderSkyland extends WorldProviderSurface
 {
@@ -340,7 +339,7 @@ public class WorldProviderSkyland extends WorldProviderSurface
 	@Override
 	public boolean canCoordinateBeSpawn(int x, int z)
 	{
-		return !worldObj.isAirBlock(worldObj.getHorizon(new BlockPos(x, 0, z)));
+		return !worldObj.isAirBlock(worldObj.getHeight(new BlockPos(x, 0, z)));
 	}
 
 	@Override
@@ -451,7 +450,7 @@ public class WorldProviderSkyland extends WorldProviderSurface
 	{
 		super.resetRainAndThunder();
 
-		if (worldObj.getGameRules().getGameRuleBooleanValue("doDaylightCycle"))
+		if (worldObj.getGameRules().getBoolean("doDaylightCycle"))
 		{
 			WorldInfo worldInfo = SkyUtils.getWorldInfo(worldObj);
 			long i = worldInfo.getWorldTime() + 24000L;

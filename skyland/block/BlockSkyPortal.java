@@ -11,10 +11,15 @@ package skyland.block;
 
 import java.util.Random;
 
+import com.google.common.cache.LoadingCache;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockPortal;
 import net.minecraft.block.material.Material;
+import net.minecraft.block.state.BlockWorldState;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.state.pattern.BlockPattern;
+import net.minecraft.block.state.pattern.BlockPattern.PatternHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -76,7 +81,7 @@ public class BlockSkyPortal extends BlockPortal
 	@Override
 	public void onNeighborBlockChange(World worldIn, BlockPos pos, IBlockState state, Block neighborBlock)
 	{
-		EnumFacing.Axis axis = (EnumFacing.Axis)state.getValue(AXIS);
+		EnumFacing.Axis axis = state.getValue(AXIS);
 		Size size;
 
 		if (axis == EnumFacing.Axis.X)
@@ -173,6 +178,61 @@ public class BlockSkyPortal extends BlockPortal
 		}
 	}
 
+	@Override
+	public PatternHelper func_181089_f(World world, BlockPos pos)
+	{
+		EnumFacing.Axis axis = EnumFacing.Axis.Z;
+		Size size = new Size(world, pos, EnumFacing.Axis.X);
+		LoadingCache<BlockPos, BlockWorldState> cache = BlockPattern.func_181627_a(world, true);
+
+		if (!size.func_150860_b())
+		{
+			axis = EnumFacing.Axis.X;
+			size = new Size(world, pos, EnumFacing.Axis.Z);
+		}
+
+		if (!size.func_150860_b())
+		{
+			return new PatternHelper(pos, EnumFacing.NORTH, EnumFacing.UP, cache, 1, 1, 1);
+		}
+		else
+		{
+			int[] aint = new int[EnumFacing.AxisDirection.values().length];
+			EnumFacing facing = size.field_150866_c.rotateYCCW();
+			BlockPos blockpos = size.field_150861_f.up(size.func_181100_a() - 1);
+
+			for (EnumFacing.AxisDirection direction : EnumFacing.AxisDirection.values())
+			{
+				PatternHelper pattern = new PatternHelper(facing.getAxisDirection() == direction ? blockpos : blockpos.offset(size.field_150866_c, size.func_181101_b() - 1), EnumFacing.func_181076_a(direction, axis), EnumFacing.UP, cache, size.func_181101_b(), size.func_181100_a(), 1);
+
+				for (int i = 0; i < size.func_181101_b(); ++i)
+				{
+					for (int j = 0; j < size.func_181100_a(); ++j)
+					{
+						BlockWorldState blockworldstate = pattern.translateOffset(i, j, 1);
+
+						if (blockworldstate.getBlockState() != null && blockworldstate.getBlockState().getBlock().getMaterial() != Material.air)
+						{
+							++aint[direction.ordinal()];
+						}
+					}
+				}
+			}
+
+			EnumFacing.AxisDirection var1 = EnumFacing.AxisDirection.POSITIVE;
+
+			for (EnumFacing.AxisDirection direction : EnumFacing.AxisDirection.values())
+			{
+				if (aint[direction.ordinal()] < aint[var1.ordinal()])
+				{
+					var1 = direction;
+				}
+			}
+
+			return new PatternHelper(facing.getAxisDirection() == var1 ? blockpos : blockpos.offset(size.field_150866_c, size.func_181101_b() - 1), EnumFacing.func_181076_a(var1, axis), EnumFacing.UP, cache, size.func_181101_b(), size.func_181100_a(), 1);
+		}
+	}
+
 	@SideOnly(Side.CLIENT)
 	@Override
 	public void randomDisplayTick(World worldIn, BlockPos pos, IBlockState state, Random rand) {}
@@ -253,6 +313,16 @@ public class BlockSkyPortal extends BlockPortal
 			Block block = world.getBlockState(pos.offset(face, i)).getBlock();
 
 			return block == Blocks.quartz_block ? i : 0;
+		}
+
+		public int func_181100_a()
+		{
+			return field_150862_g;
+		}
+
+		public int func_181101_b()
+		{
+			return field_150868_h;
 		}
 
 		protected int func_150858_a()

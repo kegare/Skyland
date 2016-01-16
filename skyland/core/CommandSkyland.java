@@ -35,13 +35,13 @@ import skyland.world.WorldProviderSkyland;
 public class CommandSkyland implements ICommand
 {
 	@Override
-	public int compareTo(Object obj)
+	public int compareTo(ICommand command)
 	{
-		return getName().compareTo(((ICommand)obj).getName());
+		return getCommandName().compareTo(command.getCommandName());
 	}
 
 	@Override
-	public String getName()
+	public String getCommandName()
 	{
 		return "skyland";
 	}
@@ -53,13 +53,13 @@ public class CommandSkyland implements ICommand
 	}
 
 	@Override
-	public List<?> getAliases()
+	public List getCommandAliases()
 	{
 		return Collections.emptyList();
 	}
 
 	@Override
-	public void execute(ICommandSender sender, final String[] args)
+	public void processCommand(ICommandSender sender, final String[] args)
 	{
 		if (args.length <= 0 || args[0].equalsIgnoreCase("version"))
 		{
@@ -146,13 +146,13 @@ public class CommandSkyland implements ICommand
 	}
 
 	@Override
-	public boolean canCommandSenderUse(ICommandSender sender)
+	public boolean canCommandSenderUseCommand(ICommandSender sender)
 	{
 		return sender instanceof MinecraftServer || sender instanceof EntityPlayerMP;
 	}
 
 	@Override
-	public List<?> addTabCompletionOptions(ICommandSender sender, String[] args, BlockPos pos)
+	public List addTabCompletionOptions(ICommandSender sender, String[] args, BlockPos pos)
 	{
 		return args.length == 1 ? CommandBase.getListOfStringsMatchingLastWord(args, "version", "forum", "regenerate") : null;
 	}

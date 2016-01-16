@@ -9,12 +9,19 @@
 
 package skyland.network;
 
+import java.util.Iterator;
+import java.util.Map;
+
 import io.netty.buffer.ByteBuf;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.ISound;
+import net.minecraft.client.audio.PositionedSound;
 import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.client.audio.SoundHandler;
+import net.minecraft.client.audio.SoundManager;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.client.FMLClientHandler;
+import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
@@ -47,15 +54,36 @@ public class PlaySoundMessage implements IMessage, IMessageHandler<PlaySoundMess
 
 	@SideOnly(Side.CLIENT)
 	@Override
-	public IMessage onMessage(PlaySoundMessage message, MessageContext ctx)
+	public IMessage onMessage(final PlaySoundMessage message, MessageContext ctx)
 	{
-		SoundHandler handler = FMLClientHandler.instance().getClient().getSoundHandler();
-		ISound sound = PositionedSoundRecord.create(new ResourceLocation(message.sound));
+		final Minecraft mc = FMLClientHandler.instance().getClient();
 
-		if (!handler.isSoundPlaying(sound))
-		{
-			handler.playSound(sound);
-		}
+		mc.addScheduledTask(
+			new Runnable()
+			{
+				@Override
+				public void run()
+				{
+					SoundHandler handler = mc.getSoundHandler();
+					SoundManager manager = ObfuscationReflectionHelper.getPrivateValue(SoundHandler.class, handler, "sndManager", "field_147694_f");
+					Map<String, ISound> playingSounds = ObfuscationReflectionHelper.getPrivateValue(SoundManager.class, manager, "playingSounds", "field_148629_h");
+					Iterator<String> iterator = playingSounds.keySet().iterator();
+
+					while (iterator.hasNext())
+					{
+						PositionedSound sound = (PositionedSound)playingSounds.get(iterator.next());
+
+						if ("music.game".equals(sound.getSoundLocation().getResourcePath()))
+						{
+							handler.stopSound(sound);
+							break;
+						}
+					}
+
+					handler.playSound(PositionedSoundRecord.create(new ResourceLocation(message.sound)));
+				}
+			}
+		);
 
 		return null;
 	}

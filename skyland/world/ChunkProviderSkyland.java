@@ -160,7 +160,7 @@ public class ChunkProviderSkyland implements IChunkProvider
 		double d1 = 684.412D;
 		noise4 = noiseGen4.generateNoiseOctaves(noise4, posX, posZ, sizeX, sizeZ, 1.121D, 1.121D, 0.5D);
 		noise5 = noiseGen5.generateNoiseOctaves(noise5, posX, posZ, sizeX, sizeZ, 200.0D, 200.0D, 0.5D);
-		d0 *= 4.0D;
+		d0 *= 5.0D;
 		d1 *= 2.0D;
 		noise1 = noiseGen3.generateNoiseOctaves(noise1, posX, posY, posZ, sizeX, sizeY, sizeZ, d0 / 80.0D, d1 / 160.0D, d0 / 80.0D);
 		noise2 = noiseGen1.generateNoiseOctaves(noise2, posX, posY, posZ, sizeX, sizeY, sizeZ, d0, d1, d0);
@@ -361,7 +361,7 @@ public class ChunkProviderSkyland implements IChunkProvider
 
 		if (Config.generateCaves)
 		{
-			caveGenerator.func_175792_a(this, worldObj, chunkX, chunkZ, data);
+			caveGenerator.generate(this, worldObj, chunkX, chunkZ, data);
 		}
 
 		Chunk chunk = new Chunk(worldObj, data, chunkX, chunkZ);
@@ -404,7 +404,7 @@ public class ChunkProviderSkyland implements IChunkProvider
 			{
 				genX = rand.nextInt(16) + 8;
 				genZ = rand.nextInt(16) + 8;
-				genY = rand.nextInt(Math.max(worldObj.getHorizon(pos.add(genX, 0, genZ)).getY() - 10, 1)) + 10;
+				genY = rand.nextInt(Math.max(worldObj.getHeight(pos.add(genX, 0, genZ)).getY() - 10, 1)) + 10;
 
 				lakeWaterGen.generate(worldObj, rand, pos.add(genX, genY, genZ));
 			}
@@ -413,7 +413,7 @@ public class ChunkProviderSkyland implements IChunkProvider
 			{
 				genX = rand.nextInt(16) + 8;
 				genZ = rand.nextInt(16) + 8;
-				i = worldObj.getHorizon(pos.add(genX, 0, genZ)).getY();
+				i = worldObj.getHeight(pos.add(genX, 0, genZ)).getY();
 				genY = rand.nextInt(Math.max(i - 10, 1)) + 10;
 
 				if (genY < i || rand.nextInt(10) == 0)
@@ -425,7 +425,7 @@ public class ChunkProviderSkyland implements IChunkProvider
 
 		boolean doGen = TerrainGen.generateOre(worldObj, rand, worldGenIron, pos, EventType.IRON);
 
-		for (i = 0; doGen && i < 14; ++i)
+		for (i = 0; doGen && i < 15; ++i)
 		{
 			genX = rand.nextInt(16);
 			genY = rand.nextInt(50) + 20;
@@ -476,7 +476,7 @@ public class ChunkProviderSkyland implements IChunkProvider
 			{
 				BlockPos pos1 = worldObj.getPrecipitationHeight(pos.add(genX, 0, genZ)).down();
 
-				if (worldObj.func_175675_v(pos1))
+				if (worldObj.canBlockFreezeWater(pos1))
 				{
 					worldObj.setBlockState(pos1, Blocks.ice.getDefaultState(), 2);
 				}
@@ -522,7 +522,7 @@ public class ChunkProviderSkyland implements IChunkProvider
 	}
 
 	@Override
-	public List<?> func_177458_a(EnumCreatureType type, BlockPos pos)
+	public List getPossibleCreatures(EnumCreatureType type, BlockPos pos)
 	{
 		BiomeGenBase biome = worldObj.getBiomeGenForCoords(pos);
 

@@ -113,6 +113,52 @@ public class SkyEventHooks
 	}
 
 	@SideOnly(Side.CLIENT)
+	@SubscribeEvent(receiveCanceled = true)
+	public void onMouse(MouseEvent event)
+	{
+		if (event.button == 0 && event.buttonstate)
+		{
+			Minecraft mc = Minecraft.getMinecraft();
+			EntityPlayer thePlayer = mc.thePlayer;
+
+			if (thePlayer != null)
+			{
+				ItemStack itemstack = thePlayer.getCurrentEquippedItem();
+				IExtendedReach extended;
+
+				if (itemstack != null)
+				{
+					if (itemstack.getItem() instanceof IExtendedReach)
+					{
+						extended = (IExtendedReach)itemstack.getItem();
+					}
+					else
+					{
+						extended = null;
+					}
+
+					if (extended != null)
+					{
+						float reach = extended.getReach();
+						MovingObjectPosition mov = SkyUtils.getMouseOverExtended(reach);
+
+						if (mov != null)
+						{
+							if (mov.entityHit != null && mov.entityHit.hurtResistantTime == 0)
+							{
+								if (mov.entityHit != thePlayer )
+								{
+									Skyland.network.sendToServer(new ExtendedReachAttackMessage(mov.entityHit.getEntityId()));
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	@SideOnly(Side.CLIENT)
 	@SubscribeEvent
 	public void onClientConnected(ClientConnectedToServerEvent event)
 	{
@@ -281,15 +327,16 @@ public class SkyEventHooks
 	@SubscribeEvent
 	public void onLivingUpdate(LivingUpdateEvent event)
 	{
+		EntityLivingBase entity = event.entityLiving;
+
 		if (SkylandAPI.getWorldType() != null)
 		{
 			return;
 		}
 
-		if (event.entityLiving instanceof EntityPlayerMP)
+		if (entity instanceof EntityPlayerMP)
 		{
-			EntityPlayerMP player = (EntityPlayerMP)event.entityLiving;
-			ItemStack current = player.getCurrentEquippedItem();
+			EntityPlayerMP player = (EntityPlayerMP)entity;
 
 			if (player.dimension == 0)
 			{
@@ -304,6 +351,7 @@ public class SkyEventHooks
 			{
 				if (!player.onGround && player.getEntityBoundingBox().minY <= -20.0D)
 				{
+					ItemStack current = player.getCurrentEquippedItem();
 					boolean result = false;
 
 					if (current != null && current.getItem() instanceof ItemSkyFeather)
@@ -403,52 +451,6 @@ public class SkyEventHooks
 			if (world.provider.getDimensionId() == SkylandAPI.getDimension())
 			{
 				WorldProviderSkyland.saveDimData();
-			}
-		}
-	}
-
-	@SideOnly(Side.CLIENT)
-	@SubscribeEvent(receiveCanceled = true)
-	public void onEvent(MouseEvent event)
-	{
-		if (event.button == 0 && event.buttonstate)
-		{
-			Minecraft mc = Minecraft.getMinecraft();
-			EntityPlayer thePlayer = mc.thePlayer;
-
-			if (thePlayer != null)
-			{
-				ItemStack itemstack = thePlayer.getCurrentEquippedItem();
-				IExtendedReach extended;
-
-				if (itemstack != null)
-				{
-					if (itemstack.getItem() instanceof IExtendedReach)
-					{
-						extended = (IExtendedReach) itemstack.getItem();
-					}
-					else
-					{
-						extended = null;
-					}
-
-					if (extended != null)
-					{
-						float reach = extended.getReach();
-						MovingObjectPosition mov = SkyUtils.getMouseOverExtended(reach);
-
-						if (mov != null)
-						{
-							if (mov.entityHit != null && mov.entityHit.hurtResistantTime == 0)
-							{
-								if (mov.entityHit != thePlayer )
-								{
-									Skyland.network.sendToServer(new ExtendedReachAttackMessage(mov.entityHit.getEntityId()));
-								}
-							}
-						}
-					}
-				}
 			}
 		}
 	}
