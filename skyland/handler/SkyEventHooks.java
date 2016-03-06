@@ -33,6 +33,8 @@ import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.client.event.MouseEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
+import net.minecraftforge.event.entity.EntityEvent.EntityConstructing;
+import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
 import net.minecraftforge.event.entity.living.LivingFallEvent;
@@ -55,6 +57,7 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import skyland.api.SkylandAPI;
 import skyland.core.Config;
+import skyland.core.SkyEntityProperties;
 import skyland.core.Skyland;
 import skyland.item.ItemSkyFeather;
 import skyland.item.SkyItems;
@@ -325,6 +328,24 @@ public class SkyEventHooks
 	}
 
 	@SubscribeEvent
+	public void onEntityConstruct(EntityConstructing event)
+	{
+		if (SkylandAPI.getWorldType() == null)
+		{
+			SkyEntityProperties.get(event.entity);
+		}
+	}
+
+	@SubscribeEvent
+	public void onEntityJoinWorld(EntityJoinWorldEvent event)
+	{
+		if (SkylandAPI.getWorldType() == null)
+		{
+			SkyEntityProperties.get(event.entity).loadNBTData(null);
+		}
+	}
+
+	@SubscribeEvent
 	public void onLivingUpdate(LivingUpdateEvent event)
 	{
 		EntityLivingBase entity = event.entityLiving;
@@ -400,6 +421,11 @@ public class SkyEventHooks
 	public void onLivingDeath(LivingDeathEvent event)
 	{
 		EntityLivingBase entity = event.entityLiving;
+
+		if (SkylandAPI.getWorldType() == null)
+		{
+			SkyEntityProperties.get(entity).saveNBTData(null);
+		}
 
 		if (entity instanceof EntityChicken)
 		{

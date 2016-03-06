@@ -36,6 +36,7 @@ import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import skyland.api.SkylandAPI;
+import skyland.core.SkyEntityProperties;
 import skyland.core.Skyland;
 import skyland.world.TeleporterSkyland;
 
@@ -113,7 +114,14 @@ public class BlockSkyPortal extends BlockPortal
 			{
 				MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
 				int dimOld = entityIn.dimension;
-				int dimNew = SkylandAPI.isEntityInSkyland(entityIn) ? entityIn.getEntityData().getInteger("Skyland:LastDim") : SkylandAPI.getDimension();
+				int dimNew = SkylandAPI.isEntityInSkyland(entityIn) ? SkyEntityProperties.get(entityIn).getLastDim() : SkylandAPI.getDimension();
+
+				if (dimOld == dimNew)
+				{
+					dimOld = SkylandAPI.getDimension();
+					dimNew = 0;
+				}
+
 				WorldServer worldOld = server.worldServerForDimension(dimOld);
 				WorldServer worldNew = server.worldServerForDimension(dimNew);
 
@@ -123,6 +131,7 @@ public class BlockSkyPortal extends BlockPortal
 				}
 
 				Teleporter teleporter = new TeleporterSkyland(worldNew);
+				BlockPos lastPos = entityIn.getPosition();
 
 				entityIn.worldObj.removeEntity(entityIn);
 				entityIn.isDead = false;
@@ -140,7 +149,8 @@ public class BlockSkyPortal extends BlockPortal
 
 						worldNew.playSoundAtEntity(player, "skyland:sky_portal", 0.75F, 1.0F);
 
-						player.getEntityData().setInteger("Skyland:LastDim", dimOld);
+						SkyEntityProperties.get(player).setLastDim(dimOld);
+						SkyEntityProperties.get(player).setLastPos(dimOld, lastPos);
 					}
 				}
 				else
@@ -162,7 +172,9 @@ public class BlockSkyPortal extends BlockPortal
 						worldNew.playSoundAtEntity(target, "skyland:sky_portal", 0.5F, 1.15F);
 
 						target.forceSpawn = false;
-						target.getEntityData().setInteger("Skyland:LastDim", dimOld);
+
+						SkyEntityProperties.get(target).setLastDim(dimOld);
+						SkyEntityProperties.get(target).setLastPos(dimOld, lastPos);
 					}
 
 					entityIn.setDead();

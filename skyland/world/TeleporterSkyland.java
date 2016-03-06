@@ -31,6 +31,7 @@ import net.minecraft.world.Teleporter;
 import net.minecraft.world.WorldServer;
 import skyland.api.SkylandAPI;
 import skyland.block.SkyBlocks;
+import skyland.core.SkyEntityProperties;
 
 public class TeleporterSkyland extends Teleporter
 {
@@ -51,6 +52,23 @@ public class TeleporterSkyland extends Teleporter
 	@Override
 	public void placeInPortal(Entity entity, float rotationYaw)
 	{
+		BlockPos pos = SkyEntityProperties.get(entity).getLastPos(entity.dimension);
+
+		if (pos == null)
+		{
+			if (SkylandAPI.isEntityInSkyland(entity))
+			{
+				entity.setLocationAndAngles(0.0D, 64.0D, 0.0D, entity.rotationYaw, entity.rotationPitch);
+			}
+		}
+		else
+		{
+			if (worldObj.getBlockState(pos).getBlock() == SkyBlocks.sky_portal)
+			{
+				entity.setLocationAndAngles(pos.getX(), pos.getY() + 0.5D, pos.getZ(), entity.rotationYaw, entity.rotationPitch);
+			}
+		}
+
 		if (!placeInExistingPortal(entity, rotationYaw))
 		{
 			if (SkylandAPI.isEntityInSkyland(entity))
