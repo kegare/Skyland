@@ -1,21 +1,20 @@
-/*
- * Skyland
- *
- * Copyright (c) 2014 kegare
- * https://github.com/kegare
- *
- * This mod is distributed under the terms of the Minecraft Mod Public License Japanese Translation, or MMPL_J.
- */
-
 package skyland.item;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.BlockPos;
+import net.minecraft.util.ActionResult;
+import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.EnumHand;
+import net.minecraft.util.SoundCategory;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.client.FMLClientHandler;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 import skyland.block.SkyBlocks;
+import skyland.client.audio.MovingSoundSkyJump;
 import skyland.core.Skyland;
 
 public class ItemSkyFeather extends Item
@@ -27,29 +26,29 @@ public class ItemSkyFeather extends Item
 	}
 
 	@Override
-	public boolean onItemUse(ItemStack stack, EntityPlayer playerIn, World worldIn, BlockPos pos, EnumFacing side, float hitX, float hitY, float hitZ)
+	public EnumActionResult onItemUse(ItemStack stack, EntityPlayer player, World world, BlockPos pos, EnumHand hand, EnumFacing side, float hitX, float hitY, float hitZ)
 	{
 		BlockPos pos1 = pos.offset(side);
 
-		if (SkyBlocks.sky_portal.func_176548_d(worldIn, pos1))
+		if (SkyBlocks.sky_portal.func_176548_d(world, pos1))
 		{
-			worldIn.playSoundEffect(pos1.getX() + 0.5D, pos1.getY() + 0.5D, pos1.getZ() + 0.5D, SkyBlocks.sky_portal.stepSound.getPlaceSound(), 1.0F, 2.0F);
+			world.playSound(null, pos1.getX() + 0.5D, pos1.getY() + 0.5D, pos1.getZ() + 0.5D, SkyBlocks.sky_portal.getStepSound().getPlaceSound(), SoundCategory.BLOCKS, 1.0F, 2.0F);
 
-			if (!playerIn.capabilities.isCreativeMode && --stack.stackSize <= 0)
+			if (!player.capabilities.isCreativeMode && --stack.stackSize <= 0)
 			{
-				playerIn.inventory.setInventorySlotContents(playerIn.inventory.currentItem, null);
+				player.inventory.setInventorySlotContents(player.inventory.currentItem, null);
 			}
 
-			return true;
+			return EnumActionResult.SUCCESS;
 		}
 
-		return super.onItemUse(stack, playerIn, worldIn, pos, side, hitX, hitY, hitZ);
+		return super.onItemUse(stack, player, world, pos, hand, side, hitX, hitY, hitZ);
 	}
 
 	@Override
-	public ItemStack onItemRightClick(ItemStack itemstack, World world, EntityPlayer player)
+	public ActionResult<ItemStack> onItemRightClick(ItemStack itemstack, World world, EntityPlayer player, EnumHand hand)
 	{
-		if (world.provider.getDimensionId() == 0)
+		if (world.provider.getDimension() == 0)
 		{
 			BlockPos pos = player.getPosition();
 
@@ -60,7 +59,7 @@ public class ItemSkyFeather extends Item
 
 			if (!world.isAirBlock(pos))
 			{
-				return itemstack;
+				return ActionResult.newResult(EnumActionResult.FAIL, itemstack);
 			}
 
 			if (!world.isRemote)
@@ -74,12 +73,18 @@ public class ItemSkyFeather extends Item
 			}
 			else
 			{
-				Skyland.proxy.playSoundSkyJump();
+				playSkyJumpSound();
 			}
 
 			player.addVelocity(0.0D, 15.0D, 0.0D);
 		}
 
-		return itemstack;
+		return ActionResult.newResult(EnumActionResult.SUCCESS, itemstack);
+	}
+
+	@SideOnly(Side.CLIENT)
+	public void playSkyJumpSound()
+	{
+		FMLClientHandler.instance().getClient().getSoundHandler().playSound(new MovingSoundSkyJump());
 	}
 }

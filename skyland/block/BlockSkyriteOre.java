@@ -1,21 +1,13 @@
-/*
- * Skyland
- *
- * Copyright (c) 2014 kegare
- * https://github.com/kegare
- *
- * This mod is distributed under the terms of the Minecraft Mod Public License Japanese Translation, or MMPL_J.
- */
-
 package skyland.block;
 
 import java.util.Random;
 
 import net.minecraft.block.BlockOre;
+import net.minecraft.block.SoundType;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.item.Item;
-import net.minecraft.util.BlockPos;
-import net.minecraft.util.MathHelper;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import skyland.core.Skyland;
@@ -29,7 +21,7 @@ public class BlockSkyriteOre extends BlockOre
 		this.setUnlocalizedName("oreSkyrite");
 		this.setHardness(3.0F);
 		this.setResistance(5.0F);
-		this.setStepSound(soundTypePiston);
+		this.setStepSound(SoundType.STONE);
 		this.setCreativeTab(Skyland.tabSkyland);
 	}
 
@@ -40,7 +32,7 @@ public class BlockSkyriteOre extends BlockOre
 	}
 
 	@Override
-	public int getExpDrop(IBlockAccess world, BlockPos pos, int fortune)
+	public int getExpDrop(IBlockState state, IBlockAccess world, BlockPos pos, int fortune)
 	{
 		Random rand = world instanceof World ? ((World)world).rand : new Random();
 

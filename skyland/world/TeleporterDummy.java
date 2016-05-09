@@ -1,17 +1,10 @@
-/*
- * Skyland
- *
- * Copyright (c) 2014 kegare
- * https://github.com/kegare
- *
- * This mod is distributed under the terms of the Minecraft Mod Public License Japanese Translation, or MMPL_J.
- */
-
 package skyland.world;
 
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.world.Teleporter;
 import net.minecraft.world.WorldServer;
+import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 
 public class TeleporterDummy extends Teleporter
 {
@@ -21,7 +14,18 @@ public class TeleporterDummy extends Teleporter
 	}
 
 	@Override
-	public void placeInPortal(Entity entity, float rotationYaw) {}
+	public void placeInPortal(Entity entity, float rotationYaw)
+	{
+		if (entity instanceof EntityPlayerMP)
+		{
+			EntityPlayerMP player = (EntityPlayerMP)entity;
+
+			if (!player.capabilities.isCreativeMode)
+			{
+				ObfuscationReflectionHelper.setPrivateValue(EntityPlayerMP.class, player, true, "invulnerableDimensionChange", "field_184851_cj");
+			}
+		}
+	}
 
 	@Override
 	public boolean placeInExistingPortal(Entity entity, float rotationYaw)

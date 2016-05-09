@@ -1,12 +1,3 @@
-/*
- * Skyland
- *
- * Copyright (c) 2014 kegare
- * https://github.com/kegare
- *
- * This mod is distributed under the terms of the Minecraft Mod Public License Japanese Translation, or MMPL_J.
- */
-
 package skyland.block;
 
 import java.util.Random;
@@ -15,6 +6,7 @@ import com.google.common.cache.LoadingCache;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockPortal;
+import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.BlockWorldState;
 import net.minecraft.block.state.IBlockState;
@@ -22,22 +14,30 @@ import net.minecraft.block.state.pattern.BlockPattern;
 import net.minecraft.block.state.pattern.BlockPattern.PatternHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
-import net.minecraft.item.Item;
-import net.minecraft.potion.Potion;
+import net.minecraft.init.MobEffects;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.BlockPos;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.EnumHand;
+import net.minecraft.util.SoundCategory;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.Teleporter;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
+import net.minecraftforge.fml.client.FMLClientHandler;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
-import skyland.api.SkylandAPI;
-import skyland.core.SkyEntityProperties;
-import skyland.core.Skyland;
+import skyland.client.gui.GuiRegeneration;
+import skyland.core.Config;
+import skyland.core.SkySounds;
+import skyland.stats.IPortalCache;
+import skyland.stats.PortalCache;
+import skyland.util.SkyUtils;
 import skyland.world.TeleporterSkyland;
 
 public class BlockSkyPortal extends BlockPortal
@@ -46,9 +46,8 @@ public class BlockSkyPortal extends BlockPortal
 	{
 		super();
 		this.setUnlocalizedName("skyPortal");
-		this.setStepSound(soundTypeGlass);
+		this.setStepSound(SoundType.GLASS);
 		this.setTickRandomly(false);
-		this.setCreativeTab(Skyland.tabSkyland);
 	}
 
 	@Override
@@ -105,20 +104,33 @@ public class BlockSkyPortal extends BlockPortal
 		}
 	}
 
+	@SideOnly(Side.CLIENT)
 	@Override
-	public void onEntityCollidedWithBlock(World worldIn, BlockPos pos, IBlockState state, Entity entityIn)
+	public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand, ItemStack heldItem, EnumFacing side, float hitX, float hitY, float hitZ)
 	{
-		if (!worldIn.isRemote && entityIn.isEntityAlive())
+		if (world.isRemote)
 		{
-			if (entityIn.timeUntilPortal <= 0)
+			FMLClientHandler.instance().showGuiScreen(new GuiRegeneration(true));
+		}
+
+		return true;
+	}
+
+	@Override
+	public void onEntityCollidedWithBlock(World world, BlockPos pos, IBlockState state, Entity entity)
+	{
+		if (!world.isRemote && entity.isEntityAlive())
+		{
+			if (entity.timeUntilPortal <= 0)
 			{
+				IPortalCache cache = PortalCache.get(entity);
 				MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
-				int dimOld = entityIn.dimension;
-				int dimNew = SkylandAPI.isEntityInSkyland(entityIn) ? SkyEntityProperties.get(entityIn).getLastDim() : SkylandAPI.getDimension();
+				int dimOld = entity.dimension;
+				int dimNew = SkyUtils.isEntityInSkyland(entity) ? cache.getLastDim(0) : Config.dimension;
 
 				if (dimOld == dimNew)
 				{
-					dimOld = SkylandAPI.getDimension();
+					dimOld = Config.dimension;
 					dimNew = 0;
 				}
 
@@ -131,53 +143,74 @@ public class BlockSkyPortal extends BlockPortal
 				}
 
 				Teleporter teleporter = new TeleporterSkyland(worldNew);
-				BlockPos lastPos = entityIn.getPosition();
 
-				entityIn.worldObj.removeEntity(entityIn);
-				entityIn.isDead = false;
-				entityIn.timeUntilPortal = entityIn.getPortalCooldown();
+				entity.timeUntilPortal = entity.getPortalCooldown();
 
-				if (entityIn instanceof EntityPlayerMP)
+				if (entity instanceof EntityPlayerMP)
 				{
-					EntityPlayerMP player = (EntityPlayerMP)entityIn;
+					EntityPlayerMP player = (EntityPlayerMP)entity;
 
-					if (!player.isSneaking() && !player.isPotionActive(Potion.blindness))
+					if (!player.isSneaking() && !player.isPotionActive(MobEffects.blindness))
 					{
-						worldOld.playSoundToNearExcept(player, "skyland:sky_portal", 0.5F, 1.0F);
+						double x = player.posX;
+						double y = player.posY + player.getEyeHeight();
+						double z = player.posZ;
 
-						server.getConfigurationManager().transferPlayerToDimension(player, dimNew, teleporter);
+						worldOld.playSound(player, x, y, z, SkySounds.sky_portal, SoundCategory.BLOCKS, 0.5F, 1.0F);
 
-						worldNew.playSoundAtEntity(player, "skyland:sky_portal", 0.75F, 1.0F);
+						server.getPlayerList().transferPlayerToDimension(player, dimNew, teleporter);
 
-						SkyEntityProperties.get(player).setLastDim(dimOld);
-						SkyEntityProperties.get(player).setLastPos(dimOld, lastPos);
+						x = player.posX;
+						y = player.posY + player.getEyeHeight();
+						z = player.posZ;
+
+						worldNew.playSound(null, x, y, z, SkySounds.sky_portal, SoundCategory.BLOCKS, 0.75F, 1.0F);
+
+						cache.setLastDim(0, dimOld);
+						cache.setLastPos(0, dimOld, pos);
 					}
 				}
 				else
 				{
-					entityIn.dimension = dimNew;
+					double x = entity.posX;
+					double y = entity.posY + entity.getEyeHeight();
+					double z = entity.posZ;
 
-					server.getConfigurationManager().transferEntityToWorld(entityIn, dimOld, worldOld, worldNew, teleporter);
+					worldOld.playSound(null, x, y, z, SkySounds.sky_portal, SoundCategory.BLOCKS, 0.25F, 1.15F);
 
-					Entity target = EntityList.createEntityByName(EntityList.getEntityString(entityIn), worldNew);
+					server.getPlayerList().transferEntityToWorld(entity, dimOld, worldOld, worldNew, teleporter);
+
+					Entity target = EntityList.createEntityByName(EntityList.getEntityString(entity), worldNew);
 
 					if (target != null)
 					{
-						worldOld.playSoundEffect(pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D, "skyland:sky_portal", 0.25F, 1.15F);
+						NBTTagCompound nbt = new NBTTagCompound();
 
-						target.copyDataFromOld(entityIn);
+						entity.writeToNBT(nbt);
+						nbt.removeTag("Dimension");
+
+						target.readFromNBT(nbt);
+
+						boolean force = target.forceSpawn;
+
 						target.forceSpawn = true;
 
 						worldNew.spawnEntityInWorld(target);
-						worldNew.playSoundAtEntity(target, "skyland:sky_portal", 0.5F, 1.15F);
+						worldNew.updateEntityWithOptionalForce(target, false);
 
-						target.forceSpawn = false;
+						x = target.posX;
+						y = target.posY + target.getEyeHeight();
+						z = target.posZ;
 
-						SkyEntityProperties.get(target).setLastDim(dimOld);
-						SkyEntityProperties.get(target).setLastPos(dimOld, lastPos);
+						worldNew.playSound(null, x, y, z, SkySounds.sky_portal, SoundCategory.BLOCKS, 0.5F, 1.15F);
+
+						target.forceSpawn = force;
+
+						cache.setLastDim(0, dimOld);
+						cache.setLastPos(0, dimOld, pos);
 					}
 
-					entityIn.setDead();
+					entity.setDead();
 
 					worldOld.resetUpdateEntityTick();
 					worldNew.resetUpdateEntityTick();
@@ -185,7 +218,7 @@ public class BlockSkyPortal extends BlockPortal
 			}
 			else
 			{
-				entityIn.timeUntilPortal = entityIn.getPortalCooldown();
+				entity.timeUntilPortal = entity.getPortalCooldown();
 			}
 		}
 	}
@@ -209,13 +242,13 @@ public class BlockSkyPortal extends BlockPortal
 		}
 		else
 		{
-			int[] aint = new int[EnumFacing.AxisDirection.values().length];
+			int[] values = new int[EnumFacing.AxisDirection.values().length];
 			EnumFacing facing = size.field_150866_c.rotateYCCW();
 			BlockPos blockpos = size.field_150861_f.up(size.func_181100_a() - 1);
 
 			for (EnumFacing.AxisDirection direction : EnumFacing.AxisDirection.values())
 			{
-				PatternHelper pattern = new PatternHelper(facing.getAxisDirection() == direction ? blockpos : blockpos.offset(size.field_150866_c, size.func_181101_b() - 1), EnumFacing.func_181076_a(direction, axis), EnumFacing.UP, cache, size.func_181101_b(), size.func_181100_a(), 1);
+				PatternHelper pattern = new PatternHelper(facing.getAxisDirection() == direction ? blockpos : blockpos.offset(size.field_150866_c, size.func_181101_b() - 1), EnumFacing.getFacingFromAxis(direction, axis), EnumFacing.UP, cache, size.func_181101_b(), size.func_181100_a(), 1);
 
 				for (int i = 0; i < size.func_181101_b(); ++i)
 				{
@@ -223,37 +256,36 @@ public class BlockSkyPortal extends BlockPortal
 					{
 						BlockWorldState blockworldstate = pattern.translateOffset(i, j, 1);
 
-						if (blockworldstate.getBlockState() != null && blockworldstate.getBlockState().getBlock().getMaterial() != Material.air)
+						if (blockworldstate.getBlockState() != null && blockworldstate.getBlockState().getMaterial() != Material.air)
 						{
-							++aint[direction.ordinal()];
+							++values[direction.ordinal()];
 						}
 					}
 				}
 			}
 
-			EnumFacing.AxisDirection var1 = EnumFacing.AxisDirection.POSITIVE;
+			EnumFacing.AxisDirection axis1 = EnumFacing.AxisDirection.POSITIVE;
 
 			for (EnumFacing.AxisDirection direction : EnumFacing.AxisDirection.values())
 			{
-				if (aint[direction.ordinal()] < aint[var1.ordinal()])
+				if (values[direction.ordinal()] < values[axis1.ordinal()])
 				{
-					var1 = direction;
+					axis1 = direction;
 				}
 			}
 
-			return new PatternHelper(facing.getAxisDirection() == var1 ? blockpos : blockpos.offset(size.field_150866_c, size.func_181101_b() - 1), EnumFacing.func_181076_a(var1, axis), EnumFacing.UP, cache, size.func_181101_b(), size.func_181100_a(), 1);
+			return new PatternHelper(facing.getAxisDirection() == axis1 ? blockpos : blockpos.offset(size.field_150866_c, size.func_181101_b() - 1), EnumFacing.getFacingFromAxis(axis1, axis), EnumFacing.UP, cache, size.func_181101_b(), size.func_181100_a(), 1);
 		}
 	}
 
 	@SideOnly(Side.CLIENT)
 	@Override
-	public void randomDisplayTick(World worldIn, BlockPos pos, IBlockState state, Random rand) {}
+	public void randomDisplayTick(IBlockState state, World worldIn, BlockPos pos, Random rand) {}
 
-	@SideOnly(Side.CLIENT)
 	@Override
-	public Item getItem(World worldIn, BlockPos pos)
+	public ItemStack getItem(World worldIn, BlockPos pos, IBlockState state)
 	{
-		return Item.getItemFromBlock(this);
+		return new ItemStack(this);
 	}
 
 	public class Size
@@ -267,9 +299,9 @@ public class BlockSkyPortal extends BlockPortal
 		private int field_150862_g;
 		private int field_150868_h;
 
-		public Size(World worldIn, BlockPos pos, EnumFacing.Axis axis)
+		public Size(World world, BlockPos pos, EnumFacing.Axis axis)
 		{
-			this.world = worldIn;
+			this.world = world;
 			this.axis = axis;
 
 			if (axis == EnumFacing.Axis.X)
@@ -283,7 +315,7 @@ public class BlockSkyPortal extends BlockPortal
 				this.field_150866_c = EnumFacing.SOUTH;
 			}
 
-			for (BlockPos blockpos1 = pos; pos.getY() > blockpos1.getY() - 21 && pos.getY() > 0 && func_150857_a(worldIn.getBlockState(pos.down()).getBlock()); pos = pos.down())
+			for (BlockPos blockpos = pos; pos.getY() > blockpos.getY() - 21 && pos.getY() > 0 && func_150857_a(world.getBlockState(pos.down())); pos = pos.down())
 			{
 				;
 			}
@@ -316,7 +348,7 @@ public class BlockSkyPortal extends BlockPortal
 			{
 				BlockPos pos1 = pos.offset(face, i);
 
-				if (!func_150857_a(world.getBlockState(pos1).getBlock()) || world.getBlockState(pos1.down()).getBlock() != Blocks.quartz_block)
+				if (!func_150857_a(world.getBlockState(pos1)) || world.getBlockState(pos1.down()).getBlock() != Blocks.quartz_block)
 				{
 					break;
 				}
@@ -346,9 +378,10 @@ public class BlockSkyPortal extends BlockPortal
 				for (i = 0; i < field_150868_h; ++i)
 				{
 					BlockPos pos = field_150861_f.offset(field_150866_c, i).up(field_150862_g);
-					Block block = world.getBlockState(pos).getBlock();
+					IBlockState state = world.getBlockState(pos);
+					Block block = state.getBlock();
 
-					if (!func_150857_a(block))
+					if (!func_150857_a(state))
 					{
 						break outside;
 					}
@@ -402,9 +435,9 @@ public class BlockSkyPortal extends BlockPortal
 			}
 		}
 
-		protected boolean func_150857_a(Block block)
+		protected boolean func_150857_a(IBlockState state)
 		{
-			return block.getMaterial() == Material.air || block == BlockSkyPortal.this;
+			return state.getMaterial() == Material.air || state.getBlock() == BlockSkyPortal.this;
 		}
 
 		public boolean func_150860_b()

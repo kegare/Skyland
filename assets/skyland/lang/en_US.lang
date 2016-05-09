@@ -3,18 +3,20 @@
 generator.skyland=Skyland
 
 skyland.version.message=A new %s version is available
+skyland.version.message.beta=You are using a Beta version of %s
+skyland.version.message.alpha=You are using an Alpha version of %s
 
 skyland.config.title=Skyland Configuration
 skyland.config.general.versionNotify=Version Notify
 skyland.config.general.versionNotify.tooltip=Whether or not to notify when a new Skyland version is available.
-skyland.config.skyland.dimensionSkyland=Skyland Dimension ID
-skyland.config.skyland.dimensionSkyland.tooltip=Specify the dimension ID of Skyland. If you specify 0, adds the world type of Skyland, but the Skyland dimension is not added.
-skyland.config.skyland.generateCaves=Generate Caves
-skyland.config.skyland.generateCaves.tooltip=Whether or not to generate caves to Skyland.
-skyland.config.skyland.generateLakes=Generate Lakes
-skyland.config.skyland.generateLakes.tooltip=Whether or not to generate lakes to Skyland.
-skyland.config.options.skyborn=Skyborn Option
-skyland.config.options.skyborn.tooltip=Transfer to the Skyland dimension when join to world for the first time.
+skyland.config.general.skyborn=Skyborn Option
+skyland.config.general.skyborn.tooltip=Transfer to the Skyland dimension when join to world for the first time.
+skyland.config.dimension.dimension=Skyland Dimension ID
+skyland.config.dimension.dimension.tooltip=Specify the dimension ID of Skyland. If you specify 0, adds the world type of Skyland, but the Skyland dimension is not added.
+skyland.config.dimension.generateCaves=Generate Caves
+skyland.config.dimension.generateCaves.tooltip=Whether or not to generate caves to Skyland.
+skyland.config.dimension.generateLakes=Generate Lakes
+skyland.config.dimension.generateLakes.tooltip=Whether or not to generate lakes to Skyland.
 
 skyland.regenerate.regenerating=Regenerating the Skyland dimension...
 skyland.regenerate.backingup=Backing up the Skyland dimension folder...
@@ -38,7 +40,6 @@ tile.oreSkyrite.name=Skyrite Ore
 tile.blockSkyrite.name=Block of Skyrite
 
 item.skyFeather.name=Sky Feather
-item.record.skyland.desc=Skyland
 item.skyrite.name=Skyrite
 item.swordSkyrite.name=Skyrite Sword
 item.shovelSkyrite.name=Skyrite Shovel

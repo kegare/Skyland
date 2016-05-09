@@ -1,12 +1,3 @@
-/*
- * Skyland
- *
- * Copyright (c) 2014 kegare
- * https://github.com/kegare
- *
- * This mod is distributed under the terms of the Minecraft Mod Public License Japanese Translation, or MMPL_J.
- */
-
 package skyland.world;
 
 import java.util.Iterator;
@@ -20,25 +11,27 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
-import net.minecraft.potion.Potion;
+import net.minecraft.init.MobEffects;
 import net.minecraft.potion.PotionEffect;
-import net.minecraft.util.BlockPos;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.LongHashMap;
-import net.minecraft.util.MathHelper;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.ChunkCoordIntPair;
 import net.minecraft.world.Teleporter;
 import net.minecraft.world.WorldServer;
-import skyland.api.SkylandAPI;
+import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import skyland.block.SkyBlocks;
-import skyland.core.SkyEntityProperties;
+import skyland.stats.IPortalCache;
+import skyland.stats.PortalCache;
+import skyland.util.SkyUtils;
 
 public class TeleporterSkyland extends Teleporter
 {
 	private final WorldServer worldObj;
 	private final Random random;
 
-	private final LongHashMap coordCache = new LongHashMap();
+	private final LongHashMap<PortalPosition> coordCache = new LongHashMap<>();
 	private final Set<Long> coordKeys = Sets.newHashSet();
 
 	public TeleporterSkyland(WorldServer worldServer)
@@ -52,26 +45,42 @@ public class TeleporterSkyland extends Teleporter
 	@Override
 	public void placeInPortal(Entity entity, float rotationYaw)
 	{
-		BlockPos pos = SkyEntityProperties.get(entity).getLastPos(entity.dimension);
-
-		if (pos == null)
+		if (entity instanceof EntityPlayerMP)
 		{
-			if (SkylandAPI.isEntityInSkyland(entity))
+			EntityPlayerMP player = (EntityPlayerMP)entity;
+
+			if (!player.capabilities.isCreativeMode)
 			{
-				entity.setLocationAndAngles(0.0D, 64.0D, 0.0D, entity.rotationYaw, entity.rotationPitch);
+				ObfuscationReflectionHelper.setPrivateValue(EntityPlayerMP.class, player, true, "invulnerableDimensionChange", "field_184851_cj");
 			}
 		}
-		else
+
+		IPortalCache cache = PortalCache.get(entity);
+
+		if (cache.hasLastPos(0, entity.dimension))
 		{
+			BlockPos pos = cache.getLastPos(0, entity.dimension);
+
 			if (worldObj.getBlockState(pos).getBlock() == SkyBlocks.sky_portal)
 			{
-				entity.setLocationAndAngles(pos.getX(), pos.getY() + 0.5D, pos.getZ(), entity.rotationYaw, entity.rotationPitch);
+				if (entity instanceof EntityPlayerMP)
+				{
+					((EntityPlayerMP)entity).playerNetServerHandler.setPlayerLocation(pos.getX(), pos.getY() + 0.5D, pos.getZ(), entity.rotationYaw, entity.rotationPitch);
+				}
+				else
+				{
+					entity.setLocationAndAngles(pos.getX(), pos.getY() + 0.5D, pos.getZ(), entity.rotationYaw, entity.rotationPitch);
+				}
 			}
+		}
+		else if (SkyUtils.isEntityInSkyland(entity))
+		{
+			entity.setLocationAndAngles(0.0D, 64.0D, 0.0D, entity.rotationYaw, entity.rotationPitch);
 		}
 
 		if (!placeInExistingPortal(entity, rotationYaw))
 		{
-			if (SkylandAPI.isEntityInSkyland(entity))
+			if (SkyUtils.isEntityInSkyland(entity))
 			{
 				if (!placeInExistingPortal(entity, rotationYaw, true))
 				{
@@ -93,7 +102,7 @@ public class TeleporterSkyland extends Teleporter
 			EntityPlayerMP player = (EntityPlayerMP)entity;
 
 			player.addExperienceLevel(0);
-			player.addPotionEffect(new PotionEffect(Potion.blindness.getId(), 25, 0, false, false));
+			player.addPotionEffect(new PotionEffect(MobEffects.blindness, 25, 0, false, false));
 		}
 	}
 
@@ -114,7 +123,7 @@ public class TeleporterSkyland extends Teleporter
 
 		if (coordCache.containsItem(k))
 		{
-			Teleporter.PortalPosition portalposition = (PortalPosition)coordCache.getValueByKey(k);
+			Teleporter.PortalPosition portalposition = coordCache.getValueByKey(k);
 			d0 = 0.0D;
 			object = portalposition;
 			portalposition.lastUpdateTime = worldObj.getTotalWorldTime();
@@ -290,7 +299,7 @@ public class TeleporterSkyland extends Teleporter
 		double posY = entity.posY;
 		double posZ = entity.posZ;
 
-		if (SkylandAPI.isEntityInSkyland(entity))
+		if (SkyUtils.isEntityInSkyland(entity))
 		{
 			posX = 0.0D;
 			posZ = 0.0D;
@@ -358,7 +367,7 @@ public class TeleporterSkyland extends Teleporter
 										i5 = i3 + k4;
 										int j5 = k2 + (j4 - 1) * l3 - i4 * k3;
 
-										if (k4 < 0 && !worldObj.getBlockState(new BlockPos(l4, i5, j5)).getBlock().getMaterial().isSolid() || k4 >= 0 && !worldObj.isAirBlock(new BlockPos(l4, i5, j5)))
+										if (k4 < 0 && !worldObj.getBlockState(new BlockPos(l4, i5, j5)).getMaterial().isSolid() || k4 >= 0 && !worldObj.isAirBlock(new BlockPos(l4, i5, j5)))
 										{
 											continue outside;
 										}
@@ -415,7 +424,7 @@ public class TeleporterSkyland extends Teleporter
 										l4 = i3 + j4;
 										i5 = k2 + (i4 - 1) * l3;
 
-										if (j4 < 0 && !worldObj.getBlockState(new BlockPos(k4, l4, i5)).getBlock().getMaterial().isSolid() || j4 >= 0 && !worldObj.isAirBlock(new BlockPos(k4, l4, i5)))
+										if (j4 < 0 && !worldObj.getBlockState(new BlockPos(k4, l4, i5)).getMaterial().isSolid() || j4 >= 0 && !worldObj.isAirBlock(new BlockPos(k4, l4, i5)))
 										{
 											continue outside;
 										}
@@ -518,7 +527,7 @@ public class TeleporterSkyland extends Teleporter
 			while (iterator.hasNext())
 			{
 				long chunkSeed = iterator.next();
-				PortalPosition portal = (PortalPosition)coordCache.getValueByKey(chunkSeed);
+				PortalPosition portal = coordCache.getValueByKey(chunkSeed);
 
 				if (portal == null || portal.lastUpdateTime < var1)
 				{

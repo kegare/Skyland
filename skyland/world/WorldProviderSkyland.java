@@ -1,12 +1,3 @@
-/*
- * Skyland
- *
- * Copyright (c) 2014 kegare
- * https://github.com/kegare
- *
- * This mod is distributed under the terms of the Minecraft Mod Public License Japanese Translation, or MMPL_J.
- */
-
 package skyland.world;
 
 import java.io.File;
@@ -19,6 +10,7 @@ import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Comparator;
+import java.util.Random;
 import java.util.concurrent.RecursiveAction;
 import java.util.regex.Pattern;
 
@@ -28,20 +20,20 @@ import org.apache.logging.log4j.Level;
 
 import com.google.common.base.Joiner;
 
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.event.ClickEvent;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.BlockPos;
-import net.minecraft.util.ChatComponentText;
-import net.minecraft.util.EnumChatFormatting;
-import net.minecraft.util.IChatComponent;
-import net.minecraft.util.StatCollector;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TextComponentTranslation;
+import net.minecraft.util.text.TextFormatting;
+import net.minecraft.util.text.event.ClickEvent;
+import net.minecraft.world.DimensionType;
 import net.minecraft.world.WorldProviderSurface;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.chunk.IChunkProvider;
+import net.minecraft.world.chunk.IChunkGenerator;
 import net.minecraft.world.storage.WorldInfo;
 import net.minecraftforge.client.IRenderHandler;
 import net.minecraftforge.common.DimensionManager;
@@ -50,12 +42,13 @@ import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
-import skyland.api.SkylandAPI;
 import skyland.client.renderer.EmptyRenderer;
+import skyland.core.Config;
 import skyland.core.Skyland;
-import skyland.network.DimSyncMessage;
-import skyland.network.RegenerateMessage;
-import skyland.network.RegenerateProgressMessage;
+import skyland.network.DisplayGuiMessage;
+import skyland.network.RegenerationGuiMessage;
+import skyland.network.RegenerationGuiMessage.EnumType;
+import skyland.network.SkyNetworkRegistry;
 import skyland.util.SkyLog;
 import skyland.util.SkyUtils;
 
@@ -63,6 +56,8 @@ public class WorldProviderSkyland extends WorldProviderSurface
 {
 	private static NBTTagCompound dimData;
 	private static long dimensionSeed;
+
+	private static final Random random = new SecureRandom();
 
 	public static NBTTagCompound getDimData()
 	{
@@ -148,7 +143,9 @@ public class WorldProviderSkyland extends WorldProviderSurface
 	{
 		if (!data.hasKey("Seed"))
 		{
-			data.setLong("Seed", new SecureRandom().nextLong());
+			random.nextLong();
+
+			data.setLong("Seed", random.nextLong());
 		}
 
 		dimensionSeed = data.getLong("Seed");
@@ -168,11 +165,11 @@ public class WorldProviderSkyland extends WorldProviderSurface
 	{
 		final MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
 
-		for (Object obj : server.getConfigurationManager().playerEntityList.toArray())
+		for (EntityPlayerMP player : server.getPlayerList().getPlayerList())
 		{
-			if (SkylandAPI.isEntityInSkyland((EntityPlayer)obj))
+			if (SkyUtils.isEntityInSkyland(player))
 			{
-				Skyland.network.sendToAll(new RegenerateProgressMessage(3));
+				SkyNetworkRegistry.sendToAll(new RegenerationGuiMessage(EnumType.FAILED));
 
 				return;
 			}
@@ -183,22 +180,22 @@ public class WorldProviderSkyland extends WorldProviderSurface
 			@Override
 			protected void compute()
 			{
-				IChatComponent component;
+				ITextComponent component;
 
 				try
 				{
-					component = new ChatComponentText(StatCollector.translateToLocal("skyland.regenerate.regenerating"));
-					component.getChatStyle().setColor(EnumChatFormatting.GRAY).setItalic(true);
-					server.getConfigurationManager().sendChatMsg(component);
+					component = new TextComponentTranslation("skyland.regenerate.regenerating");
+					component.getChatStyle().setColor(TextFormatting.GRAY).setItalic(true);
+					server.getPlayerList().sendChatMsg(component);
 
 					if (server.isSinglePlayer())
 					{
-						Skyland.network.sendToAll(new RegenerateMessage(backup));
+						SkyNetworkRegistry.sendToAll(new DisplayGuiMessage(backup ? 0 : 1));
 					}
 
-					Skyland.network.sendToAll(new RegenerateProgressMessage(0));
+					SkyNetworkRegistry.sendToAll(new RegenerationGuiMessage(EnumType.START));
 
-					int dim = SkylandAPI.getDimension();
+					int dim = Config.dimension;
 					WorldServer world = DimensionManager.getWorld(dim);
 
 					if (world != null)
@@ -208,7 +205,7 @@ public class WorldProviderSkyland extends WorldProviderSurface
 
 						MinecraftForge.EVENT_BUS.post(new WorldEvent.Unload(world));
 
-						DimensionManager.setWorld(dim, null);
+						DimensionManager.setWorld(dim, null, server);
 					}
 
 					File dir = getDimDir();
@@ -267,57 +264,54 @@ public class WorldProviderSkyland extends WorldProviderSurface
 								FileUtils.deleteQuietly(bak);
 							}
 
-							component = new ChatComponentText(StatCollector.translateToLocal("skyland.regenerate.backingup"));
-							component.getChatStyle().setColor(EnumChatFormatting.GRAY).setItalic(true);
-							server.getConfigurationManager().sendChatMsg(component);
+							SkyNetworkRegistry.sendToAll(new RegenerationGuiMessage(EnumType.BACKUP));
 
-							Skyland.network.sendToAll(new RegenerateProgressMessage(1));
+							component = new TextComponentTranslation("skyland.regenerate.backingup");
+							component.getChatStyle().setColor(TextFormatting.GRAY).setItalic(true);
+							server.getPlayerList().sendChatMsg(component);
 
 							if (SkyUtils.archiveDirZip(dir, bak))
 							{
 								ClickEvent click = new ClickEvent(ClickEvent.Action.OPEN_FILE, FilenameUtils.normalize(bak.getParentFile().getPath()));
 
-								component = new ChatComponentText(StatCollector.translateToLocal("skyland.regenerate.backedup"));
-								component.getChatStyle().setColor(EnumChatFormatting.GRAY).setItalic(true).setChatClickEvent(click);
-								server.getConfigurationManager().sendChatMsg(component);
+								component = new TextComponentTranslation("skyland.regenerate.backedup");
+								component.getChatStyle().setColor(TextFormatting.GRAY).setItalic(true).setChatClickEvent(click);
+								server.getPlayerList().sendChatMsg(component);
 							}
 							else
 							{
-								component = new ChatComponentText(StatCollector.translateToLocal("skyland.regenerate.backup.failed"));
-								component.getChatStyle().setColor(EnumChatFormatting.RED).setItalic(true);
-								server.getConfigurationManager().sendChatMsg(component);
+								component = new TextComponentTranslation("skyland.regenerate.backup.failed");
+								component.getChatStyle().setColor(TextFormatting.RED).setItalic(true);
+								server.getPlayerList().sendChatMsg(component);
 							}
 						}
 
 						FileUtils.deleteDirectory(dir);
 					}
 
-					if (DimensionManager.shouldLoadSpawn(dim))
+					DimensionManager.initDimension(dim);
+
+					world = DimensionManager.getWorld(dim);
+
+					if (world != null)
 					{
-						DimensionManager.initDimension(dim);
-
-						world = DimensionManager.getWorld(dim);
-
-						if (world != null)
-						{
-							world.saveAllChunks(true, null);
-							world.flush();
-						}
+						world.saveAllChunks(true, null);
+						world.flush();
 					}
 
-					component = new ChatComponentText(StatCollector.translateToLocal("skyland.regenerate.regenerated"));
-					component.getChatStyle().setColor(EnumChatFormatting.GRAY).setItalic(true);
-					server.getConfigurationManager().sendChatMsg(component);
+					SkyNetworkRegistry.sendToAll(new RegenerationGuiMessage(EnumType.SUCCESS));
 
-					Skyland.network.sendToAll(new RegenerateProgressMessage(2));
+					component = new TextComponentTranslation("skyland.regenerate.regenerated");
+					component.getChatStyle().setColor(TextFormatting.GRAY).setItalic(true);
+					server.getPlayerList().sendChatMsg(component);
 				}
 				catch (Exception e)
 				{
-					component = new ChatComponentText(StatCollector.translateToLocal("skyland.regenerate.failed"));
-					component.getChatStyle().setColor(EnumChatFormatting.RED).setItalic(true);
-					server.getConfigurationManager().sendChatMsg(component);
+					component = new TextComponentTranslation("skyland.regenerate.failed");
+					component.getChatStyle().setColor(TextFormatting.RED).setItalic(true);
+					server.getPlayerList().sendChatMsg(component);
 
-					Skyland.network.sendToAll(new RegenerateProgressMessage(3));
+					SkyNetworkRegistry.sendToAll(new RegenerationGuiMessage(EnumType.FAILED));
 
 					SkyLog.log(Level.ERROR, e, component.getUnformattedText());
 				}
@@ -327,11 +321,11 @@ public class WorldProviderSkyland extends WorldProviderSurface
 
 	public WorldProviderSkyland()
 	{
-		this.dimensionId = SkylandAPI.getDimension();
+		this.setDimension(Config.dimension);
 	}
 
 	@Override
-	public IChunkProvider createChunkGenerator()
+	public IChunkGenerator createChunkGenerator()
 	{
 		return new ChunkProviderSkyland(worldObj);
 	}
@@ -343,33 +337,21 @@ public class WorldProviderSkyland extends WorldProviderSurface
 	}
 
 	@Override
-	public String getDimensionName()
+	public DimensionType getDimensionType()
 	{
-		return "Skyland";
-	}
-
-	@Override
-	public String getInternalNameSuffix()
-	{
-		return "_skyland";
-	}
-
-	@Override
-	public String getSaveFolder()
-	{
-		return "DIM-" + getDimensionName();
+		return Skyland.DIM_SKYLAND;
 	}
 
 	@Override
 	public String getWelcomeMessage()
 	{
-		return "Entering the " + getDimensionName();
+		return "Entering the " + getDimensionType().getName();
 	}
 
 	@Override
 	public String getDepartMessage()
 	{
-		return "Leaving the " + getDimensionName();
+		return "Leaving the " + getDimensionType().getName();
 	}
 
 	@SideOnly(Side.CLIENT)
@@ -465,8 +447,6 @@ public class WorldProviderSkyland extends WorldProviderSurface
 		if (!worldObj.isRemote && dimData == null)
 		{
 			loadDimData(getDimData());
-
-			Skyland.network.sendToAll(new DimSyncMessage(getDimData()));
 		}
 
 		return dimensionSeed;

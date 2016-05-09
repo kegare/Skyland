@@ -1,12 +1,3 @@
-/*
- * Skyland
- *
- * Copyright (c) 2014 kegare
- * https://github.com/kegare
- *
- * This mod is distributed under the terms of the Minecraft Mod Public License Japanese Translation, or MMPL_J.
- */
-
 package skyland.util;
 
 import java.io.File;
@@ -20,35 +11,30 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ForkJoinPool;
 
 import com.google.common.collect.Maps;
 
 import net.minecraft.block.Block;
-import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.AxisAlignedBB;
-import net.minecraft.util.BlockPos;
-import net.minecraft.util.MovingObjectPosition;
-import net.minecraft.util.Vec3;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.storage.DerivedWorldInfo;
 import net.minecraft.world.storage.WorldInfo;
 import net.minecraftforge.common.DimensionManager;
-import net.minecraftforge.fml.client.FMLClientHandler;
 import net.minecraftforge.fml.common.DummyModContainer;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.ModContainer;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.minecraftforge.oredict.OreDictionary;
+import skyland.core.Config;
 import skyland.core.Skyland;
 import skyland.world.TeleporterDummy;
 
@@ -179,7 +165,7 @@ public class SkyUtils
 
 	public static void setPlayerLocation(EntityPlayerMP player, double posX, double posY, double posZ, float yaw, float pitch)
 	{
-		player.mountEntity(null);
+		player.dismountRidingEntity();
 		player.playerNetServerHandler.setPlayerLocation(posX, posY, posZ, yaw, pitch);
 	}
 
@@ -195,7 +181,7 @@ public class SkyUtils
 			player.isDead = false;
 			player.forceSpawn = true;
 			player.timeUntilPortal = player.getPortalCooldown();
-			player.mcServer.getConfigurationManager().transferPlayerToDimension(player, dim, new TeleporterDummy(player.mcServer.worldServerForDimension(dim)));
+			player.mcServer.getPlayerList().transferPlayerToDimension(player, dim, new TeleporterDummy(player.mcServer.worldServerForDimension(dim)));
 			player.addExperienceLevel(0);
 
 			return true;
@@ -235,7 +221,7 @@ public class SkyUtils
 			BlockPos pos2 = pos;
 			pos = pos.up();
 
-			if (!world.isAirBlock(pos2) && !world.getBlockState(pos2).getBlock().getMaterial().isLiquid())
+			if (!world.isAirBlock(pos2) && !world.getBlockState(pos2).getMaterial().isLiquid())
 			{
 				setPlayerLocation(player, pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D);
 
@@ -265,7 +251,7 @@ public class SkyUtils
 							BlockPos pos3 = pos2;
 							pos2 = pos2.up();
 
-							if (!world.isAirBlock(pos3) && !world.getBlockState(pos3).getBlock().getMaterial().isLiquid())
+							if (!world.isAirBlock(pos3) && !world.getBlockState(pos3).getMaterial().isLiquid())
 							{
 								setPlayerLocation(player, pos2.getX() + 0.5D, pos2.getY() + 0.5D, pos2.getZ() + 0.5D);
 
@@ -304,7 +290,7 @@ public class SkyUtils
 
 				BlockPos pos2 = pos.down();
 
-				if (!world.isAirBlock(pos2) && !world.getBlockState(pos2).getBlock().getMaterial().isLiquid())
+				if (!world.isAirBlock(pos2) && !world.getBlockState(pos2).getMaterial().isLiquid())
 				{
 					setPlayerLocation(player, posX, pos.getY() + 0.5D, posZ, yaw, pitch);
 
@@ -334,70 +320,21 @@ public class SkyUtils
 		return worldInfo;
 	}
 
-	public static MovingObjectPosition getMouseOverExtended(float dist)
+	public static boolean isEntityInSkyland(Entity entity)
 	{
-		Minecraft mc = FMLClientHandler.instance().getClient();
-		Entity renderEntity = mc.getRenderViewEntity();
-		AxisAlignedBB boundingBox = new AxisAlignedBB(renderEntity.posX - 0.5D, renderEntity.posY - 0.0D, renderEntity.posZ - 0.5D, renderEntity.posX + 0.5D, renderEntity.posY + 1.5D, renderEntity.posZ + 0.5D);
-		MovingObjectPosition mop = null;
-
-		if (mc.theWorld != null)
+		if (entity != null)
 		{
-			double var1 = dist;
-			mop = renderEntity.rayTrace(var1, 0);
-			double calcdist = var1;
-			Vec3 pos = renderEntity.getPositionEyes(0);
-			var1 = calcdist;
-
-			if (mop != null)
+			if (Skyland.SKYLAND == null)
 			{
-				calcdist = mop.hitVec.distanceTo(pos);
+				return entity.dimension == Config.dimension;
 			}
 
-			Vec3 lookvec = renderEntity.getLook(0);
-			Vec3 var2 = pos.addVector(lookvec.xCoord * var1, lookvec.yCoord * var1, lookvec.zCoord * var1);
-			Entity pointedEntity = null;
-			float range = 1.0F;
-			@SuppressWarnings("unchecked")
-			List<Entity> list = mc.theWorld.getEntitiesWithinAABBExcludingEntity(renderEntity, boundingBox.addCoord(lookvec.xCoord * var1, lookvec.yCoord * var1, lookvec.zCoord * var1).expand(range, range, range));
-			double d = calcdist;
-
-			for (Entity entity : list)
+			if (entity.worldObj.getWorldInfo().getTerrainType() == Skyland.SKYLAND)
 			{
-				if (entity.canBeCollidedWith())
-				{
-					float size = entity.getCollisionBorderSize();
-					AxisAlignedBB axis = new AxisAlignedBB(entity.posX - entity.width / 2, entity.posY, entity.posZ - entity.width / 2, entity.posX + entity.width / 2, entity.posY + entity.height, entity.posZ + entity.width / 2);
-					axis.expand(size, size, size);
-					MovingObjectPosition mop1 = axis.calculateIntercept(pos, var2);
-
-					if (axis.isVecInside(pos))
-					{
-						if (0.0D < d || d == 0.0D)
-						{
-							pointedEntity = entity;
-							d = 0.0D;
-						}
-					}
-					else if (mop1 != null)
-					{
-						double d1 = pos.distanceTo(mop1.hitVec);
-
-						if (d1 < d || d == 0.0D)
-						{
-							pointedEntity = entity;
-							d = d1;
-						}
-					}
-				}
-			}
-
-			if (pointedEntity != null && (d < calcdist || mop == null))
-			{
-				mop = new MovingObjectPosition(pointedEntity);
+				return entity.dimension == 0;
 			}
 		}
 
-		return mop;
+		return false;
 	}
 }

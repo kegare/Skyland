@@ -1,12 +1,3 @@
-/*
- * Skyland
- *
- * Copyright (c) 2014 kegare
- * https://github.com/kegare
- *
- * This mod is distributed under the terms of the Minecraft Mod Public License Japanese Translation, or MMPL_J.
- */
-
 package skyland.world;
 
 import java.util.List;
@@ -17,15 +8,15 @@ import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.init.Blocks;
-import net.minecraft.util.BlockPos;
-import net.minecraft.util.IProgressUpdate;
-import net.minecraft.util.MathHelper;
-import net.minecraft.world.SpawnerAnimals;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldEntitySpawner;
 import net.minecraft.world.biome.BiomeGenBase;
+import net.minecraft.world.biome.BiomeGenBase.SpawnListEntry;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkPrimer;
-import net.minecraft.world.chunk.IChunkProvider;
+import net.minecraft.world.chunk.IChunkGenerator;
 import net.minecraft.world.gen.MapGenBase;
 import net.minecraft.world.gen.NoiseGeneratorOctaves;
 import net.minecraft.world.gen.feature.WorldGenLakes;
@@ -33,16 +24,15 @@ import net.minecraft.world.gen.feature.WorldGenMinable;
 import net.minecraft.world.gen.feature.WorldGenerator;
 import net.minecraftforge.common.BiomeDictionary;
 import net.minecraftforge.common.BiomeDictionary.Type;
-import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.ForgeEventFactory;
 import net.minecraftforge.event.terraingen.OreGenEvent.GenerateMinable.EventType;
-import net.minecraftforge.event.terraingen.PopulateChunkEvent;
 import net.minecraftforge.event.terraingen.PopulateChunkEvent.Populate;
 import net.minecraftforge.event.terraingen.TerrainGen;
 import skyland.block.SkyBlocks;
 import skyland.core.Config;
 import skyland.world.gen.MapGenCavesSkyland;
 
-public class ChunkProviderSkyland implements IChunkProvider
+public class ChunkProviderSkyland implements IChunkGenerator
 {
 	private final World worldObj;
 	private final Random rand;
@@ -301,7 +291,7 @@ public class ChunkProviderSkyland implements IChunkProvider
 				{
 					IBlockState block = data.getBlockState(x, y, z);
 
-					if (block.getBlock().getMaterial() == Material.air)
+					if (block.getMaterial() == Material.air)
 					{
 						i = -1;
 					}
@@ -344,24 +334,18 @@ public class ChunkProviderSkyland implements IChunkProvider
 	}
 
 	@Override
-	public Chunk provideChunk(BlockPos pos)
-	{
-		return provideChunk(pos.getX() >> 4, pos.getZ() >> 4);
-	}
-
-	@Override
 	public Chunk provideChunk(int chunkX, int chunkZ)
 	{
 		rand.setSeed(chunkX * 341873128712L + chunkZ * 132897987541L);
 
 		ChunkPrimer data = new ChunkPrimer();
-		biomesForGeneration = worldObj.getWorldChunkManager().loadBlockGeneratorData(biomesForGeneration, chunkX * 16, chunkZ * 16, 16, 16);
+		biomesForGeneration = worldObj.getBiomeProvider().loadBlockGeneratorData(biomesForGeneration, chunkX * 16, chunkZ * 16, 16, 16);
 		generateTerrain(chunkX, chunkZ, data);
 		replaceBiomeBlocks(chunkX, chunkZ, data, biomesForGeneration);
 
 		if (Config.generateCaves)
 		{
-			caveGenerator.generate(this, worldObj, chunkX, chunkZ, data);
+			caveGenerator.generate(worldObj, chunkX, chunkZ, data);
 		}
 
 		Chunk chunk = new Chunk(worldObj, data, chunkX, chunkZ);
@@ -369,7 +353,7 @@ public class ChunkProviderSkyland implements IChunkProvider
 
 		for (int index = 0; index < biomes.length; ++index)
 		{
-			biomes[index] = (byte)biomesForGeneration[index].biomeID;
+			biomes[index] = (byte)BiomeGenBase.getIdForBiome(biomesForGeneration[index]);
 		}
 
 		chunk.generateSkylightMap();
@@ -378,17 +362,11 @@ public class ChunkProviderSkyland implements IChunkProvider
 	}
 
 	@Override
-	public boolean chunkExists(int chunkX, int chunkZ)
-	{
-		return true;
-	}
-
-	@Override
-	public void populate(IChunkProvider chunkProvider, int chunkX, int chunkZ)
+	public void populate(int chunkX, int chunkZ)
 	{
 		BlockFalling.fallInstantly = true;
 
-		MinecraftForge.EVENT_BUS.post(new PopulateChunkEvent.Pre(chunkProvider, worldObj, rand, chunkX, chunkZ, false));
+		ForgeEventFactory.onChunkPopulate(true, this, worldObj, chunkX, chunkZ, false);
 
 		BlockPos pos = new BlockPos(chunkX * 16, 0, chunkZ * 16);
 		BiomeGenBase biome = worldObj.getBiomeGenForCoords(pos.add(16, 0, 16));
@@ -400,7 +378,7 @@ public class ChunkProviderSkyland implements IChunkProvider
 
 		if (Config.generateLakes)
 		{
-			if (!BiomeDictionary.isBiomeOfType(biome, Type.SANDY) && rand.nextInt(4) == 0 && TerrainGen.populate(chunkProvider, worldObj, rand, chunkX, chunkZ, false, Populate.EventType.LAKE))
+			if (!BiomeDictionary.isBiomeOfType(biome, Type.SANDY) && rand.nextInt(4) == 0 && TerrainGen.populate(this, worldObj, rand, chunkX, chunkZ, false, Populate.EventType.LAKE))
 			{
 				genX = rand.nextInt(16) + 8;
 				genZ = rand.nextInt(16) + 8;
@@ -409,7 +387,7 @@ public class ChunkProviderSkyland implements IChunkProvider
 				lakeWaterGen.generate(worldObj, rand, pos.add(genX, genY, genZ));
 			}
 
-			if (rand.nextInt(8) == 0 && TerrainGen.populate(chunkProvider, worldObj, rand, chunkX, chunkZ, false, Populate.EventType.LAVA))
+			if (rand.nextInt(8) == 0 && TerrainGen.populate(this, worldObj, rand, chunkX, chunkZ, false, Populate.EventType.LAVA))
 			{
 				genX = rand.nextInt(16) + 8;
 				genZ = rand.nextInt(16) + 8;
@@ -463,14 +441,14 @@ public class ChunkProviderSkyland implements IChunkProvider
 
 		biome.decorate(worldObj, rand, pos);
 
-		if (TerrainGen.populate(chunkProvider, worldObj, rand, chunkX, chunkZ, false, Populate.EventType.ANIMALS))
+		if (TerrainGen.populate(this, worldObj, rand, chunkX, chunkZ, false, Populate.EventType.ANIMALS))
 		{
-			SpawnerAnimals.performWorldGenSpawning(worldObj, biome, pos.getX() + 8, pos.getZ() + 8, 16, 16, rand);
+			WorldEntitySpawner.performWorldGenSpawning(worldObj, biome, pos.getX() + 8, pos.getZ() + 8, 16, 16, rand);
 		}
 
 		pos = pos.add(8, 0, 8);
 
-		for (genX = 0, doGen = TerrainGen.populate(chunkProvider, worldObj, rand, chunkX, chunkZ, false, Populate.EventType.ICE); doGen && genX < 16; ++genX)
+		for (genX = 0, doGen = TerrainGen.populate(this, worldObj, rand, chunkX, chunkZ, false, Populate.EventType.ICE); doGen && genX < 16; ++genX)
 		{
 			for (genZ = 0; genZ < 16; ++ genZ)
 			{
@@ -483,46 +461,19 @@ public class ChunkProviderSkyland implements IChunkProvider
 			}
 		}
 
-		MinecraftForge.EVENT_BUS.post(new PopulateChunkEvent.Post(chunkProvider, worldObj, rand, chunkX, chunkZ, false));
+		ForgeEventFactory.onChunkPopulate(false, this, worldObj, chunkX, chunkZ, false);
 
 		BlockFalling.fallInstantly = false;
 	}
 
 	@Override
-	public boolean func_177460_a(IChunkProvider provider, Chunk chunk, int chunkX, int chunkZ)
+	public boolean generateStructures(Chunk chunkIn, int x, int z)
 	{
 		return false;
 	}
 
 	@Override
-	public boolean saveChunks(boolean flag, IProgressUpdate progress)
-	{
-		return true;
-	}
-
-	@Override
-	public void saveExtraData() {}
-
-	@Override
-	public boolean unloadQueuedChunks()
-	{
-		return false;
-	}
-
-	@Override
-	public boolean canSave()
-	{
-		return true;
-	}
-
-	@Override
-	public String makeString()
-	{
-		return "SkylandRandomLevelSource";
-	}
-
-	@Override
-	public List getPossibleCreatures(EnumCreatureType type, BlockPos pos)
+	public List<SpawnListEntry> getPossibleCreatures(EnumCreatureType type, BlockPos pos)
 	{
 		BiomeGenBase biome = worldObj.getBiomeGenForCoords(pos);
 
@@ -536,11 +487,5 @@ public class ChunkProviderSkyland implements IChunkProvider
 	}
 
 	@Override
-	public int getLoadedChunkCount()
-	{
-		return 0;
-	}
-
-	@Override
-	public void recreateStructures(Chunk chunk, int chunkX, int chunkZ) {}
+	public void recreateStructures(Chunk chunkIn, int x, int z) {}
 }

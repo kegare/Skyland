@@ -1,12 +1,3 @@
-/*
- * Skyland
- *
- * Copyright (c) 2014 kegare
- * https://github.com/kegare
- *
- * This mod is distributed under the terms of the Minecraft Mod Public License Japanese Translation, or MMPL_J.
- */
-
 package skyland.handler;
 
 import java.util.Set;
@@ -17,24 +8,21 @@ import com.google.common.collect.Sets;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.monster.EntityCreeper;
 import net.minecraft.entity.passive.EntityChicken;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.event.ClickEvent;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.BlockPos;
-import net.minecraft.util.ChatComponentTranslation;
-import net.minecraft.util.EnumChatFormatting;
-import net.minecraft.util.IChatComponent;
-import net.minecraft.util.MovingObjectPosition;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.text.TextComponentTranslation;
+import net.minecraft.util.text.TextFormatting;
+import net.minecraft.util.text.event.ClickEvent;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
-import net.minecraftforge.client.event.MouseEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
-import net.minecraftforge.event.entity.EntityEvent.EntityConstructing;
-import net.minecraftforge.event.entity.EntityJoinWorldEvent;
+import net.minecraftforge.common.ForgeVersion.Status;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
 import net.minecraftforge.event.entity.living.LivingFallEvent;
@@ -51,30 +39,23 @@ import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.fml.common.gameevent.TickEvent.WorldTickEvent;
 import net.minecraftforge.fml.common.network.FMLNetworkEvent.ClientConnectedToServerEvent;
-import net.minecraftforge.fml.common.network.FMLNetworkEvent.ClientDisconnectionFromServerEvent;
-import net.minecraftforge.fml.common.network.FMLNetworkEvent.ServerConnectionFromClientEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
-import skyland.api.SkylandAPI;
 import skyland.core.Config;
-import skyland.core.SkyEntityProperties;
+import skyland.core.SkySounds;
 import skyland.core.Skyland;
 import skyland.item.ItemSkyFeather;
 import skyland.item.SkyItems;
-import skyland.network.DimSyncMessage;
-import skyland.network.ExtendedReachAttackMessage;
+import skyland.network.DisplayGuiMessage;
 import skyland.network.FallTeleportMessage;
-import skyland.network.PlaySoundMessage;
-import skyland.util.IExtendedReach;
+import skyland.network.PlayMusicMessage;
+import skyland.network.SkyNetworkRegistry;
 import skyland.util.SkyUtils;
 import skyland.util.Version;
-import skyland.util.Version.Status;
 import skyland.world.WorldProviderSkyland;
 
 public class SkyEventHooks
 {
-	public static final SkyEventHooks instance = new SkyEventHooks();
-
 	public static final Set<String> firstJoinPlayers = Sets.newHashSet();
 	public static final ThreadLocal<Set<String>> fallTeleportPlayers = new ThreadLocal<Set<String>>()
 	{
@@ -89,7 +70,7 @@ public class SkyEventHooks
 	@SubscribeEvent
 	public void onConfigChanged(OnConfigChangedEvent event)
 	{
-		if (event.modID.equals(Skyland.MODID))
+		if (event.getModID().equals(Skyland.MODID))
 		{
 			Config.syncConfig();
 		}
@@ -99,64 +80,18 @@ public class SkyEventHooks
 	@SubscribeEvent
 	public void onRenderGameTextOverlay(RenderGameOverlayEvent.Text event)
 	{
-		if (SkylandAPI.getWorldType() != null)
+		if (Skyland.SKYLAND != null)
 		{
 			return;
 		}
 
 		Minecraft mc = FMLClientHandler.instance().getClient();
 
-		if (SkylandAPI.isEntityInSkyland(mc.thePlayer))
+		if (SkyUtils.isEntityInSkyland(mc.thePlayer))
 		{
 			if (mc.gameSettings.showDebugInfo)
 			{
-				event.left.add("Dim: Skyland");
-			}
-		}
-	}
-
-	@SideOnly(Side.CLIENT)
-	@SubscribeEvent(receiveCanceled = true)
-	public void onMouse(MouseEvent event)
-	{
-		if (event.button == 0 && event.buttonstate)
-		{
-			Minecraft mc = Minecraft.getMinecraft();
-			EntityPlayer thePlayer = mc.thePlayer;
-
-			if (thePlayer != null)
-			{
-				ItemStack itemstack = thePlayer.getCurrentEquippedItem();
-				IExtendedReach extended;
-
-				if (itemstack != null)
-				{
-					if (itemstack.getItem() instanceof IExtendedReach)
-					{
-						extended = (IExtendedReach)itemstack.getItem();
-					}
-					else
-					{
-						extended = null;
-					}
-
-					if (extended != null)
-					{
-						float reach = extended.getReach();
-						MovingObjectPosition mov = SkyUtils.getMouseOverExtended(reach);
-
-						if (mov != null)
-						{
-							if (mov.entityHit != null && mov.entityHit.hurtResistantTime == 0)
-							{
-								if (mov.entityHit != thePlayer )
-								{
-									Skyland.network.sendToServer(new ExtendedReachAttackMessage(mov.entityHit.getEntityId()));
-								}
-							}
-						}
-					}
-				}
+				event.getLeft().add("Dim: Skyland");
 			}
 		}
 	}
@@ -165,46 +100,54 @@ public class SkyEventHooks
 	@SubscribeEvent
 	public void onClientConnected(ClientConnectedToServerEvent event)
 	{
-		if (Version.getStatus() == Status.PENDING || Version.getStatus() == Status.FAILED)
+		Minecraft mc = FMLClientHandler.instance().getClient();
+
+		if (Version.DEV_DEBUG || Version.getStatus() == Status.AHEAD || Version.getStatus() == Status.BETA || Config.versionNotify && Version.isOutdated())
 		{
-			Version.versionCheck();
+			ITextComponent name = new TextComponentString(Skyland.metadata.name);
+			name.getChatStyle().setColor(TextFormatting.AQUA);
+			ITextComponent latest = new TextComponentString(Version.getLatest().toString());
+			latest.getChatStyle().setColor(TextFormatting.YELLOW);
+
+			ITextComponent message;
+
+			message = new TextComponentTranslation("skyland.version.message", name);
+			message.appendText(" : ").appendSibling(latest);
+			message.getChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, Skyland.metadata.url));
+
+			mc.ingameGUI.getChatGUI().printChatMessage(message);
+			message = null;
+
+			if (Version.isBeta())
+			{
+				message = new TextComponentTranslation("skyland.version.message.beta", name);
+			}
+			else if (Version.isAlpha())
+			{
+				message = new TextComponentTranslation("skyland.version.message.alpha", name);
+			}
+
+			if (message != null)
+			{
+				mc.ingameGUI.getChatGUI().printChatMessage(message);
+			}
 		}
-		else if (Version.DEV_DEBUG || Config.versionNotify && Version.isOutdated())
-		{
-			IChatComponent component = new ChatComponentTranslation("skyland.version.message", EnumChatFormatting.AQUA + "Skyland" + EnumChatFormatting.RESET);
-			component.appendText(" : " + EnumChatFormatting.YELLOW + Version.getLatest());
-			component.getChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, Skyland.metadata.url));
-
-			FMLClientHandler.instance().getClient().ingameGUI.getChatGUI().printChatMessage(component);
-		}
-	}
-
-	@SideOnly(Side.CLIENT)
-	@SubscribeEvent
-	public void onClientDisconnected(ClientDisconnectionFromServerEvent event)
-	{
-		Config.syncConfig();
-	}
-
-	@SubscribeEvent
-	public void onServerConnected(ServerConnectionFromClientEvent event)
-	{
-		event.manager.sendPacket(Skyland.network.getPacketFrom(new Config()));
-		event.manager.sendPacket(Skyland.network.getPacketFrom(new DimSyncMessage(WorldProviderSkyland.getDimData())));
 	}
 
 	@SubscribeEvent
 	public void onPlayerLoadFromFile(PlayerEvent.LoadFromFile event)
 	{
-		for (String str : event.playerDirectory.list())
+		String uuid = event.getPlayerUUID();
+
+		for (String str : event.getPlayerDirectory().list())
 		{
-			if (StringUtils.startsWith(str, event.playerUUID))
+			if (StringUtils.startsWith(str, uuid))
 			{
 				return;
 			}
 		}
 
-		firstJoinPlayers.add(event.playerUUID);
+		firstJoinPlayers.add(uuid);
 	}
 
 	@SubscribeEvent
@@ -219,20 +162,20 @@ public class SkyEventHooks
 				WorldServer world = player.getServerForPlayer();
 				boolean result = false;
 
-				if (world.getWorldInfo().getTerrainType() == SkylandAPI.getWorldType())
+				if (world.getWorldInfo().getTerrainType() == Skyland.SKYLAND)
 				{
 					result = SkyUtils.teleportPlayer(player, player.dimension, 0, 254.0D, 0, player.rotationYaw, player.rotationPitch, true);
 				}
-				else if (Config.skyborn && !SkylandAPI.isEntityInSkyland(player))
+				else if (Config.skyborn)
 				{
-					result = SkyUtils.teleportPlayer(player, SkylandAPI.getDimension());
+					result = SkyUtils.teleportPlayer(player, Config.dimension);
 				}
 
 				if (result)
 				{
 					player.setSpawnChunk(player.getPosition(), true, player.dimension);
 
-					Skyland.network.sendTo(new PlaySoundMessage("skyland:skyland"), player);
+					SkyNetworkRegistry.sendTo(new PlayMusicMessage(SkySounds.skyland), player);
 				}
 			}
 		}
@@ -255,7 +198,7 @@ public class SkyEventHooks
 		{
 			EntityPlayerMP player = (EntityPlayerMP)event.player;
 
-			if (SkylandAPI.isEntityInSkyland(player))
+			if (SkyUtils.isEntityInSkyland(player))
 			{
 				if (player.getServerForPlayer().isAirBlock(player.getPosition().down()))
 				{
@@ -272,7 +215,7 @@ public class SkyEventHooks
 		{
 			EntityPlayerMP player = (EntityPlayerMP)event.player;
 
-			if (event.toDim == SkylandAPI.getDimension())
+			if (event.toDim == Config.dimension)
 			{
 				WorldServer world = player.getServerForPlayer();
 				NBTTagCompound data = player.getEntityData();
@@ -280,7 +223,7 @@ public class SkyEventHooks
 
 				if (!data.hasKey(key) || data.getLong(key) + 18000L < world.getTotalWorldTime())
 				{
-					Skyland.network.sendTo(new PlaySoundMessage("skyland:skyland"), player);
+					SkyNetworkRegistry.sendTo(new PlayMusicMessage(SkySounds.skyland), player);
 				}
 
 				data.setLong(key, world.getTotalWorldTime());
@@ -297,28 +240,38 @@ public class SkyEventHooks
 			return;
 		}
 
-		World world = FMLClientHandler.instance().getWorldClient();
-
-		if (world != null && world.provider.getDimensionId() == 0 && world.getWorldInfo().getTerrainType() == SkylandAPI.getWorldType())
+		if (DisplayGuiMessage.gui != null)
 		{
-			world.prevRainingStrength = 0.0F;
-			world.rainingStrength = 0.0F;
-			world.prevThunderingStrength = 0.0F;
-			world.thunderingStrength = 0.0F;
+			FMLClientHandler.instance().showGuiScreen(DisplayGuiMessage.gui);
+
+			DisplayGuiMessage.gui = null;
+		}
+
+		if (Skyland.SKYLAND != null)
+		{
+			World world = FMLClientHandler.instance().getWorldClient();
+
+			if (world != null && world.provider.getDimension() == 0 && world.getWorldInfo().getTerrainType() == Skyland.SKYLAND)
+			{
+				world.prevRainingStrength = 0.0F;
+				world.rainingStrength = 0.0F;
+				world.prevThunderingStrength = 0.0F;
+				world.thunderingStrength = 0.0F;
+			}
 		}
 	}
 
 	@SubscribeEvent
 	public void onWorldTick(WorldTickEvent event)
 	{
-		if (event.phase != Phase.END)
+		if (event.phase != Phase.END || Skyland.SKYLAND == null)
 		{
 			return;
 		}
 
 		World world = event.world;
 
-		if (world.provider.getDimensionId() == 0 && world.getWorldInfo().getTerrainType() == SkylandAPI.getWorldType())
+		if (world.getWorldInfo().getTerrainType() == Skyland.SKYLAND && world.provider.getDimension() == 0)
 		{
 			world.prevRainingStrength = 0.0F;
 			world.rainingStrength = 0.0F;
@@ -328,32 +281,14 @@ public class SkyEventHooks
 	}
 
 	@SubscribeEvent
-	public void onEntityConstruct(EntityConstructing event)
-	{
-		if (SkylandAPI.getWorldType() == null)
-		{
-			SkyEntityProperties.get(event.entity);
-		}
-	}
-
-	@SubscribeEvent
-	public void onEntityJoinWorld(EntityJoinWorldEvent event)
-	{
-		if (SkylandAPI.getWorldType() == null)
-		{
-			SkyEntityProperties.get(event.entity).loadNBTData(null);
-		}
-	}
-
-	@SubscribeEvent
 	public void onLivingUpdate(LivingUpdateEvent event)
 	{
-		EntityLivingBase entity = event.entityLiving;
-
-		if (SkylandAPI.getWorldType() != null)
+		if (Skyland.SKYLAND != null)
 		{
 			return;
 		}
+
+		EntityLivingBase entity = event.getEntityLiving();
 
 		if (entity instanceof EntityPlayerMP)
 		{
@@ -363,25 +298,29 @@ public class SkyEventHooks
 			{
 				if (!player.onGround && player.getEntityBoundingBox().minY > 350.0D && player.getEntityData().getBoolean("Skyland:SkyJump"))
 				{
-					SkyUtils.teleportPlayer(player, SkylandAPI.getDimension());
+					SkyUtils.teleportPlayer(player, Config.dimension);
 
 					player.getEntityData().removeTag("Skyland:SkyJump");
 				}
 			}
-			else if (SkylandAPI.isEntityInSkyland(player))
+			else if (SkyUtils.isEntityInSkyland(player))
 			{
 				if (!player.onGround && player.getEntityBoundingBox().minY <= -20.0D)
 				{
-					ItemStack current = player.getCurrentEquippedItem();
 					boolean result = false;
+					ItemStack[] helds = new ItemStack[] {player.getHeldItemMainhand(), player.getHeldItemOffhand()};
 
-					if (current != null && current.getItem() instanceof ItemSkyFeather)
+					for (ItemStack current : helds)
 					{
-						BlockPos pos = player.getBedLocation(0);
-
-						if (pos != null)
+						if (current != null && current.getItem() instanceof ItemSkyFeather)
 						{
-							result = SkyUtils.teleportPlayer(player, 0, pos.getX() + 0.5D, 254.0D, pos.getZ() + 0.5D, player.rotationYaw, player.rotationPitch, false);
+							BlockPos pos = player.getBedLocation(0);
+
+							if (pos != null)
+							{
+								result = SkyUtils.teleportPlayer(player, 0, pos.getX() + 0.5D, 254.0D, pos.getZ() + 0.5D, player.rotationYaw, player.rotationPitch, false);
+								break;
+							}
 						}
 					}
 
@@ -396,7 +335,7 @@ public class SkyEventHooks
 
 						fallTeleportPlayers.get().add(player.getUniqueID().toString());
 
-						Skyland.network.sendTo(new FallTeleportMessage(player), player);
+						SkyNetworkRegistry.sendTo(new FallTeleportMessage(player), player);
 					}
 				}
 			}
@@ -406,12 +345,14 @@ public class SkyEventHooks
 	@SubscribeEvent
 	public void onLivingFall(LivingFallEvent event)
 	{
-		if (SkylandAPI.getWorldType() != null)
+		if (Skyland.SKYLAND != null)
 		{
 			return;
 		}
 
-		if (event.entityLiving instanceof EntityPlayer && fallTeleportPlayers.get().remove(event.entityLiving.getUniqueID().toString()))
+		EntityLivingBase entity = event.getEntityLiving();
+
+		if (entity instanceof EntityPlayer && fallTeleportPlayers.get().remove(entity.getUniqueID().toString()))
 		{
 			event.setCanceled(true);
 		}
@@ -420,20 +361,15 @@ public class SkyEventHooks
 	@SubscribeEvent
 	public void onLivingDeath(LivingDeathEvent event)
 	{
-		EntityLivingBase entity = event.entityLiving;
-
-		if (SkylandAPI.getWorldType() == null)
+		if (Skyland.SKYLAND != null)
 		{
-			SkyEntityProperties.get(entity).saveNBTData(null);
+			return;
 		}
+
+		EntityLivingBase entity = event.getEntityLiving();
 
 		if (entity instanceof EntityChicken)
 		{
-			if (SkylandAPI.getWorldType() != null)
-			{
-				return;
-			}
-
 			if (!entity.worldObj.isRemote)
 			{
 				int rate = 0;
@@ -442,7 +378,7 @@ public class SkyEventHooks
 				{
 					rate = 15;
 				}
-				else if (SkylandAPI.isEntityInSkyland(entity))
+				else if (SkyUtils.isEntityInSkyland(entity))
 				{
 					rate = 5;
 				}
@@ -453,28 +389,21 @@ public class SkyEventHooks
 				}
 			}
 		}
-		else if (entity instanceof EntityCreeper)
-		{
-			if (!entity.worldObj.isRemote && SkylandAPI.isEntityInSkyland(entity) && entity.getRNG().nextInt(20) == 0)
-			{
-				entity.dropItem(SkyItems.record_skyland, 1);
-			}
-		}
 	}
 
 	@SubscribeEvent
 	public void onWorldUnload(WorldEvent.Unload event)
 	{
-		if (SkylandAPI.getWorldType() != null)
+		if (Skyland.SKYLAND != null)
 		{
 			return;
 		}
 
-		World world = event.world;
+		World world = event.getWorld();
 
 		if (!world.isRemote)
 		{
-			if (world.provider.getDimensionId() == SkylandAPI.getDimension())
+			if (world.provider.getDimension() == Config.dimension)
 			{
 				WorldProviderSkyland.saveDimData();
 			}

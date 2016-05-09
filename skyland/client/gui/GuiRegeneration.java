@@ -1,16 +1,9 @@
-/*
- * Skyland
- *
- * Copyright (c) 2014 kegare
- * https://github.com/kegare
- *
- * This mod is distributed under the terms of the Minecraft Mod Public License Japanese Translation, or MMPL_J.
- */
-
 package skyland.client.gui;
 
 import java.awt.Desktop;
 import java.io.IOException;
+
+import org.lwjgl.input.Keyboard;
 
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
@@ -19,11 +12,9 @@ import net.minecraft.client.resources.I18n;
 import net.minecraftforge.fml.client.config.GuiButtonExt;
 import net.minecraftforge.fml.client.config.GuiCheckBox;
 import net.minecraftforge.fml.client.config.HoverChecker;
-
-import org.lwjgl.input.Keyboard;
-
-import skyland.core.Skyland;
-import skyland.network.RegenerateMessage;
+import skyland.network.RegenerationGuiMessage.EnumType;
+import skyland.network.RegenerationMessage;
+import skyland.network.SkyNetworkRegistry;
 import skyland.world.WorldProviderSkyland;
 
 public class GuiRegeneration extends GuiScreen
@@ -44,7 +35,6 @@ public class GuiRegeneration extends GuiScreen
 		this.backup = backup;
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public void initGui()
 	{
@@ -122,7 +112,7 @@ public class GuiRegeneration extends GuiScreen
 			switch (button.id)
 			{
 				case 0:
-					Skyland.network.sendToServer(new RegenerateMessage(backupCheckBox.isChecked()));
+					SkyNetworkRegistry.sendToServer(new RegenerationMessage(backupCheckBox.isChecked()));
 
 					regenButton.enabled = false;
 					cancelButton.visible = false;
@@ -169,30 +159,30 @@ public class GuiRegeneration extends GuiScreen
 		return false;
 	}
 
-	public void updateProgress(int task)
+	public void updateProgress(EnumType type)
 	{
 		regenButton.enabled = false;
 		cancelButton.visible = false;
 
-		if (task < 0)
+		if (type == null)
 		{
 			regenButton.visible = false;
 			cancelButton.visible = true;
 		}
-		else switch (task)
+		else switch (type)
 		{
-			case 0:
+			case START:
 				regenButton.displayString = I18n.format("skyland.regenerate.gui.progress.regenerating");
 				break;
-			case 1:
+			case BACKUP:
 				regenButton.displayString = I18n.format("skyland.regenerate.gui.progress.backingup");
 				break;
-			case 2:
+			case SUCCESS:
 				regenButton.displayString = I18n.format("skyland.regenerate.gui.progress.regenerated");
 				cancelButton.displayString = I18n.format("gui.done");
 				cancelButton.visible = true;
 				break;
-			case 3:
+			case FAILED:
 				regenButton.displayString = I18n.format("skyland.regenerate.gui.progress.failed");
 				cancelButton.visible = true;
 				break;

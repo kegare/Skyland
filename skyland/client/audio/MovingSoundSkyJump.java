@@ -1,29 +1,21 @@
-/*
- * Skyland
- *
- * Copyright (c) 2014 kegare
- * https://github.com/kegare
- *
- * This mod is distributed under the terms of the Minecraft Mod Public License Japanese Translation, or MMPL_J.
- */
-
 package skyland.client.audio;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.MovingSound;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.util.MathHelper;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.SoundCategory;
+import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.fml.client.FMLClientHandler;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import skyland.core.SkySounds;
 
 @SideOnly(Side.CLIENT)
 public class MovingSoundSkyJump extends MovingSound
 {
 	public MovingSoundSkyJump()
 	{
-		super(new ResourceLocation("skyland:falling"));
+		super(SkySounds.falling, SoundCategory.PLAYERS);
 		this.repeat = true;
 		this.repeatDelay = 0;
 	}

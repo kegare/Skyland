@@ -1,20 +1,14 @@
-/*
- * Skyland
- *
- * Copyright (c) 2014 kegare
- * https://github.com/kegare
- *
- * This mod is distributed under the terms of the Minecraft Mod Public License Japanese Translation, or MMPL_J.
- */
-
 package skyland.item;
 
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.BlockPos;
+import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.EnumHand;
+import net.minecraft.util.SoundCategory;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import skyland.block.SkyBlocks;
 
@@ -27,7 +21,7 @@ public class ItemSkyPortal extends ItemBlock
 	}
 
 	@Override
-	public boolean onItemUseFirst(ItemStack stack, EntityPlayer player, World world, BlockPos pos, EnumFacing side, float hitX, float hitY, float hitZ)
+	public EnumActionResult onItemUseFirst(ItemStack stack, EntityPlayer player, World world, BlockPos pos, EnumFacing side, float hitX, float hitY, float hitZ, EnumHand hand)
 	{
 		if (!world.isRemote)
 		{
@@ -35,23 +29,23 @@ public class ItemSkyPortal extends ItemBlock
 
 			if (SkyBlocks.sky_portal.func_176548_d(world, pos1))
 			{
-				world.playSoundEffect(pos1.getX() + 0.5D, pos1.getY() + 0.5D, pos1.getZ() + 0.5D, SkyBlocks.sky_portal.stepSound.getPlaceSound(), 1.0F, 2.0F);
+				world.playSound(null, pos1.getX() + 0.5D, pos1.getY() + 0.5D, pos1.getZ() + 0.5D, SkyBlocks.sky_portal.getStepSound().getPlaceSound(), SoundCategory.BLOCKS, 1.0F, 2.0F);
 
 				if (!player.capabilities.isCreativeMode && --stack.stackSize <= 0)
 				{
 					player.inventory.setInventorySlotContents(player.inventory.currentItem, null);
 				}
 
-				return true;
+				return EnumActionResult.SUCCESS;
 			}
 		}
 
-		return false;
+		return EnumActionResult.PASS;
 	}
 
 	@Override
-	public boolean onItemUse(ItemStack stack, EntityPlayer playerIn, World worldIn, BlockPos pos, EnumFacing side, float hitX, float hitY, float hitZ)
+	public EnumActionResult onItemUse(ItemStack stack, EntityPlayer playerIn, World worldIn, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ)
 	{
-		return false;
+		return EnumActionResult.PASS;
 	}
 }

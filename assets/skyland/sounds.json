@@ -1,20 +1,10 @@
 {
   "skyland": {
-    "category": "neutral",
+    "category": "music",
     "sounds": [
       {
-        "name": "skyland",
+        "name": "skyland:skyland",
         "volume": 0.25,
-        "stream": true
-      }
-    ]
-  },
-  "record.skyland": {
-    "category": "record",
-    "sounds": [
-      {
-        "name": "skyland",
-        "volume": 0.35,
         "stream": true
       }
     ]
@@ -22,13 +12,13 @@
   "falling": {
     "category": "player",
     "sounds": [
-      "falling"
+      "skyland:falling"
     ]
   },
   "sky_portal": {
     "category": "block",
     "sounds": [
-      "sky_portal"
+      "skyland:sky_portal"
     ]
   }
 }

@@ -1,73 +1,45 @@
-/*
- * Skyland
- *
- * Copyright (c) 2014 kegare
- * https://github.com/kegare
- *
- * This mod is distributed under the terms of the Minecraft Mod Public License Japanese Translation, or MMPL_J.
- */
-
 package skyland.util;
 
 import java.io.File;
-import java.io.InputStream;
-import java.net.URL;
-import java.util.Map;
-import java.util.concurrent.RecursiveAction;
-
-import net.minecraft.util.MathHelper;
-import net.minecraftforge.classloading.FMLForgePlugin;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.fml.common.versioning.ArtifactVersion;
-import net.minecraftforge.fml.common.versioning.DefaultArtifactVersion;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.Level;
 
+import com.google.common.base.Strings;
+
+import net.minecraftforge.classloading.FMLForgePlugin;
+import net.minecraftforge.common.ForgeVersion;
+import net.minecraftforge.common.ForgeVersion.CheckResult;
+import net.minecraftforge.common.ForgeVersion.Status;
+import net.minecraftforge.fml.common.ModContainer;
+import net.minecraftforge.fml.common.versioning.ComparableVersion;
 import skyland.core.Skyland;
 
-import com.google.common.base.Optional;
-import com.google.common.base.Strings;
-import com.google.common.collect.Maps;
-import com.google.common.io.ByteStreams;
-import com.google.gson.Gson;
-
-public class Version extends RecursiveAction
+public class Version
 {
-	private static Optional<String> CURRENT = Optional.absent();
-	private static Optional<String> LATEST = Optional.absent();
+	private static String CURRENT;
 
 	public static boolean DEV_DEBUG = false;
 
-	private static Optional<Status> status = Optional.fromNullable(Status.PENDING);
-
-	public static enum Status
+	public static void initVersion()
 	{
-		PENDING,
-		FAILED,
-		UP_TO_DATE,
-		OUTDATED,
-		AHEAD
-	}
+		CURRENT = Strings.nullToEmpty(Skyland.metadata.version);
 
-	private static void initialize()
-	{
-		CURRENT = Optional.of(Strings.nullToEmpty(Skyland.metadata.version));
-		LATEST = Optional.fromNullable(CURRENT.orNull());
-
-		File file = SkyUtils.getModContainer().getSource();
+		ModContainer mod = SkyUtils.getModContainer();
+		File file = mod == null ? null : mod.getSource();
 
 		if (file != null && file.exists())
 		{
 			if (file.isFile())
 			{
-				if (StringUtils.endsWithIgnoreCase(FilenameUtils.getBaseName(file.getName()), "dev"))
+				String name = FilenameUtils.getBaseName(file.getName());
+
+				if (StringUtils.endsWithIgnoreCase(name, "dev"))
 				{
 					DEV_DEBUG = true;
 				}
 			}
-			else
+			else if (file.isDirectory())
 			{
 				DEV_DEBUG = true;
 			}
@@ -77,7 +49,7 @@ public class Version extends RecursiveAction
 			DEV_DEBUG = true;
 		}
 
-		if (StringUtils.endsWithIgnoreCase(getCurrent(), "dev"))
+		if (Skyland.metadata.version.endsWith("dev"))
 		{
 			DEV_DEBUG = true;
 		}
@@ -87,116 +59,45 @@ public class Version extends RecursiveAction
 		}
 	}
 
-	public static void versionCheck()
+	public static CheckResult getResult()
 	{
-		if (!CURRENT.isPresent() || !LATEST.isPresent())
-		{
-			initialize();
-		}
-
-		SkyUtils.getPool().execute(new Version());
-	}
-
-	public static String getCurrent()
-	{
-		return CURRENT.orNull();
-	}
-
-	public static String getLatest()
-	{
-		return LATEST.or(getCurrent());
+		return ForgeVersion.getResult(SkyUtils.getModContainer());
 	}
 
 	public static Status getStatus()
 	{
-		return status.orNull();
+		return getResult().status;
+	}
+
+	public static String getCurrent()
+	{
+		return CURRENT;
+	}
+
+	public static ComparableVersion getLatest()
+	{
+		ComparableVersion ret = getResult().target;
+
+		if (ret == null)
+		{
+			return new ComparableVersion(CURRENT);
+		}
+
+		return ret;
 	}
 
 	public static boolean isOutdated()
 	{
-		return getStatus() == Status.OUTDATED;
+		return getStatus() == Status.OUTDATED || getStatus() == Status.BETA_OUTDATED;
 	}
 
-	@SuppressWarnings("unchecked")
-	@Override
-	protected void compute()
+	public static boolean isBeta()
 	{
-		try
-		{
-			URL url = new URL(Skyland.metadata.updateUrl);
-			Map<String, Object> data = null;
+		return StringUtils.containsIgnoreCase(CURRENT, "beta");
+	}
 
-			try (InputStream input = url.openStream())
-			{
-				byte[] dat = ByteStreams.toByteArray(input);
-
-				if (dat != null && dat.length > 0)
-				{
-					data = new Gson().fromJson(new String(dat), Map.class);
-				}
-			}
-			finally
-			{
-				if (data == null)
-				{
-					status = Optional.of(Status.FAILED);
-
-					return;
-				}
-			}
-
-			if (data.containsKey("homepage"))
-			{
-				Skyland.metadata.url = (String)data.get("homepage");
-			}
-
-			Map<String, String> versions = Maps.newHashMap();
-
-			if (data.containsKey("versions"))
-			{
-				versions = (Map<String, String>)data.get("versions");
-			}
-
-			String version = versions.get(MinecraftForge.MC_VERSION);
-			ArtifactVersion current = new DefaultArtifactVersion(CURRENT.or("1.0.0"));
-
-			if (!Strings.isNullOrEmpty(version))
-			{
-				ArtifactVersion latest = new DefaultArtifactVersion(version);
-
-				LATEST = Optional.of(version);
-
-				switch (MathHelper.clamp_int(latest.compareTo(current), -1, 1))
-				{
-					case 0:
-						status = Optional.of(Status.UP_TO_DATE);
-						return;
-					case -1:
-						status = Optional.of(Status.AHEAD);
-						return;
-					case 1:
-						status = Optional.of(Status.OUTDATED);
-						return;
-					default:
-						status = Optional.of(Status.FAILED);
-						return;
-				}
-			}
-
-			version = versions.get("latest");
-
-			if (!Strings.isNullOrEmpty(version))
-			{
-				LATEST = Optional.of(version);
-			}
-
-			status = Optional.of(Status.FAILED);
-		}
-		catch (Exception e)
-		{
-			SkyLog.log(Level.WARN, e, "An error occurred trying to version check");
-
-			status = Optional.of(Status.FAILED);
-		}
+	public static boolean isAlpha()
+	{
+		return StringUtils.containsIgnoreCase(CURRENT, "alpha");
 	}
 }

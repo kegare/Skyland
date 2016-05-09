@@ -1,14 +1,12 @@
-/*
- * Skyland
- *
- * Copyright (c) 2014 kegare
- * https://github.com/kegare
- *
- * This mod is distributed under the terms of the Minecraft Mod Public License Japanese Translation, or MMPL_J.
- */
-
 package skyland.item;
 
+import java.util.List;
+
+import com.google.common.collect.Lists;
+
+import net.minecraft.client.renderer.block.model.ModelBakery;
+import net.minecraft.client.renderer.block.model.ModelResourceLocation;
+import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.Item.ToolMaterial;
 import net.minecraft.item.ItemAxe;
@@ -17,43 +15,122 @@ import net.minecraft.item.ItemPickaxe;
 import net.minecraft.item.ItemSpade;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemSword;
+import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.common.util.EnumHelper;
 import net.minecraftforge.fml.common.registry.GameRegistry;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraftforge.oredict.ShapedOreRecipe;
+import net.minecraftforge.oredict.ShapelessOreRecipe;
 import skyland.core.Skyland;
 import skyland.util.SkyUtils;
 
 public class SkyItems
 {
 	public static final ItemSkyFeather sky_feather = new ItemSkyFeather();
-	public static final ItemRecordSkyland record_skyland = new ItemRecordSkyland();
 	public static final Item skyrite = new Item().setUnlocalizedName("skyrite").setCreativeTab(Skyland.tabSkyland);
 
 	public static final ToolMaterial SKYRITE = EnumHelper.addToolMaterial("SKYRITE", 3, 3000, 6.0F, 2.0F, 12).setRepairItem(new ItemStack(skyrite));
 
-	public static final ItemSword skyrite_sword = (ItemSword)new ItemSkyriteSword(SKYRITE).setUnlocalizedName("swordSkyrite").setCreativeTab(Skyland.tabSkyland);
+	public static final ItemSword skyrite_sword = (ItemSword)new ItemSword(SKYRITE).setUnlocalizedName("swordSkyrite").setCreativeTab(Skyland.tabSkyland);
 	public static final ItemSpade skyrite_shovel = (ItemSpade)new ItemSpade(SKYRITE).setUnlocalizedName("shovelSkyrite").setCreativeTab(Skyland.tabSkyland);
 	public static final ItemPickaxe skyrite_pickaxe = (ItemPickaxe)new ItemPickaxeSkyland(SKYRITE).setUnlocalizedName("pickaxeSkyrite").setCreativeTab(Skyland.tabSkyland);
 	public static final ItemAxe skyrite_axe = (ItemAxe)new ItemAxeSkyland(SKYRITE).setUnlocalizedName("axeSkyrite").setCreativeTab(Skyland.tabSkyland);
 	public static final ItemHoe skyrite_hoe = (ItemHoe)new ItemHoe(SKYRITE).setUnlocalizedName("hoeSkyrite").setCreativeTab(Skyland.tabSkyland);
 
-	public static void register()
+	public static void registerItems()
 	{
-		GameRegistry.registerItem(sky_feather, "sky_feather");
-		GameRegistry.registerItem(record_skyland, "record_skyland");
-		GameRegistry.registerItem(skyrite, "skyrite");
-		GameRegistry.registerItem(skyrite_sword, "skyrite_sword");
-		GameRegistry.registerItem(skyrite_shovel, "skyrite_shovel");
-		GameRegistry.registerItem(skyrite_pickaxe, "skyrite_pickaxe");
-		GameRegistry.registerItem(skyrite_axe, "skyrite_axe");
-		GameRegistry.registerItem(skyrite_hoe, "skyrite_hoe");
+		sky_feather.setRegistryName("sky_feather");
+		skyrite.setRegistryName("skyrite");
+		skyrite_sword.setRegistryName("skyrite_sword");
+		skyrite_shovel.setRegistryName("skyrite_shovel");
+		skyrite_pickaxe.setRegistryName("skyrite_pickaxe");
+		skyrite_axe.setRegistryName("skyrite_axe");
+		skyrite_hoe.setRegistryName("skyrite_hoe");
+
+		GameRegistry.register(sky_feather);
+		GameRegistry.register(skyrite);
+		GameRegistry.register(skyrite_sword);
+		GameRegistry.register(skyrite_shovel);
+		GameRegistry.register(skyrite_pickaxe);
+		GameRegistry.register(skyrite_axe);
+		GameRegistry.register(skyrite_hoe);
 
 		SkyUtils.registerOreDict(sky_feather, "feather", "skyFeather");
-		SkyUtils.registerOreDict(record_skyland, "record");
 		SkyUtils.registerOreDict(skyrite, "skyrite", "gemSkyrite");
-		SkyUtils.registerOreDict(skyrite_sword, "sword", "swordSkyrite");
-		SkyUtils.registerOreDict(skyrite_shovel, "shovel", "shovelSkyrite");
-		SkyUtils.registerOreDict(skyrite_pickaxe, "pickaxe", "pickaxeSkyrite");
-		SkyUtils.registerOreDict(skyrite_axe, "axe", "axeSkyrite");
-		SkyUtils.registerOreDict(skyrite_hoe, "hoe", "hoeSkyrite");
+	}
+
+	@SideOnly(Side.CLIENT)
+	public static void registerModels()
+	{
+		registerModel(sky_feather, "sky_feather");
+		registerModel(skyrite, "skyrite");
+		registerModel(skyrite_sword, "skyrite_sword");
+		registerModel(skyrite_shovel, "skyrite_shovel");
+		registerModel(skyrite_pickaxe, "skyrite_pickaxe");
+		registerModel(skyrite_axe, "skyrite_axe");
+		registerModel(skyrite_hoe, "skyrite_hoe");
+	}
+
+	@SideOnly(Side.CLIENT)
+	public static void registerModel(Item item, String modelName)
+	{
+		ModelLoader.setCustomModelResourceLocation(item, 0, new ModelResourceLocation(Skyland.MODID + ":" + modelName, "inventory"));
+	}
+
+	@SideOnly(Side.CLIENT)
+	public static void registerModelWithMeta(Item item, String... modelName)
+	{
+		List<ModelResourceLocation> models = Lists.newArrayList();
+
+		for (String model : modelName)
+		{
+			models.add(new ModelResourceLocation(Skyland.MODID + ":" + model, "inventory"));
+		}
+
+		ModelBakery.registerItemVariants(item, models.toArray(new ResourceLocation[models.size()]));
+
+		for (int i = 0; i < models.size(); ++i)
+		{
+			ModelLoader.setCustomModelResourceLocation(item, i, models.get(i));
+		}
+	}
+
+	public static void registerRecipes()
+	{
+		GameRegistry.addRecipe(new ShapelessOreRecipe(new ItemStack(SkyItems.skyrite, 9), "blockSkyrite"));
+
+		GameRegistry.addRecipe(new ShapedOreRecipe(SkyItems.skyrite_sword,
+			"X", "X", "Y",
+			'X', "skyrite",
+			'Y', "stickWood"
+		));
+		GameRegistry.addRecipe(new ShapedOreRecipe(SkyItems.skyrite_shovel,
+			"X", "Y", "Y",
+			'X', "skyrite",
+			'Y', "stickWood"
+		));
+		GameRegistry.addRecipe(new ShapedOreRecipe(SkyItems.skyrite_pickaxe,
+			"XXX", " Y ", " Y ",
+			'X', "skyrite",
+			'Y', "stickWood"
+		));
+		GameRegistry.addRecipe(new ShapedOreRecipe(SkyItems.skyrite_axe,
+			"XX", "XY", " Y",
+			'X', "skyrite",
+			'Y', "stickWood"
+		));
+		GameRegistry.addRecipe(new ShapedOreRecipe(SkyItems.skyrite_hoe,
+			"XX", " Y", " Y",
+			'X', "skyrite",
+			'Y', "stickWood"
+		));
+		GameRegistry.addRecipe(new ShapedOreRecipe(Items.arrow,
+			"X", "#", "Y",
+			'X', Items.flint,
+			'#', "stickWood",
+			'Y', "skyFeather"
+		));
 	}
 }

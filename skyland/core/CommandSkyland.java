@@ -1,45 +1,27 @@
-/*
- * Skyland
- *
- * Copyright (c) 2014 kegare
- * https://github.com/kegare
- *
- * This mod is distributed under the terms of the Minecraft Mod Public License Japanese Translation, or MMPL_J.
- */
-
 package skyland.core;
 
-import java.awt.Desktop;
-import java.net.URI;
-import java.util.Collections;
 import java.util.List;
+
+import com.google.common.base.Joiner;
 
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
-import net.minecraft.command.ICommand;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.event.ClickEvent;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.BlockPos;
-import net.minecraft.util.ChatComponentText;
-import net.minecraft.util.ChatComponentTranslation;
-import net.minecraft.util.EnumChatFormatting;
-import net.minecraft.util.IChatComponent;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.text.TextFormatting;
+import net.minecraft.util.text.event.ClickEvent;
 import net.minecraftforge.fml.common.Loader;
-import skyland.api.SkylandAPI;
-import skyland.network.RegenerateMessage;
+import skyland.network.DisplayGuiMessage;
+import skyland.network.SkyNetworkRegistry;
 import skyland.util.Version;
 import skyland.world.WorldProviderSkyland;
 
-public class CommandSkyland implements ICommand
+public class CommandSkyland extends CommandBase
 {
-	@Override
-	public int compareTo(ICommand command)
-	{
-		return getCommandName().compareTo(command.getCommandName());
-	}
-
 	@Override
 	public String getCommandName()
 	{
@@ -47,67 +29,64 @@ public class CommandSkyland implements ICommand
 	}
 
 	@Override
+	public int getRequiredPermissionLevel()
+	{
+		return 0;
+	}
+
+	@Override
 	public String getCommandUsage(ICommandSender sender)
 	{
-		return "commands.generic.notFound";
+		return String.format("/%s <%s>", getCommandName(), Joiner.on('|').join(getCommands()));
 	}
 
-	@Override
-	public List getCommandAliases()
+	public String[] getCommands()
 	{
-		return Collections.emptyList();
+		return new String[] {"version", "regenerate"};
 	}
 
 	@Override
-	public void processCommand(ICommandSender sender, final String[] args)
+	public void execute(MinecraftServer server, ICommandSender sender, final String[] args) throws CommandException
 	{
 		if (args.length <= 0 || args[0].equalsIgnoreCase("version"))
 		{
 			ClickEvent click = new ClickEvent(ClickEvent.Action.OPEN_URL, Skyland.metadata.url);
-			IChatComponent component;
-			IChatComponent message = new ChatComponentText(" ");
+			ITextComponent component;
+			ITextComponent message = new TextComponentString(" ");
 
-			component = new ChatComponentText("Skyland");
-			component.getChatStyle().setColor(EnumChatFormatting.AQUA);
+			component = new TextComponentString("Skyland");
+			component.getChatStyle().setColor(TextFormatting.AQUA);
 			message.appendSibling(component);
 			message.appendText(" " + Version.getCurrent());
 
 			if (Version.DEV_DEBUG)
 			{
 				message.appendText(" ");
-				component = new ChatComponentText("dev");
-				component.getChatStyle().setColor(EnumChatFormatting.RED);
+				component = new TextComponentString("dev");
+				component.getChatStyle().setColor(TextFormatting.RED);
 				message.appendSibling(component);
 			}
 
 			message.appendText(" for " + Loader.instance().getMCVersionString() + " ");
-			component = new ChatComponentText("(Latest: " + Version.getLatest() + ")");
-			component.getChatStyle().setColor(EnumChatFormatting.GRAY);
+			component = new TextComponentString("(Latest: " + Version.getLatest() + ")");
+			component.getChatStyle().setColor(TextFormatting.GRAY);
 			message.appendSibling(component);
 			message.getChatStyle().setChatClickEvent(click);
 			sender.addChatMessage(message);
 
-			message = new ChatComponentText("  ");
-			component = new ChatComponentText(Skyland.metadata.description);
+			message = new TextComponentString("  ");
+			component = new TextComponentString(Skyland.metadata.description);
 			component.getChatStyle().setChatClickEvent(click);
 			message.appendSibling(component);
 			sender.addChatMessage(message);
 
-			message = new ChatComponentText("  ");
-			component = new ChatComponentText(Skyland.metadata.url);
-			component.getChatStyle().setColor(EnumChatFormatting.DARK_GRAY).setChatClickEvent(click);
+			message = new TextComponentString("  ");
+			component = new TextComponentString(Skyland.metadata.url);
+			component.getChatStyle().setColor(TextFormatting.DARK_GRAY).setChatClickEvent(click);
 			message.appendSibling(component);
 			sender.addChatMessage(message);
 		}
-		else if (args[0].equalsIgnoreCase("forum") || args[0].equalsIgnoreCase("url"))
-		{
-			try
-			{
-				Desktop.getDesktop().browse(new URI(Skyland.metadata.url));
-			}
-			catch (Exception e) {}
-		}
-		else if (args[0].equalsIgnoreCase("regenerate") && SkylandAPI.getWorldType() == null)
+		else if (args[0].equalsIgnoreCase("regenerate") && Skyland.SKYLAND == null)
 		{
 			boolean backup = true;
 
@@ -127,15 +106,13 @@ public class CommandSkyland implements ICommand
 			{
 				EntityPlayerMP player = (EntityPlayerMP)sender;
 
-				if (player.mcServer.isSinglePlayer() || player.mcServer.getConfigurationManager().canSendCommands(player.getGameProfile()))
+				if (player.mcServer.isSinglePlayer() || player.mcServer.getPlayerList().canSendCommands(player.getGameProfile()))
 				{
-					Skyland.network.sendTo(new RegenerateMessage(backup), player);
+					SkyNetworkRegistry.sendTo(new DisplayGuiMessage(backup ? 0 : 1), player);
 				}
 				else
 				{
-					IChatComponent component = new ChatComponentTranslation("commands.generic.permission");
-					component.getChatStyle().setColor(EnumChatFormatting.RED);
-					sender.addChatMessage(component);
+					throw new CommandException("commands.generic.permission");
 				}
 			}
 			else
@@ -146,20 +123,14 @@ public class CommandSkyland implements ICommand
 	}
 
 	@Override
-	public boolean canCommandSenderUseCommand(ICommandSender sender)
+	public boolean checkPermission(MinecraftServer server, ICommandSender sender)
 	{
 		return sender instanceof MinecraftServer || sender instanceof EntityPlayerMP;
 	}
 
 	@Override
-	public List addTabCompletionOptions(ICommandSender sender, String[] args, BlockPos pos)
+	public List<String> getTabCompletionOptions(MinecraftServer server, ICommandSender sender, String[] args, BlockPos pos)
 	{
-		return args.length == 1 ? CommandBase.getListOfStringsMatchingLastWord(args, "version", "forum", "regenerate") : null;
-	}
-
-	@Override
-	public boolean isUsernameIndex(String[] args, int index)
-	{
-		return false;
+		return args.length == 1 ? CommandBase.getListOfStringsMatchingLastWord(args, getCommands()) : null;
 	}
 }

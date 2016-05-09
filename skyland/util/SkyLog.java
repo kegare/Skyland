@@ -1,22 +1,13 @@
-/*
- * Skyland
- *
- * Copyright (c) 2014 kegare
- * https://github.com/kegare
- *
- * This mod is distributed under the terms of the Minecraft Mod Public License Japanese Translation, or MMPL_J.
- */
-
 package skyland.util;
 
 import java.util.Locale;
-
-import net.minecraftforge.fml.relauncher.FMLLaunchHandler;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.ThreadContext;
+
+import net.minecraftforge.fml.relauncher.FMLLaunchHandler;
 
 public class SkyLog
 {

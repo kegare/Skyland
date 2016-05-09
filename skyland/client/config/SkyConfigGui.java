@@ -1,18 +1,9 @@
-/*
- * Skyland
- *
- * Copyright (c) 2014 kegare
- * https://github.com/kegare
- *
- * This mod is distributed under the terms of the Minecraft Mod Public License Japanese Translation, or MMPL_J.
- */
-
 package skyland.client.config;
 
 import java.util.List;
 
-import skyland.api.SkylandAPI;
-import skyland.core.Skyland;
+import com.google.common.collect.Lists;
+
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.resources.I18n;
 import net.minecraftforge.common.config.ConfigElement;
@@ -21,8 +12,8 @@ import net.minecraftforge.fml.client.config.GuiConfig;
 import net.minecraftforge.fml.client.config.IConfigElement;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
-
-import com.google.common.collect.Lists;
+import skyland.core.Config;
+import skyland.core.Skyland;
 
 @SideOnly(Side.CLIENT)
 public class SkyConfigGui extends GuiConfig
@@ -35,11 +26,10 @@ public class SkyConfigGui extends GuiConfig
 	private static List<IConfigElement> getConfigElements()
 	{
 		List<IConfigElement> list = Lists.newArrayList();
+		Configuration config = Config.config;
 
-		list.addAll(new ConfigElement(SkylandAPI.getConfig().getCategory(Configuration.CATEGORY_GENERAL)).getChildElements());
-		list.addAll(new ConfigElement(SkylandAPI.getConfig().getCategory("items")).getChildElements());
-		list.addAll(new ConfigElement(SkylandAPI.getConfig().getCategory("skyland")).getChildElements());
-		list.addAll(new ConfigElement(SkylandAPI.getConfig().getCategory("options")).getChildElements());
+		list.addAll(new ConfigElement(config.getCategory(Configuration.CATEGORY_GENERAL)).getChildElements());
+		list.addAll(new ConfigElement(config.getCategory(Config.CATEGORY_DIMENSION)).getChildElements());
 
 		return list;
 	}

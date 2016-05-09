@@ -1,17 +1,10 @@
-/*
- * Skyland
- *
- * Copyright (c) 2014 kegare
- * https://github.com/kegare
- *
- * This mod is distributed under the terms of the Minecraft Mod Public License Japanese Translation, or MMPL_J.
- */
-
 package skyland.world;
 
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldServer;
 import net.minecraft.world.WorldType;
-import net.minecraft.world.chunk.IChunkProvider;
+import net.minecraft.world.chunk.IChunkGenerator;
 
 public class WorldTypeSkyland extends WorldType
 {
@@ -21,7 +14,7 @@ public class WorldTypeSkyland extends WorldType
 	}
 
 	@Override
-	public IChunkProvider getChunkGenerator(World world, String generatorOptions)
+	public IChunkGenerator getChunkGenerator(World world, String generatorOptions)
 	{
 		return new ChunkProviderSkyland(world);
 	}
@@ -39,9 +32,9 @@ public class WorldTypeSkyland extends WorldType
 	}
 
 	@Override
-	public int getSpawnFuzz()
+	public int getSpawnFuzz(WorldServer world, MinecraftServer server)
 	{
-		return 2;
+		return Math.min(2, server.getSpawnRadius(world));
 	}
 
 	@Override
