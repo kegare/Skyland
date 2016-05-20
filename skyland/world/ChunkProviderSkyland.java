@@ -12,8 +12,8 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldEntitySpawner;
-import net.minecraft.world.biome.BiomeGenBase;
-import net.minecraft.world.biome.BiomeGenBase.SpawnListEntry;
+import net.minecraft.world.biome.Biome;
+import net.minecraft.world.biome.Biome.SpawnListEntry;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkPrimer;
 import net.minecraft.world.chunk.IChunkGenerator;
@@ -44,7 +44,7 @@ public class ChunkProviderSkyland implements IChunkGenerator
 	private NoiseGeneratorOctaves noiseGen5;
 
 	private double[] densities;
-	private BiomeGenBase[] biomesForGeneration;
+	private Biome[] biomesForGeneration;
 	private double[] noise1;
 	private double[] noise2;
 	private double[] noise3;
@@ -52,11 +52,11 @@ public class ChunkProviderSkyland implements IChunkGenerator
 	private double[] noise5;
 
 	private final MapGenBase caveGenerator = new MapGenCavesSkyland();
-	private final WorldGenerator lakeWaterGen = new WorldGenLakes(Blocks.water);
-	private final WorldGenerator lakeLavaGen = new WorldGenLakes(Blocks.lava);
-	private final WorldGenerator worldGenIron = new WorldGenMinable(Blocks.iron_ore.getDefaultState(), 7);
-	private final WorldGenerator worldGenEmerald = new WorldGenMinable(Blocks.emerald_ore.getDefaultState(), 4);
-	private final WorldGenerator worldGenDiamond = new WorldGenMinable(Blocks.diamond_ore.getDefaultState(), 3);
+	private final WorldGenerator lakeWaterGen = new WorldGenLakes(Blocks.WATER);
+	private final WorldGenerator lakeLavaGen = new WorldGenLakes(Blocks.LAVA);
+	private final WorldGenerator worldGenIron = new WorldGenMinable(Blocks.IRON_ORE.getDefaultState(), 7);
+	private final WorldGenerator worldGenEmerald = new WorldGenMinable(Blocks.EMERALD_ORE.getDefaultState(), 4);
+	private final WorldGenerator worldGenDiamond = new WorldGenMinable(Blocks.DIAMOND_ORE.getDefaultState(), 3);
 	private final WorldGenerator worldGenSkyrite = new WorldGenMinable(SkyBlocks.skyrite_ore.getDefaultState(), 5);
 
 	public ChunkProviderSkyland(World world)
@@ -115,7 +115,7 @@ public class ChunkProviderSkyland implements IChunkGenerator
 
 								if (d15 > 0.0D)
 								{
-									state = Blocks.stone.getDefaultState();
+									state = Blocks.STONE.getDefaultState();
 								}
 
 								int x = m + i * 8;
@@ -275,7 +275,7 @@ public class ChunkProviderSkyland implements IChunkGenerator
 		return densities;
 	}
 
-	public void replaceBiomeBlocks(int chunkX, int chunkZ, ChunkPrimer data, BiomeGenBase[] biomes)
+	public void replaceBiomeBlocks(int chunkX, int chunkZ, ChunkPrimer data, Biome[] biomes)
 	{
 		for (int x = 0; x < 16; ++x)
 		{
@@ -283,7 +283,7 @@ public class ChunkProviderSkyland implements IChunkGenerator
 			{
 				byte b = 1;
 				int i = -1;
-				BiomeGenBase biome = biomes[z + x * 16];
+				Biome biome = biomes[z + x * 16];
 				IBlockState top = biome.topBlock;
 				IBlockState filler = biome.fillerBlock;
 
@@ -291,17 +291,17 @@ public class ChunkProviderSkyland implements IChunkGenerator
 				{
 					IBlockState block = data.getBlockState(x, y, z);
 
-					if (block.getMaterial() == Material.air)
+					if (block.getMaterial() == Material.AIR)
 					{
 						i = -1;
 					}
-					else if (block.getBlock() == Blocks.stone)
+					else if (block.getBlock() == Blocks.STONE)
 					{
 						if (i == -1)
 						{
 							if (b <= 0)
 							{
-								top = Blocks.air.getDefaultState();
+								top = Blocks.AIR.getDefaultState();
 								filler = biome.fillerBlock;
 							}
 
@@ -321,10 +321,10 @@ public class ChunkProviderSkyland implements IChunkGenerator
 							--i;
 							data.setBlockState(x, y, z, filler);
 
-							if (i == 0 && filler.getBlock() == Blocks.sand)
+							if (i == 0 && filler.getBlock() == Blocks.SAND)
 							{
 								i = rand.nextInt(4) + Math.max(0, y - 63);
-								filler = Blocks.sandstone.getDefaultState();
+								filler = Blocks.SANDSTONE.getDefaultState();
 							}
 						}
 					}
@@ -353,7 +353,7 @@ public class ChunkProviderSkyland implements IChunkGenerator
 
 		for (int index = 0; index < biomes.length; ++index)
 		{
-			biomes[index] = (byte)BiomeGenBase.getIdForBiome(biomesForGeneration[index]);
+			biomes[index] = (byte)Biome.getIdForBiome(biomesForGeneration[index]);
 		}
 
 		chunk.generateSkylightMap();
@@ -366,10 +366,10 @@ public class ChunkProviderSkyland implements IChunkGenerator
 	{
 		BlockFalling.fallInstantly = true;
 
-		ForgeEventFactory.onChunkPopulate(true, this, worldObj, chunkX, chunkZ, false);
+		ForgeEventFactory.onChunkPopulate(true, this, worldObj, rand, chunkX, chunkZ, false);
 
 		BlockPos pos = new BlockPos(chunkX * 16, 0, chunkZ * 16);
-		BiomeGenBase biome = worldObj.getBiomeGenForCoords(pos.add(16, 0, 16));
+		Biome biome = worldObj.getBiomeGenForCoords(pos.add(16, 0, 16));
 		rand.setSeed(worldObj.getSeed());
 		long xSeed = rand.nextLong() / 2L * 2L + 1L;
 		long zSeed = rand.nextLong() / 2L * 2L + 1L;
@@ -456,12 +456,12 @@ public class ChunkProviderSkyland implements IChunkGenerator
 
 				if (worldObj.canBlockFreezeWater(pos1))
 				{
-					worldObj.setBlockState(pos1, Blocks.ice.getDefaultState(), 2);
+					worldObj.setBlockState(pos1, Blocks.ICE.getDefaultState(), 2);
 				}
 			}
 		}
 
-		ForgeEventFactory.onChunkPopulate(false, this, worldObj, chunkX, chunkZ, false);
+		ForgeEventFactory.onChunkPopulate(false, this, worldObj, rand, chunkX, chunkZ, false);
 
 		BlockFalling.fallInstantly = false;
 	}
@@ -475,7 +475,7 @@ public class ChunkProviderSkyland implements IChunkGenerator
 	@Override
 	public List<SpawnListEntry> getPossibleCreatures(EnumCreatureType type, BlockPos pos)
 	{
-		BiomeGenBase biome = worldObj.getBiomeGenForCoords(pos);
+		Biome biome = worldObj.getBiomeGenForCoords(pos);
 
 		return biome == null ? null : biome.getSpawnableList(type);
 	}

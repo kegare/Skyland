@@ -52,7 +52,7 @@ public class PlayMusicMessage implements IMessage, IMessageHandler<PlayMusicMess
 					SoundHandler handler = mc.getSoundHandler();
 
 					handler.stopSounds();
-					handler.playSound(PositionedSoundRecord.getMusicRecord(SoundEvent.soundEventRegistry.getObject(new ResourceLocation(message.music))));
+					handler.playSound(PositionedSoundRecord.getMusicRecord(SoundEvent.REGISTRY.getObject(new ResourceLocation(message.music))));
 				}
 			}
 		);

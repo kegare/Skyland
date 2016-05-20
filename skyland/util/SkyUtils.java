@@ -166,7 +166,7 @@ public class SkyUtils
 	public static void setPlayerLocation(EntityPlayerMP player, double posX, double posY, double posZ, float yaw, float pitch)
 	{
 		player.dismountRidingEntity();
-		player.playerNetServerHandler.setPlayerLocation(posX, posY, posZ, yaw, pitch);
+		player.connection.setPlayerLocation(posX, posY, posZ, yaw, pitch);
 	}
 
 	public static boolean transferPlayer(EntityPlayerMP player, int dim)
@@ -194,7 +194,7 @@ public class SkyUtils
 	{
 		transferPlayer(player, dim);
 
-		WorldServer world = player.getServerForPlayer();
+		WorldServer world = player.getServerWorld();
 		BlockPos pos = null;
 		boolean flag = false;
 
@@ -266,7 +266,7 @@ public class SkyUtils
 			setPlayerLocation(player, pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D);
 			world.setBlockToAir(pos);
 			world.setBlockToAir(pos.up());
-			world.setBlockState(pos, Blocks.dirt.getDefaultState());
+			world.setBlockState(pos, Blocks.DIRT.getDefaultState());
 		}
 
 		return false;
@@ -278,7 +278,7 @@ public class SkyUtils
 
 		if (safe)
 		{
-			WorldServer world = player.getServerForPlayer();
+			WorldServer world = player.getServerWorld();
 			BlockPos pos = new BlockPos(posX, posY, posZ);
 
 			if (world.isAirBlock(pos) && world.isAirBlock(pos.up()))

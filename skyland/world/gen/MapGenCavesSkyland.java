@@ -12,7 +12,6 @@ package skyland.world.gen;
 import java.util.Random;
 
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.init.Blocks;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.ChunkPrimer;
@@ -21,7 +20,7 @@ import net.minecraft.world.gen.MapGenCaves;
 public class MapGenCavesSkyland extends MapGenCaves
 {
 	@Override
-	protected void func_180702_a(long caveSeed, int chunkX, int chunkZ, ChunkPrimer data, double blockX, double blockY, double blockZ, float scale, float leftRightRadian, float upDownRadian, int currentY, int targetY, double scaleHeight)
+	protected void addTunnel(long caveSeed, int chunkX, int chunkZ, ChunkPrimer data, double blockX, double blockY, double blockZ, float scale, float leftRightRadian, float upDownRadian, int currentY, int targetY, double scaleHeight)
 	{
 		Random random = new Random(caveSeed);
 		double centerX = chunkX * 16 + 8;
@@ -73,8 +72,8 @@ public class MapGenCavesSkyland extends MapGenCaves
 
 			if (!createFinalRoom && currentY == nextInterHeight && scale > 1.0F && targetY > 0)
 			{
-				func_180702_a(random.nextLong(), chunkX, chunkZ, data, blockX, blockY, blockZ, random.nextFloat() * 0.5F + 0.5F, leftRightRadian - (float)Math.PI / 2F, upDownRadian / 3.0F, currentY, targetY, 1.0D);
-				func_180702_a(random.nextLong(), chunkX, chunkZ, data, blockX, blockY, blockZ, random.nextFloat() * 0.5F + 0.5F, leftRightRadian + (float)Math.PI / 2F, upDownRadian / 3.0F, currentY, targetY, 1.0D);
+				addTunnel(random.nextLong(), chunkX, chunkZ, data, blockX, blockY, blockZ, random.nextFloat() * 0.5F + 0.5F, leftRightRadian - (float)Math.PI / 2F, upDownRadian / 3.0F, currentY, targetY, 1.0D);
+				addTunnel(random.nextLong(), chunkX, chunkZ, data, blockX, blockY, blockZ, random.nextFloat() * 0.5F + 0.5F, leftRightRadian + (float)Math.PI / 2F, upDownRadian / 3.0F, currentY, targetY, 1.0D);
 
 				return;
 			}
@@ -151,7 +150,7 @@ public class MapGenCavesSkyland extends MapGenCaves
 
 			if (rand.nextInt(6) == 0)
 			{
-				func_180703_a(rand.nextLong(), chunkX, chunkZ, data, blockX, blockY, blockZ);
+				addRoom(rand.nextLong(), chunkX, chunkZ, data, blockX, blockY, blockZ);
 
 				count += rand.nextInt(4);
 			}
@@ -167,7 +166,7 @@ public class MapGenCavesSkyland extends MapGenCaves
 					scale *= rand.nextFloat() * rand.nextFloat() * 3.5F + 1.0F;
 				}
 
-				func_180702_a(rand.nextLong(), chunkX, chunkZ, data, blockX, blockY, blockZ, scale, leftRightRadian, upDownRadian, 0, 0, 1.0D);
+				addTunnel(rand.nextLong(), chunkX, chunkZ, data, blockX, blockY, blockZ, scale, leftRightRadian, upDownRadian, 0, 0, 1.0D);
 			}
 		}
 	}
@@ -175,6 +174,6 @@ public class MapGenCavesSkyland extends MapGenCaves
 	@Override
 	protected void digBlock(ChunkPrimer data, int x, int y, int z, int chunkX, int chunkZ, boolean foundTop, IBlockState state, IBlockState up)
 	{
-		data.setBlockState(x, y, z, Blocks.air.getDefaultState());
+		data.setBlockState(x, y, z, BLK_AIR);
 	}
 }

@@ -55,7 +55,7 @@ public class CommandSkyland extends CommandBase
 			ITextComponent message = new TextComponentString(" ");
 
 			component = new TextComponentString("Skyland");
-			component.getChatStyle().setColor(TextFormatting.AQUA);
+			component.getStyle().setColor(TextFormatting.AQUA);
 			message.appendSibling(component);
 			message.appendText(" " + Version.getCurrent());
 
@@ -63,26 +63,26 @@ public class CommandSkyland extends CommandBase
 			{
 				message.appendText(" ");
 				component = new TextComponentString("dev");
-				component.getChatStyle().setColor(TextFormatting.RED);
+				component.getStyle().setColor(TextFormatting.RED);
 				message.appendSibling(component);
 			}
 
 			message.appendText(" for " + Loader.instance().getMCVersionString() + " ");
 			component = new TextComponentString("(Latest: " + Version.getLatest() + ")");
-			component.getChatStyle().setColor(TextFormatting.GRAY);
+			component.getStyle().setColor(TextFormatting.GRAY);
 			message.appendSibling(component);
-			message.getChatStyle().setChatClickEvent(click);
+			message.getStyle().setClickEvent(click);
 			sender.addChatMessage(message);
 
 			message = new TextComponentString("  ");
 			component = new TextComponentString(Skyland.metadata.description);
-			component.getChatStyle().setChatClickEvent(click);
+			component.getStyle().setClickEvent(click);
 			message.appendSibling(component);
 			sender.addChatMessage(message);
 
 			message = new TextComponentString("  ");
 			component = new TextComponentString(Skyland.metadata.url);
-			component.getChatStyle().setColor(TextFormatting.DARK_GRAY).setChatClickEvent(click);
+			component.getStyle().setColor(TextFormatting.DARK_GRAY).setClickEvent(click);
 			message.appendSibling(component);
 			sender.addChatMessage(message);
 		}

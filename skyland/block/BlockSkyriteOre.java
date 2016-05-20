@@ -21,7 +21,7 @@ public class BlockSkyriteOre extends BlockOre
 		this.setUnlocalizedName("oreSkyrite");
 		this.setHardness(3.0F);
 		this.setResistance(5.0F);
-		this.setStepSound(SoundType.STONE);
+		this.setSoundType(SoundType.STONE);
 		this.setCreativeTab(Skyland.tabSkyland);
 	}
 

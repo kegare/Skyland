@@ -1,11 +1,10 @@
 package skyland.world;
 
-import java.util.Iterator;
 import java.util.Random;
-import java.util.Set;
 
-import com.google.common.collect.Sets;
-
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.ObjectIterator;
 import net.minecraft.block.BlockPortal;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
@@ -14,10 +13,10 @@ import net.minecraft.init.Blocks;
 import net.minecraft.init.MobEffects;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.EnumFacing;
-import net.minecraft.util.LongHashMap;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.BlockPos.MutableBlockPos;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.ChunkCoordIntPair;
 import net.minecraft.world.Teleporter;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
@@ -31,14 +30,12 @@ public class TeleporterSkyland extends Teleporter
 	private final WorldServer worldObj;
 	private final Random random;
 
-	private final LongHashMap<PortalPosition> coordCache = new LongHashMap<>();
-	private final Set<Long> coordKeys = Sets.newHashSet();
+	private final Long2ObjectMap<PortalPosition> coordCache = new Long2ObjectOpenHashMap<>(4096);
 
 	public TeleporterSkyland(WorldServer worldServer)
 	{
 		super(worldServer);
 		this.worldObj = worldServer;
-		this.worldObj.customTeleporters.add(this);
 		this.random = new Random(worldServer.getSeed());
 	}
 
@@ -65,7 +62,7 @@ public class TeleporterSkyland extends Teleporter
 			{
 				if (entity instanceof EntityPlayerMP)
 				{
-					((EntityPlayerMP)entity).playerNetServerHandler.setPlayerLocation(pos.getX(), pos.getY() + 0.5D, pos.getZ(), entity.rotationYaw, entity.rotationPitch);
+					((EntityPlayerMP)entity).connection.setPlayerLocation(pos.getX(), pos.getY() + 0.5D, pos.getZ(), entity.rotationYaw, entity.rotationPitch);
 				}
 				else
 				{
@@ -102,7 +99,7 @@ public class TeleporterSkyland extends Teleporter
 			EntityPlayerMP player = (EntityPlayerMP)entity;
 
 			player.addExperienceLevel(0);
-			player.addPotionEffect(new PotionEffect(MobEffects.blindness, 25, 0, false, false));
+			player.addPotionEffect(new PotionEffect(MobEffects.BLINDNESS, 25, 0, false, false));
 		}
 	}
 
@@ -119,11 +116,11 @@ public class TeleporterSkyland extends Teleporter
 		int j = MathHelper.floor_double(entity.posZ);
 		boolean flag1 = true;
 		Object object = BlockPos.ORIGIN;
-		long k = ChunkCoordIntPair.chunkXZ2Int(i, j);
+		long coord = ChunkPos.chunkXZ2Int(i, j);
 
-		if (coordCache.containsItem(k))
+		if (coordCache.containsKey(coord))
 		{
-			Teleporter.PortalPosition portalposition = coordCache.getValueByKey(k);
+			PortalPosition portalposition = coordCache.get(coord);
 			d0 = 0.0D;
 			object = portalposition;
 			portalposition.lastUpdateTime = worldObj.getTotalWorldTime();
@@ -138,21 +135,21 @@ public class TeleporterSkyland extends Teleporter
 				pos = BlockPos.ORIGIN;
 			}
 
-			for (int l = -128; l <= 128; ++l)
+			for (int x = -128; x <= 128; ++x)
 			{
-				BlockPos blockpos1;
+				BlockPos current;
 
-				for (int i1 = -128; i1 <= 128; ++i1)
+				for (int z = -128; z <= 128; ++z)
 				{
-					for (BlockPos blockpos = pos.add(l, worldObj.getActualHeight() - 1 - pos.getY(), i1); blockpos.getY() >= 0; blockpos = blockpos1)
+					for (BlockPos blockpos = pos.add(x, worldObj.getActualHeight() - 1 - pos.getY(), z); blockpos.getY() >= 0; blockpos = current)
 					{
-						blockpos1 = blockpos.down();
+						current = blockpos.down();
 
 						if (worldObj.getBlockState(blockpos).getBlock() == SkyBlocks.sky_portal)
 						{
-							while (worldObj.getBlockState(blockpos1 = blockpos.down()).getBlock() == SkyBlocks.sky_portal)
+							while (worldObj.getBlockState(current = blockpos.down()).getBlock() == SkyBlocks.sky_portal)
 							{
-								blockpos = blockpos1;
+								blockpos = current;
 							}
 
 							double d1 = blockpos.distanceSq(pos);
@@ -172,52 +169,51 @@ public class TeleporterSkyland extends Teleporter
 		{
 			if (flag1)
 			{
-				coordCache.add(k, new Teleporter.PortalPosition((BlockPos)object, worldObj.getTotalWorldTime()));
-				coordKeys.add(Long.valueOf(k));
+				coordCache.put(coord, new PortalPosition((BlockPos)object, worldObj.getTotalWorldTime()));
 			}
 
-			double d4 = ((BlockPos)object).getX() + 0.5D;
-			double d5 = ((BlockPos)object).getY() + 0.5D;
-			double d6 = ((BlockPos)object).getZ() + 0.5D;
-			EnumFacing enumfacing = null;
+			double posX = ((BlockPos)object).getX() + 0.5D;
+			double posY = ((BlockPos)object).getY() + 0.5D;
+			double posZ = ((BlockPos)object).getZ() + 0.5D;
+			EnumFacing face = null;
 
 			if (worldObj.getBlockState(((BlockPos)object).west()).getBlock() == SkyBlocks.sky_portal)
 			{
-				enumfacing = EnumFacing.NORTH;
+				face = EnumFacing.NORTH;
 			}
 
 			if (worldObj.getBlockState(((BlockPos)object).east()).getBlock() == SkyBlocks.sky_portal)
 			{
-				enumfacing = EnumFacing.SOUTH;
+				face = EnumFacing.SOUTH;
 			}
 
 			if (worldObj.getBlockState(((BlockPos)object).north()).getBlock() == SkyBlocks.sky_portal)
 			{
-				enumfacing = EnumFacing.EAST;
+				face = EnumFacing.EAST;
 			}
 
 			if (worldObj.getBlockState(((BlockPos)object).south()).getBlock() == SkyBlocks.sky_portal)
 			{
-				enumfacing = EnumFacing.WEST;
+				face = EnumFacing.WEST;
 			}
 
-			EnumFacing enumfacing1 = EnumFacing.getHorizontal(0);
+			EnumFacing face0 = EnumFacing.getHorizontal(0);
 
-			if (enumfacing != null)
+			if (face != null)
 			{
-				EnumFacing enumfacing2 = enumfacing.rotateYCCW();
-				BlockPos pos = ((BlockPos)object).offset(enumfacing);
-				boolean flag2 = func_180265_a(pos);
-				boolean flag3 = func_180265_a(pos.offset(enumfacing2));
+				EnumFacing face1 = face.rotateYCCW();
+				BlockPos pos = ((BlockPos)object).offset(face);
+				boolean flag2 = isNotAir(pos);
+				boolean flag3 = isNotAir(pos.offset(face1));
 
 				if (flag3 && flag2)
 				{
-					object = ((BlockPos)object).offset(enumfacing2);
-					enumfacing = enumfacing.getOpposite();
-					enumfacing2 = enumfacing2.getOpposite();
-					BlockPos blockpos3 = ((BlockPos)object).offset(enumfacing);
-					flag2 = func_180265_a(blockpos3);
-					flag3 = func_180265_a(blockpos3.offset(enumfacing2));
+					object = ((BlockPos)object).offset(face1);
+					face = face.getOpposite();
+					face1 = face1.getOpposite();
+					BlockPos blockpos = ((BlockPos)object).offset(face);
+					flag2 = isNotAir(blockpos);
+					flag3 = isNotAir(blockpos.offset(face1));
 				}
 
 				float f6 = 0.5F;
@@ -236,27 +232,27 @@ public class TeleporterSkyland extends Teleporter
 					f1 = 0.0F;
 				}
 
-				d4 = ((BlockPos)object).getX() + 0.5D;
-				d5 = ((BlockPos)object).getY() + 0.5D;
-				d6 = ((BlockPos)object).getZ() + 0.5D;
-				d4 += enumfacing2.getFrontOffsetX() * f6 + enumfacing.getFrontOffsetX() * f1;
-				d6 += enumfacing2.getFrontOffsetZ() * f6 + enumfacing.getFrontOffsetZ() * f1;
+				posX = ((BlockPos)object).getX() + 0.5D;
+				posY = ((BlockPos)object).getY() + 0.5D;
+				posZ = ((BlockPos)object).getZ() + 0.5D;
+				posX += face1.getFrontOffsetX() * f6 + face.getFrontOffsetX() * f1;
+				posZ += face1.getFrontOffsetZ() * f6 + face.getFrontOffsetZ() * f1;
 				float f2 = 0.0F;
 				float f3 = 0.0F;
 				float f4 = 0.0F;
 				float f5 = 0.0F;
 
-				if (enumfacing == enumfacing1)
+				if (face == face0)
 				{
 					f2 = 1.0F;
 					f3 = 1.0F;
 				}
-				else if (enumfacing == enumfacing1.getOpposite())
+				else if (face == face0.getOpposite())
 				{
 					f2 = -1.0F;
 					f3 = -1.0F;
 				}
-				else if (enumfacing == enumfacing1.rotateY())
+				else if (face == face0.rotateY())
 				{
 					f4 = 1.0F;
 					f5 = -1.0F;
@@ -267,25 +263,32 @@ public class TeleporterSkyland extends Teleporter
 					f5 = 1.0F;
 				}
 
-				double d2 = entity.motionX;
-				double d3 = entity.motionZ;
-				entity.motionX = d2 * f2 + d3 * f5;
-				entity.motionZ = d2 * f4 + d3 * f3;
-				entity.rotationYaw = par2 - enumfacing1.getHorizontalIndex() * 90 + enumfacing.getHorizontalIndex() * 90;
+				double mx = entity.motionX;
+				double mz = entity.motionZ;
+				entity.motionX = mx * f2 + mz * f5;
+				entity.motionZ = mx * f4 + mz * f3;
+				entity.rotationYaw = par2 - face0.getHorizontalIndex() * 90 + face.getHorizontalIndex() * 90;
 			}
 			else
 			{
 				entity.motionX = entity.motionY = entity.motionZ = 0.0D;
 			}
 
-			entity.setLocationAndAngles(d4, d5, d6, entity.rotationYaw, entity.rotationPitch);
+			if (entity instanceof EntityPlayerMP)
+			{
+				((EntityPlayerMP)entity).connection.setPlayerLocation(posX, posY, posZ, entity.rotationYaw, entity.rotationPitch);
+			}
+			else
+			{
+				entity.setLocationAndAngles(posX, posY, posZ, entity.rotationYaw, entity.rotationPitch);
+			}
 
 			return true;
 		}
 		else return false;
 	}
 
-	private boolean func_180265_a(BlockPos pos)
+	private boolean isNotAir(BlockPos pos)
 	{
 		return !worldObj.isAirBlock(pos) || !worldObj.isAirBlock(pos.up());
 	}
@@ -328,6 +331,7 @@ public class TeleporterSkyland extends Teleporter
 		int i5;
 		double d3;
 		double d4;
+		MutableBlockPos blockpos = new MutableBlockPos();
 
 		for (i2 = i - b0; i2 <= i + b0; ++i2)
 		{
@@ -339,9 +343,9 @@ public class TeleporterSkyland extends Teleporter
 
 				outside: for (i3 = worldObj.getActualHeight() - 1; i3 >= 0; --i3)
 				{
-					if (worldObj.isAirBlock(new BlockPos(i2, i3, k2)))
+					if (worldObj.isAirBlock(blockpos.setPos(i2, i3, k2)))
 					{
-						while (i3 > 0 && worldObj.isAirBlock(new BlockPos(i2, i3 - 1, k2)))
+						while (i3 > 0 && worldObj.isAirBlock(blockpos.setPos(i2, i3 - 1, k2)))
 						{
 							--i3;
 						}
@@ -367,7 +371,9 @@ public class TeleporterSkyland extends Teleporter
 										i5 = i3 + k4;
 										int j5 = k2 + (j4 - 1) * l3 - i4 * k3;
 
-										if (k4 < 0 && !worldObj.getBlockState(new BlockPos(l4, i5, j5)).getMaterial().isSolid() || k4 >= 0 && !worldObj.isAirBlock(new BlockPos(l4, i5, j5)))
+										blockpos.setPos(l4, i5, j5);
+
+										if (k4 < 0 && !worldObj.getBlockState(blockpos).getMaterial().isSolid() || k4 >= 0 && !worldObj.isAirBlock(blockpos))
 										{
 											continue outside;
 										}
@@ -404,9 +410,9 @@ public class TeleporterSkyland extends Teleporter
 
 					outside: for (i3 = worldObj.getActualHeight() - 1; i3 >= 0; --i3)
 					{
-						if (worldObj.isAirBlock(new BlockPos(i2, i3, k2)))
+						if (worldObj.isAirBlock(blockpos.setPos(i2, i3, k2)))
 						{
-							while (i3 > 0 && worldObj.isAirBlock(new BlockPos(i2, i3 - 1, k2)))
+							while (i3 > 0 && worldObj.isAirBlock(blockpos.setPos(i2, i3 - 1, k2)))
 							{
 								--i3;
 							}
@@ -424,7 +430,9 @@ public class TeleporterSkyland extends Teleporter
 										l4 = i3 + j4;
 										i5 = k2 + (i4 - 1) * l3;
 
-										if (j4 < 0 && !worldObj.getBlockState(new BlockPos(k4, l4, i5)).getMaterial().isSolid() || j4 >= 0 && !worldObj.isAirBlock(new BlockPos(k4, l4, i5)))
+										blockpos.setPos(k4, l4, i5);
+
+										if (j4 < 0 && !worldObj.getBlockState(blockpos).getMaterial().isSolid() || j4 >= 0 && !worldObj.isAirBlock(blockpos))
 										{
 											continue outside;
 										}
@@ -477,13 +485,13 @@ public class TeleporterSkyland extends Teleporter
 						j4 = k2 + (j3 - 1) * l2 - i3 * l5;
 						boolean flag = k3 < 0;
 
-						worldObj.setBlockState(new BlockPos(l3, i4, j4), flag ? Blocks.quartz_block.getDefaultState() : Blocks.air.getDefaultState());
+						worldObj.setBlockState(blockpos.setPos(l3, i4, j4), flag ? Blocks.QUARTZ_BLOCK.getDefaultState() : Blocks.AIR.getDefaultState());
 					}
 				}
 			}
 		}
 
-		IBlockState blockstate = SkyBlocks.sky_portal.getDefaultState().withProperty(BlockPortal.AXIS, l5 != 0 ? EnumFacing.Axis.X : EnumFacing.Axis.Z);
+		IBlockState state = SkyBlocks.sky_portal.getDefaultState().withProperty(BlockPortal.AXIS, l5 != 0 ? EnumFacing.Axis.X : EnumFacing.Axis.Z);
 
 		for (j3 = 0; j3 < 4; ++j3)
 		{
@@ -496,7 +504,7 @@ public class TeleporterSkyland extends Teleporter
 					k4 = k2 + (k3 - 1) * l2;
 					boolean flag1 = k3 == 0 || k3 == 3 || l3 == -1 || l3 == 3;
 
-					worldObj.setBlockState(new BlockPos(i4, j4, k4), flag1 ? Blocks.quartz_block.getDefaultState() : blockstate, 2);
+					worldObj.setBlockState(blockpos.setPos(i4, j4, k4), flag1 ? Blocks.QUARTZ_BLOCK.getDefaultState() : state, 2);
 				}
 			}
 
@@ -508,7 +516,7 @@ public class TeleporterSkyland extends Teleporter
 					j4 = j2 + l3;
 					k4 = k2 + (k3 - 1) * l2;
 
-					worldObj.notifyNeighborsOfStateChange(new BlockPos(i4, j4, k4), worldObj.getBlockState(new BlockPos(i4, j4, k4)).getBlock());
+					worldObj.notifyNeighborsOfStateChange(blockpos.setPos(i4, j4, k4), worldObj.getBlockState(blockpos).getBlock());
 				}
 			}
 		}
@@ -521,18 +529,16 @@ public class TeleporterSkyland extends Teleporter
 	{
 		if (time % 100L == 0L)
 		{
-			Iterator<Long> iterator = coordKeys.iterator();
-			long var1 = time - 600L;
+			ObjectIterator<PortalPosition> iterator = coordCache.values().iterator();
+			long i = time - 300L;
 
 			while (iterator.hasNext())
 			{
-				long chunkSeed = iterator.next();
-				PortalPosition portal = coordCache.getValueByKey(chunkSeed);
+				PortalPosition pos = iterator.next();
 
-				if (portal == null || portal.lastUpdateTime < var1)
+				if (pos == null || pos.lastUpdateTime < i)
 				{
 					iterator.remove();
-					coordCache.remove(chunkSeed);
 				}
 			}
 		}

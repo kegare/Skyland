@@ -126,9 +126,9 @@ public class SkyItems
 			'X', "skyrite",
 			'Y', "stickWood"
 		));
-		GameRegistry.addRecipe(new ShapedOreRecipe(Items.arrow,
+		GameRegistry.addRecipe(new ShapedOreRecipe(Items.ARROW,
 			"X", "#", "Y",
-			'X', Items.flint,
+			'X', Items.FLINT,
 			'#', "stickWood",
 			'Y', "skyFeather"
 		));

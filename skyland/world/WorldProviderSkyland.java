@@ -6,12 +6,10 @@ import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Comparator;
 import java.util.Random;
-import java.util.concurrent.RecursiveAction;
 import java.util.regex.Pattern;
 
 import org.apache.commons.io.FileUtils;
@@ -57,7 +55,7 @@ public class WorldProviderSkyland extends WorldProviderSurface
 	private static NBTTagCompound dimData;
 	private static long dimensionSeed;
 
-	private static final Random random = new SecureRandom();
+	private static final Random rand = new Random();
 
 	public static NBTTagCompound getDimData()
 	{
@@ -143,9 +141,7 @@ public class WorldProviderSkyland extends WorldProviderSurface
 	{
 		if (!data.hasKey("Seed"))
 		{
-			random.nextLong();
-
-			data.setLong("Seed", random.nextLong());
+			data.setLong("Seed", rand.nextLong());
 		}
 
 		dimensionSeed = data.getLong("Seed");
@@ -161,9 +157,9 @@ public class WorldProviderSkyland extends WorldProviderSurface
 		}
 	}
 
-	public static void regenerate(final boolean backup)
+	public static void regenerate(boolean backup)
 	{
-		final MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
+		MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
 
 		for (EntityPlayerMP player : server.getPlayerList().getPlayerList())
 		{
@@ -175,148 +171,141 @@ public class WorldProviderSkyland extends WorldProviderSurface
 			}
 		}
 
-		SkyUtils.getPool().execute(new RecursiveAction()
+		ITextComponent component;
+
+		try
 		{
-			@Override
-			protected void compute()
+			component = new TextComponentTranslation("skyland.regenerate.regenerating");
+			component.getStyle().setColor(TextFormatting.GRAY).setItalic(true);
+			server.getPlayerList().sendChatMsg(component);
+
+			if (server.isSinglePlayer())
 			{
-				ITextComponent component;
-
-				try
-				{
-					component = new TextComponentTranslation("skyland.regenerate.regenerating");
-					component.getChatStyle().setColor(TextFormatting.GRAY).setItalic(true);
-					server.getPlayerList().sendChatMsg(component);
-
-					if (server.isSinglePlayer())
-					{
-						SkyNetworkRegistry.sendToAll(new DisplayGuiMessage(backup ? 0 : 1));
-					}
-
-					SkyNetworkRegistry.sendToAll(new RegenerationGuiMessage(EnumType.START));
-
-					int dim = Config.dimension;
-					WorldServer world = DimensionManager.getWorld(dim);
-
-					if (world != null)
-					{
-						world.saveAllChunks(true, null);
-						world.flush();
-
-						MinecraftForge.EVENT_BUS.post(new WorldEvent.Unload(world));
-
-						DimensionManager.setWorld(dim, null, server);
-					}
-
-					File dir = getDimDir();
-
-					if (dir != null)
-					{
-						if (backup)
-						{
-							File parent = dir.getParentFile();
-							final Pattern pattern = Pattern.compile("^" + dir.getName() + "_bak-..*\\.zip$");
-							File[] files = parent.listFiles(new FilenameFilter()
-							{
-								@Override
-								public boolean accept(File dir, String name)
-								{
-									return pattern.matcher(name).matches();
-								}
-							});
-
-							if (files != null && files.length >= 5)
-							{
-								Arrays.sort(files, new Comparator<File>()
-								{
-									@Override
-									public int compare(File o1, File o2)
-									{
-										int i = SkyUtils.compareWithNull(o1, o2);
-
-										if (i == 0 && o1 != null && o2 != null)
-										{
-											try
-											{
-												i = Files.getLastModifiedTime(o1.toPath()).compareTo(Files.getLastModifiedTime(o2.toPath()));
-											}
-											catch (IOException e) {}
-										}
-
-										return i;
-									}
-								});
-
-								FileUtils.forceDelete(files[0]);
-							}
-
-							Calendar calendar = Calendar.getInstance();
-							String year = Integer.toString(calendar.get(Calendar.YEAR));
-							String month = String.format("%02d", calendar.get(Calendar.MONTH) + 1);
-							String day = String.format("%02d", calendar.get(Calendar.DATE));
-							String hour = String.format("%02d", calendar.get(Calendar.HOUR_OF_DAY));
-							String minute = String.format("%02d", calendar.get(Calendar.MINUTE));
-							String second = String.format("%02d", calendar.get(Calendar.SECOND));
-							File bak = new File(parent, dir.getName() + "_bak-" + Joiner.on("").join(year, month, day) + "-" + Joiner.on("").join(hour, minute, second) + ".zip");
-
-							if (bak.exists())
-							{
-								FileUtils.deleteQuietly(bak);
-							}
-
-							SkyNetworkRegistry.sendToAll(new RegenerationGuiMessage(EnumType.BACKUP));
-
-							component = new TextComponentTranslation("skyland.regenerate.backingup");
-							component.getChatStyle().setColor(TextFormatting.GRAY).setItalic(true);
-							server.getPlayerList().sendChatMsg(component);
-
-							if (SkyUtils.archiveDirZip(dir, bak))
-							{
-								ClickEvent click = new ClickEvent(ClickEvent.Action.OPEN_FILE, FilenameUtils.normalize(bak.getParentFile().getPath()));
-
-								component = new TextComponentTranslation("skyland.regenerate.backedup");
-								component.getChatStyle().setColor(TextFormatting.GRAY).setItalic(true).setChatClickEvent(click);
-								server.getPlayerList().sendChatMsg(component);
-							}
-							else
-							{
-								component = new TextComponentTranslation("skyland.regenerate.backup.failed");
-								component.getChatStyle().setColor(TextFormatting.RED).setItalic(true);
-								server.getPlayerList().sendChatMsg(component);
-							}
-						}
-
-						FileUtils.deleteDirectory(dir);
-					}
-
-					DimensionManager.initDimension(dim);
-
-					world = DimensionManager.getWorld(dim);
-
-					if (world != null)
-					{
-						world.saveAllChunks(true, null);
-						world.flush();
-					}
-
-					SkyNetworkRegistry.sendToAll(new RegenerationGuiMessage(EnumType.SUCCESS));
-
-					component = new TextComponentTranslation("skyland.regenerate.regenerated");
-					component.getChatStyle().setColor(TextFormatting.GRAY).setItalic(true);
-					server.getPlayerList().sendChatMsg(component);
-				}
-				catch (Exception e)
-				{
-					component = new TextComponentTranslation("skyland.regenerate.failed");
-					component.getChatStyle().setColor(TextFormatting.RED).setItalic(true);
-					server.getPlayerList().sendChatMsg(component);
-
-					SkyNetworkRegistry.sendToAll(new RegenerationGuiMessage(EnumType.FAILED));
-
-					SkyLog.log(Level.ERROR, e, component.getUnformattedText());
-				}
+				SkyNetworkRegistry.sendToAll(new DisplayGuiMessage(backup ? 0 : 1));
 			}
-		});
+
+			SkyNetworkRegistry.sendToAll(new RegenerationGuiMessage(EnumType.START));
+
+			int dim = Config.dimension;
+			WorldServer world = DimensionManager.getWorld(dim);
+
+			if (world != null)
+			{
+				world.saveAllChunks(true, null);
+				world.flush();
+
+				MinecraftForge.EVENT_BUS.post(new WorldEvent.Unload(world));
+
+				DimensionManager.setWorld(dim, null, server);
+			}
+
+			File dir = getDimDir();
+
+			if (dir != null)
+			{
+				if (backup)
+				{
+					File parent = dir.getParentFile();
+					final Pattern pattern = Pattern.compile("^" + dir.getName() + "_bak-..*\\.zip$");
+					File[] files = parent.listFiles(new FilenameFilter()
+					{
+						@Override
+						public boolean accept(File dir, String name)
+						{
+							return pattern.matcher(name).matches();
+						}
+					});
+
+					if (files != null && files.length >= 5)
+					{
+						Arrays.sort(files, new Comparator<File>()
+						{
+							@Override
+							public int compare(File o1, File o2)
+							{
+								int i = SkyUtils.compareWithNull(o1, o2);
+
+								if (i == 0 && o1 != null && o2 != null)
+								{
+									try
+									{
+										i = Files.getLastModifiedTime(o1.toPath()).compareTo(Files.getLastModifiedTime(o2.toPath()));
+									}
+									catch (IOException e) {}
+								}
+
+								return i;
+							}
+						});
+
+						FileUtils.forceDelete(files[0]);
+					}
+
+					Calendar calendar = Calendar.getInstance();
+					String year = Integer.toString(calendar.get(Calendar.YEAR));
+					String month = String.format("%02d", calendar.get(Calendar.MONTH) + 1);
+					String day = String.format("%02d", calendar.get(Calendar.DATE));
+					String hour = String.format("%02d", calendar.get(Calendar.HOUR_OF_DAY));
+					String minute = String.format("%02d", calendar.get(Calendar.MINUTE));
+					String second = String.format("%02d", calendar.get(Calendar.SECOND));
+					File bak = new File(parent, dir.getName() + "_bak-" + Joiner.on("").join(year, month, day) + "-" + Joiner.on("").join(hour, minute, second) + ".zip");
+
+					if (bak.exists())
+					{
+						FileUtils.deleteQuietly(bak);
+					}
+
+					SkyNetworkRegistry.sendToAll(new RegenerationGuiMessage(EnumType.BACKUP));
+
+					component = new TextComponentTranslation("skyland.regenerate.backingup");
+					component.getStyle().setColor(TextFormatting.GRAY).setItalic(true);
+					server.getPlayerList().sendChatMsg(component);
+
+					if (SkyUtils.archiveDirZip(dir, bak))
+					{
+						ClickEvent click = new ClickEvent(ClickEvent.Action.OPEN_FILE, FilenameUtils.normalize(bak.getParentFile().getPath()));
+
+						component = new TextComponentTranslation("skyland.regenerate.backedup");
+						component.getStyle().setColor(TextFormatting.GRAY).setItalic(true).setClickEvent(click);
+						server.getPlayerList().sendChatMsg(component);
+					}
+					else
+					{
+						component = new TextComponentTranslation("skyland.regenerate.backup.failed");
+						component.getStyle().setColor(TextFormatting.RED).setItalic(true);
+						server.getPlayerList().sendChatMsg(component);
+					}
+				}
+
+				FileUtils.deleteDirectory(dir);
+			}
+
+			DimensionManager.initDimension(dim);
+
+			world = DimensionManager.getWorld(dim);
+
+			if (world != null)
+			{
+				world.saveAllChunks(true, null);
+				world.flush();
+			}
+
+			SkyNetworkRegistry.sendToAll(new RegenerationGuiMessage(EnumType.SUCCESS));
+
+			component = new TextComponentTranslation("skyland.regenerate.regenerated");
+			component.getStyle().setColor(TextFormatting.GRAY).setItalic(true);
+			server.getPlayerList().sendChatMsg(component);
+		}
+		catch (Exception e)
+		{
+			component = new TextComponentTranslation("skyland.regenerate.failed");
+			component.getStyle().setColor(TextFormatting.RED).setItalic(true);
+			server.getPlayerList().sendChatMsg(component);
+
+			SkyNetworkRegistry.sendToAll(new RegenerationGuiMessage(EnumType.FAILED));
+
+			SkyLog.log(Level.ERROR, e, component.getUnformattedText());
+		}
 	}
 
 	public WorldProviderSkyland()
@@ -328,6 +317,12 @@ public class WorldProviderSkyland extends WorldProviderSurface
 	public IChunkGenerator createChunkGenerator()
 	{
 		return new ChunkProviderSkyland(worldObj);
+	}
+
+	@Override
+	protected void createBiomeProvider()
+	{
+		biomeProvider = new BiomeProviderSkyland(getSeed(), worldObj.getWorldType(), worldObj.getWorldInfo().getGeneratorOptions());
 	}
 
 	@Override

@@ -35,7 +35,7 @@ public class MovingSoundSkyFalling extends MovingSound
 
 			if (player != null && player.onGround)
 			{
-				ISound sound = PositionedSoundRecord.getRecordSoundRecord(SoundEvents.entity_hostile_small_fall, (float)player.posX, (float)player.posY - (float)player.getYOffset(), (float)player.posZ);
+				ISound sound = PositionedSoundRecord.getRecordSoundRecord(SoundEvents.ENTITY_HOSTILE_SMALL_FALL, (float)player.posX, (float)player.posY - (float)player.getYOffset(), (float)player.posZ);
 
 				mc.getSoundHandler().playSound(sound);
 			}

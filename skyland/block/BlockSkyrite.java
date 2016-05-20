@@ -9,11 +9,11 @@ public class BlockSkyrite extends Block
 {
 	public BlockSkyrite()
 	{
-		super(Material.iron);
+		super(Material.IRON);
 		this.setUnlocalizedName("blockSkyrite");
 		this.setHardness(5.5F);
 		this.setResistance(10.0F);
-		this.setStepSound(SoundType.METAL);
+		this.setSoundType(SoundType.METAL);
 		this.setCreativeTab(Skyland.tabSkyland);
 	}
 }

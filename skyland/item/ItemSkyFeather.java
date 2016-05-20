@@ -30,9 +30,9 @@ public class ItemSkyFeather extends Item
 	{
 		BlockPos pos1 = pos.offset(side);
 
-		if (SkyBlocks.sky_portal.func_176548_d(world, pos1))
+		if (SkyBlocks.sky_portal.trySpawnPortal(world, pos1))
 		{
-			world.playSound(null, pos1.getX() + 0.5D, pos1.getY() + 0.5D, pos1.getZ() + 0.5D, SkyBlocks.sky_portal.getStepSound().getPlaceSound(), SoundCategory.BLOCKS, 1.0F, 2.0F);
+			world.playSound(null, pos1.getX() + 0.5D, pos1.getY() + 0.5D, pos1.getZ() + 0.5D, SkyBlocks.sky_portal.getSoundType().getPlaceSound(), SoundCategory.BLOCKS, 1.0F, 2.0F);
 
 			if (!player.capabilities.isCreativeMode && --stack.stackSize <= 0)
 			{

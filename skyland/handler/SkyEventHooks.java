@@ -105,15 +105,15 @@ public class SkyEventHooks
 		if (Version.DEV_DEBUG || Version.getStatus() == Status.AHEAD || Version.getStatus() == Status.BETA || Config.versionNotify && Version.isOutdated())
 		{
 			ITextComponent name = new TextComponentString(Skyland.metadata.name);
-			name.getChatStyle().setColor(TextFormatting.AQUA);
+			name.getStyle().setColor(TextFormatting.AQUA);
 			ITextComponent latest = new TextComponentString(Version.getLatest().toString());
-			latest.getChatStyle().setColor(TextFormatting.YELLOW);
+			latest.getStyle().setColor(TextFormatting.YELLOW);
 
 			ITextComponent message;
 
 			message = new TextComponentTranslation("skyland.version.message", name);
 			message.appendText(" : ").appendSibling(latest);
-			message.getChatStyle().setChatClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, Skyland.metadata.url));
+			message.getStyle().setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, Skyland.metadata.url));
 
 			mc.ingameGUI.getChatGUI().printChatMessage(message);
 			message = null;
@@ -159,7 +159,7 @@ public class SkyEventHooks
 
 			if (firstJoinPlayers.contains(player.getUniqueID().toString()))
 			{
-				WorldServer world = player.getServerForPlayer();
+				WorldServer world = player.getServerWorld();
 				boolean result = false;
 
 				if (world.getWorldInfo().getTerrainType() == Skyland.SKYLAND)
@@ -200,7 +200,7 @@ public class SkyEventHooks
 
 			if (SkyUtils.isEntityInSkyland(player))
 			{
-				if (player.getServerForPlayer().isAirBlock(player.getPosition().down()))
+				if (player.getServerWorld().isAirBlock(player.getPosition().down()))
 				{
 					SkyUtils.teleportPlayer(player, player.dimension);
 				}
@@ -217,7 +217,7 @@ public class SkyEventHooks
 
 			if (event.toDim == Config.dimension)
 			{
-				WorldServer world = player.getServerForPlayer();
+				WorldServer world = player.getServerWorld();
 				NBTTagCompound data = player.getEntityData();
 				String key = "Skyland:LastTeleportTime";
 
