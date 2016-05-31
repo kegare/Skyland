@@ -8,6 +8,7 @@ import it.unimi.dsi.fastutil.objects.ObjectIterator;
 import net.minecraft.block.BlockPortal;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.MobEffects;
@@ -19,7 +20,6 @@ import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.Teleporter;
 import net.minecraft.world.WorldServer;
-import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import skyland.block.SkyBlocks;
 import skyland.stats.IPortalCache;
 import skyland.stats.PortalCache;
@@ -44,49 +44,39 @@ public class TeleporterSkyland extends Teleporter
 	{
 		if (entity instanceof EntityPlayerMP)
 		{
-			EntityPlayerMP player = (EntityPlayerMP)entity;
-
-			if (!player.capabilities.isCreativeMode)
-			{
-				ObfuscationReflectionHelper.setPrivateValue(EntityPlayerMP.class, player, true, "invulnerableDimensionChange", "field_184851_cj");
-			}
+			SkyUtils.setDimensionChange((EntityPlayerMP)entity);
 		}
 
 		IPortalCache cache = PortalCache.get(entity);
+		double posX = entity.posX;
+		double posY = entity.posY;
+		double posZ = entity.posZ;
+		boolean flag = false;
 
 		if (cache.hasLastPos(0, entity.dimension))
 		{
 			BlockPos pos = cache.getLastPos(0, entity.dimension);
 
-			if (worldObj.getBlockState(pos).getBlock() == SkyBlocks.sky_portal)
+			setLocationAndAngles(entity, pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D);
+
+			if (placeInExistingPortal(entity, rotationYaw))
 			{
-				if (entity instanceof EntityPlayerMP)
-				{
-					((EntityPlayerMP)entity).connection.setPlayerLocation(pos.getX(), pos.getY() + 0.5D, pos.getZ(), entity.rotationYaw, entity.rotationPitch);
-				}
-				else
-				{
-					entity.setLocationAndAngles(pos.getX(), pos.getY() + 0.5D, pos.getZ(), entity.rotationYaw, entity.rotationPitch);
-				}
+				flag = true;
+			}
+			else
+			{
+				setLocationAndAngles(entity, posX, posY, posZ);
 			}
 		}
-		else if (SkyUtils.isEntityInSkyland(entity))
-		{
-			entity.setLocationAndAngles(0.0D, 64.0D, 0.0D, entity.rotationYaw, entity.rotationPitch);
-		}
 
-		if (!placeInExistingPortal(entity, rotationYaw))
+		if (!flag)
 		{
 			if (SkyUtils.isEntityInSkyland(entity))
 			{
-				if (!placeInExistingPortal(entity, rotationYaw, true))
-				{
-					makePortal(entity);
-
-					placeInExistingPortal(entity, rotationYaw, true);
-				}
+				setLocationAndAngles(entity, 0.0D, 64.0D, 0.0D);
 			}
-			else
+
+			if (!placeInExistingPortal(entity, rotationYaw))
 			{
 				makePortal(entity);
 
@@ -94,22 +84,21 @@ public class TeleporterSkyland extends Teleporter
 			}
 		}
 
+		if (entity instanceof EntityLivingBase)
+		{
+			((EntityLivingBase)entity).addPotionEffect(new PotionEffect(MobEffects.BLINDNESS, 25, 0, false, false));
+		}
+
 		if (entity instanceof EntityPlayerMP)
 		{
 			EntityPlayerMP player = (EntityPlayerMP)entity;
 
 			player.addExperienceLevel(0);
-			player.addPotionEffect(new PotionEffect(MobEffects.BLINDNESS, 25, 0, false, false));
 		}
 	}
 
 	@Override
-	public boolean placeInExistingPortal(Entity entity, float par2)
-	{
-		return placeInExistingPortal(entity, par2, false);
-	}
-
-	public boolean placeInExistingPortal(Entity entity, float par2, boolean flag)
+	public boolean placeInExistingPortal(Entity entity, float rotationYaw)
 	{
 		double d0 = -1.0D;
 		int i = MathHelper.floor_double(entity.posX);
@@ -129,11 +118,6 @@ public class TeleporterSkyland extends Teleporter
 		else
 		{
 			BlockPos pos = new BlockPos(entity);
-
-			if (flag)
-			{
-				pos = BlockPos.ORIGIN;
-			}
 
 			for (int x = -128; x <= 128; ++x)
 			{
@@ -267,30 +251,35 @@ public class TeleporterSkyland extends Teleporter
 				double mz = entity.motionZ;
 				entity.motionX = mx * f2 + mz * f5;
 				entity.motionZ = mx * f4 + mz * f3;
-				entity.rotationYaw = par2 - face0.getHorizontalIndex() * 90 + face.getHorizontalIndex() * 90;
+				entity.rotationYaw = rotationYaw - face0.getHorizontalIndex() * 90 + face.getHorizontalIndex() * 90;
 			}
 			else
 			{
 				entity.motionX = entity.motionY = entity.motionZ = 0.0D;
 			}
 
-			if (entity instanceof EntityPlayerMP)
-			{
-				((EntityPlayerMP)entity).connection.setPlayerLocation(posX, posY, posZ, entity.rotationYaw, entity.rotationPitch);
-			}
-			else
-			{
-				entity.setLocationAndAngles(posX, posY, posZ, entity.rotationYaw, entity.rotationPitch);
-			}
+			setLocationAndAngles(entity, posX, posY, posZ);
 
 			return true;
 		}
 		else return false;
 	}
 
-	private boolean isNotAir(BlockPos pos)
+	protected boolean isNotAir(BlockPos pos)
 	{
 		return !worldObj.isAirBlock(pos) || !worldObj.isAirBlock(pos.up());
+	}
+
+	public void setLocationAndAngles(Entity entity, double posX, double posY, double posZ)
+	{
+		if (entity instanceof EntityPlayerMP)
+		{
+			((EntityPlayerMP)entity).connection.setPlayerLocation(posX, posY, posZ, entity.rotationYaw, entity.rotationPitch);
+		}
+		else
+		{
+			entity.setLocationAndAngles(posX, posY, posZ, entity.rotationYaw, entity.rotationPitch);
+		}
 	}
 
 	@Override

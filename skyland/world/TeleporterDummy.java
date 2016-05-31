@@ -4,7 +4,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.world.Teleporter;
 import net.minecraft.world.WorldServer;
-import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
+import skyland.util.SkyUtils;
 
 public class TeleporterDummy extends Teleporter
 {
@@ -18,12 +18,7 @@ public class TeleporterDummy extends Teleporter
 	{
 		if (entity instanceof EntityPlayerMP)
 		{
-			EntityPlayerMP player = (EntityPlayerMP)entity;
-
-			if (!player.capabilities.isCreativeMode)
-			{
-				ObfuscationReflectionHelper.setPrivateValue(EntityPlayerMP.class, player, true, "invulnerableDimensionChange", "field_184851_cj");
-			}
+			SkyUtils.setDimensionChange((EntityPlayerMP)entity);
 		}
 	}
 

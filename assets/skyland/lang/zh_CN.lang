@@ -1,0 +1,45 @@
+# Localization file : zh_CN
+
+skyland.version.message=%s 新版本可用
+skyland.version.message.beta=你用的测试版本为 %s
+skyland.version.message.alpha=你用的Alpha版本为 %s
+
+skyland.config.title=Skyland的设定
+skyland.config.general.versionNotify=版本通告
+skyland.config.general.versionNotify.tooltip=是否通知最新版本
+skyland.config.general.skyborn=出生天空岛
+skyland.config.general.skyborn.tooltip=设定出生天空岛，在创建世界时将直接进入该维度
+skyland.config.dimension.dimension=维度ID
+skyland.config.dimension.dimension.tooltip=设置维度ID
+skyland.config.dimension.generateCaves=生成洞穴
+skyland.config.dimension.generateCaves.tooltip=在维度中是否生成洞穴
+skyland.config.dimension.generateLakes=生成湖泊
+skyland.config.dimension.generateLakes.tooltip=是否生成湖泊
+
+skyland.regenerate.regenerating=重置 Skyland 维度中...
+skyland.regenerate.backingup=备份 Skyland 维度文件中...
+skyland.regenerate.backedup=Skyland 维度文件已备份
+skyland.regenerate.backup.failed=备份 Skyland 维度文件失败
+skyland.regenerate.regenerated=Skyland 维度已重置
+skyland.regenerate.failed=重置 Skyland 维度失败
+skyland.regenerate.gui.title=重置维度
+skyland.regenerate.gui.info=重置后不能取消
+skyland.regenerate.gui.regenerate=重置
+skyland.regenerate.gui.backup=备份
+skyland.regenerate.gui.backup.tooltip=如果选择此项，请备份重置前的维度数据
+skyland.regenerate.gui.progress.regenerating=重置中...
+skyland.regenerate.gui.progress.backingup=备份中..
+skyland.regenerate.gui.progress.regenerated=重置
+skyland.regenerate.gui.progress.failed=失败
+
+tile.skyPortal.name=天空传送门
+tile.oreSkyrite.name=天空宝石矿
+tile.blockSkyrite.name=天空宝石块
+
+item.skyFeather.name=天空羽毛
+item.skyrite.name=天空宝石
+item.swordSkyrite.name=天空宝石剑
+item.shovelSkyrite.name=天空宝石铲
+item.pickaxeSkyrite.name=天空宝石镐
+item.axeSkyrite.name=天空宝石斧
+item.hoeSkyrite.name=天空宝石锄头

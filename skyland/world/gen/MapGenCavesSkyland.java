@@ -132,7 +132,7 @@ public class MapGenCavesSkyland extends MapGenCaves
 	}
 
 	@Override
-	protected void recursiveGenerate(World world, int x, int z, int chunkX, int chunkZ, ChunkPrimer data)
+	protected void recursiveGenerate(World world, int chunkX, int chunkZ, int x, int z, ChunkPrimer data)
 	{
 		int chance = rand.nextInt(rand.nextInt(rand.nextInt(15) + 1) + 1);
 
@@ -143,14 +143,14 @@ public class MapGenCavesSkyland extends MapGenCaves
 
 		for (int i = 0; i < chance; ++i)
 		{
-			double blockX = x * 16 + rand.nextInt(16);
+			double blockX = chunkX * 16 + rand.nextInt(16);
 			double blockY = rand.nextInt(rand.nextInt(80) + 20);
-			double blockZ = z * 16 + rand.nextInt(16);
+			double blockZ = chunkZ * 16 + rand.nextInt(16);
 			int count = 1;
 
 			if (rand.nextInt(6) == 0)
 			{
-				addRoom(rand.nextLong(), chunkX, chunkZ, data, blockX, blockY, blockZ);
+				addRoom(rand.nextLong(), x, z, data, blockX, blockY, blockZ);
 
 				count += rand.nextInt(4);
 			}
@@ -166,7 +166,7 @@ public class MapGenCavesSkyland extends MapGenCaves
 					scale *= rand.nextFloat() * rand.nextFloat() * 3.5F + 1.0F;
 				}
 
-				addTunnel(rand.nextLong(), chunkX, chunkZ, data, blockX, blockY, blockZ, scale, leftRightRadian, upDownRadian, 0, 0, 1.0D);
+				addTunnel(rand.nextLong(), x, z, data, blockX, blockY, blockZ, scale, leftRightRadian, upDownRadian, 0, 0, 1.0D);
 			}
 		}
 	}

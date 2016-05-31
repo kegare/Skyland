@@ -16,14 +16,13 @@ import java.util.concurrent.ForkJoinPool;
 
 import com.google.common.collect.Maps;
 
-import net.minecraft.block.Block;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.BlockPos.MutableBlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.storage.DerivedWorldInfo;
@@ -33,7 +32,6 @@ import net.minecraftforge.fml.common.DummyModContainer;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.ModContainer;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
-import net.minecraftforge.oredict.OreDictionary;
 import skyland.core.Config;
 import skyland.core.Skyland;
 import skyland.world.TeleporterDummy;
@@ -134,52 +132,10 @@ public class SkyUtils
 		return (o1 == null ? 1 : 0) - (o2 == null ? 1 : 0);
 	}
 
-	public static void registerOreDict(Item item, String... names)
-	{
-		for (String name : names)
-		{
-			OreDictionary.registerOre(name, item);
-		}
-	}
-
-	public static void registerOreDict(Block block, String... names)
-	{
-		for (String name : names)
-		{
-			OreDictionary.registerOre(name, block);
-		}
-	}
-
-	public static void registerOreDict(ItemStack item, String... names)
-	{
-		for (String name : names)
-		{
-			OreDictionary.registerOre(name, item);
-		}
-	}
-
-	public static void setPlayerLocation(EntityPlayerMP player, double posX, double posY, double posZ)
-	{
-		setPlayerLocation(player, posX, posY, posZ, player.rotationYaw, player.rotationPitch);
-	}
-
-	public static void setPlayerLocation(EntityPlayerMP player, double posX, double posY, double posZ, float yaw, float pitch)
-	{
-		player.dismountRidingEntity();
-		player.connection.setPlayerLocation(posX, posY, posZ, yaw, pitch);
-	}
-
 	public static boolean transferPlayer(EntityPlayerMP player, int dim)
 	{
-		if (dim != player.dimension)
+		if (dim != player.dimension && DimensionManager.isDimensionRegistered(dim))
 		{
-			if (!DimensionManager.isDimensionRegistered(dim))
-			{
-				return false;
-			}
-
-			player.isDead = false;
-			player.forceSpawn = true;
 			player.timeUntilPortal = player.getPortalCooldown();
 			player.mcServer.getPlayerList().transferPlayerToDimension(player, dim, new TeleporterDummy(player.mcServer.worldServerForDimension(dim)));
 			player.addExperienceLevel(0);
@@ -190,122 +146,200 @@ public class SkyUtils
 		return false;
 	}
 
-	public static boolean teleportPlayer(EntityPlayerMP player, int dim)
+	public static void teleportPlayer(final EntityPlayerMP player, final int dim)
 	{
 		transferPlayer(player, dim);
 
-		WorldServer world = player.getServerWorld();
-		BlockPos pos = null;
-		boolean flag = false;
+		final WorldServer world = player.getServerWorld();
 
-		if (player.getBedLocation(dim) != null)
+		world.addScheduledTask(new Runnable()
 		{
-			pos = EntityPlayer.getBedSpawnLocation(world, player.getBedLocation(dim), true);
-			flag = true;
-		}
-
-		if (pos == null)
-		{
-			pos = BlockPos.ORIGIN.up(64);
-			flag = false;
-		}
-
-		if (flag && world.isAirBlock(pos) && world.isAirBlock(pos.up()))
-		{
-			do
+			@Override
+			public void run()
 			{
-				pos = pos.down();
-			}
-			while (pos.getY() > 0 && world.isAirBlock(pos.down()));
+				BlockPos originPos = player.getBedLocation(dim);
+				boolean hasSpawn = false;
 
-			BlockPos pos2 = pos;
-			pos = pos.up();
-
-			if (!world.isAirBlock(pos2) && !world.getBlockState(pos2).getMaterial().isLiquid())
-			{
-				setPlayerLocation(player, pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D);
-
-				return true;
-			}
-		}
-		else
-		{
-			int range = 32;
-
-			for (int x = pos.getX() - range; x < pos.getX() + range; ++x)
-			{
-				for (int z = pos.getZ() - range; z < pos.getZ() + range; ++z)
+				if (originPos != null)
 				{
-					for (int y = world.getActualHeight(); y > 0; --y)
+					BlockPos blockpos = EntityPlayer.getBedSpawnLocation(world, originPos, true);
+
+					if (blockpos != null)
 					{
-						BlockPos pos2 = new BlockPos(x, y, z);
+						originPos = blockpos;
+						hasSpawn = true;
+					}
+					else
+					{
+						originPos = null;
+						hasSpawn = false;
+					}
+				}
 
-						if (world.isAirBlock(pos2) && world.isAirBlock(pos2.up()))
+				if (originPos == null)
+				{
+					originPos = BlockPos.ORIGIN;
+				}
+
+				player.setLocationAndAngles(originPos.getX() + 0.5D, originPos.getY() + 0.5D, originPos.getZ() + 0.5D, player.rotationYaw, player.rotationPitch);
+
+				if (hasSpawn)
+				{
+					while (!world.getCollisionBoxes(player, player.getEntityBoundingBox()).isEmpty() && player.posY < 256.0D)
+					{
+						player.setPosition(player.posX, player.posY + 1.0D, player.posZ);
+					}
+
+					player.connection.setPlayerLocation(player.posX, player.posY, player.posZ, player.rotationYaw, player.rotationPitch);
+
+					return;
+				}
+				else
+				{
+					int range = 64;
+					BlockPos blockpos = null;
+
+					for (final BlockPos pos : BlockPos.getAllInBoxMutable(originPos.add(range, 0, range), originPos.add(-range, 0, -range)))
+					{
+						blockpos = world.getHeight(pos);
+
+						if (!world.isAirBlock(blockpos) && !world.getBlockState(blockpos).getMaterial().isLiquid())
 						{
-							do
-							{
-								pos2 = pos2.down();
-							}
-							while (pos2.getY() > 0 && world.isAirBlock(pos2.down()));
+							break;
+						}
 
-							BlockPos pos3 = pos2;
-							pos2 = pos2.up();
+						blockpos = null;
+					}
 
-							if (!world.isAirBlock(pos3) && !world.getBlockState(pos3).getMaterial().isLiquid())
-							{
-								setPlayerLocation(player, pos2.getX() + 0.5D, pos2.getY() + 0.5D, pos2.getZ() + 0.5D);
+					if (blockpos != null && !world.isAirBlock(blockpos))
+					{
+						player.setLocationAndAngles(blockpos.getX() + 0.5D, blockpos.getY() + 0.5D, blockpos.getZ() + 0.5D, player.rotationYaw, player.rotationPitch);
 
-								return true;
-							}
+						while (!world.getCollisionBoxes(player, player.getEntityBoundingBox()).isEmpty() && player.posY < 256.0D)
+						{
+							player.setPosition(player.posX, player.posY + 1.0D, player.posZ);
+						}
+
+						player.connection.setPlayerLocation(player.posX, player.posY, player.posZ, player.rotationYaw, player.rotationPitch);
+
+						return;
+					}
+				}
+
+				int x = MathHelper.floor_double(player.posX);
+				int y = MathHelper.floor_double(player.posY) - 1;
+				int z = MathHelper.floor_double(player.posZ);
+				int i = 1;
+				int j = 0;
+				MutableBlockPos pos = new MutableBlockPos();
+
+				for (int i1 = -2; i1 <= 2; ++i1)
+				{
+					for (int j1 = -2; j1 <= 2; ++j1)
+					{
+						for (int k1 = -1; k1 < 3; ++k1)
+						{
+							boolean flag = k1 < 0;
+
+							world.setBlockState(pos.setPos(x + j1 * i + i1 * j, y + k1, z + j1 * j - i1 * i), flag ? Blocks.GRASS.getDefaultState() : Blocks.AIR.getDefaultState());
 						}
 					}
 				}
+
+				player.connection.setPlayerLocation(x, y, z, player.rotationYaw, 0.0F);
+				player.motionX = player.motionY = player.motionZ = 0.0D;
 			}
-
-			pos = BlockPos.ORIGIN.up(64);
-			setPlayerLocation(player, pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D);
-			world.setBlockToAir(pos);
-			world.setBlockToAir(pos.up());
-			world.setBlockState(pos, Blocks.DIRT.getDefaultState());
-		}
-
-		return false;
+		});
 	}
 
-	public static boolean teleportPlayer(EntityPlayerMP player, int dim, double posX, double posY, double posZ, float yaw, float pitch, boolean safe)
+	public static void teleportPlayer(final EntityPlayerMP player, final int dim, final double posX, final double posY, final double posZ)
+	{
+		teleportPlayer(player, dim, posX, posY, posZ, false);
+	}
+
+	public static void teleportPlayer(final EntityPlayerMP player, final int dim, final double posX, final double posY, final double posZ, final boolean force)
 	{
 		transferPlayer(player, dim);
 
-		if (safe)
-		{
-			WorldServer world = player.getServerWorld();
-			BlockPos pos = new BlockPos(posX, posY, posZ);
+		final WorldServer world = player.getServerWorld();
 
-			if (world.isAirBlock(pos) && world.isAirBlock(pos.up()))
+		world.addScheduledTask(new Runnable()
+		{
+			@Override
+			public void run()
 			{
-				while (pos.getY() > 1 && world.isAirBlock(pos.down()))
+				BlockPos originPos = new BlockPos(posX, posY, posZ);
+
+				player.setLocationAndAngles(posX, posY, posZ, player.rotationYaw, player.rotationPitch);
+
+				BlockPos blockpos = force ? BlockPos.ORIGIN : world.getHeight(originPos);
+
+				if (force || !world.isAirBlock(blockpos))
 				{
-					pos = pos.down();
+					while (!world.getCollisionBoxes(player, player.getEntityBoundingBox()).isEmpty() && player.posY < 256.0D)
+					{
+						player.setPosition(player.posX, player.posY + 1.0D, player.posZ);
+					}
+
+					player.connection.setPlayerLocation(player.posX, player.posY, player.posZ, player.rotationYaw, player.rotationPitch);
+
+					return;
+				}
+				else
+				{
+					int range = 64;
+
+					for (final BlockPos pos : BlockPos.getAllInBoxMutable(originPos.add(range, 0, range), originPos.add(-range, 0, -range)))
+					{
+						blockpos = world.getHeight(pos);
+
+						if (!world.isAirBlock(blockpos) && !world.getBlockState(blockpos).getMaterial().isLiquid())
+						{
+							break;
+						}
+
+						blockpos = null;
+					}
+
+					if (blockpos != null && !world.isAirBlock(blockpos))
+					{
+						player.setLocationAndAngles(blockpos.getX() + 0.5D, blockpos.getY() + 0.5D, blockpos.getZ() + 0.5D, player.rotationYaw, player.rotationPitch);
+
+						while (!world.getCollisionBoxes(player, player.getEntityBoundingBox()).isEmpty() && player.posY < 256.0D)
+						{
+							player.setPosition(player.posX, player.posY + 1.0D, player.posZ);
+						}
+
+						player.connection.setPlayerLocation(player.posX, player.posY, player.posZ, player.rotationYaw, player.rotationPitch);
+
+						return;
+					}
 				}
 
-				BlockPos pos2 = pos.down();
+				int x = MathHelper.floor_double(player.posX);
+				int y = MathHelper.floor_double(player.posY) - 1;
+				int z = MathHelper.floor_double(player.posZ);
+				int i = 1;
+				int j = 0;
+				MutableBlockPos pos = new MutableBlockPos();
 
-				if (!world.isAirBlock(pos2) && !world.getBlockState(pos2).getMaterial().isLiquid())
+				for (int i1 = -2; i1 <= 2; ++i1)
 				{
-					setPlayerLocation(player, posX, pos.getY() + 0.5D, posZ, yaw, pitch);
+					for (int j1 = -2; j1 <= 2; ++j1)
+					{
+						for (int k1 = -1; k1 < 3; ++k1)
+						{
+							boolean flag = k1 < 0;
 
-					return true;
+							world.setBlockState(pos.setPos(x + j1 * i + i1 * j, y + k1, z + j1 * j - i1 * i), flag ? Blocks.GRASS.getDefaultState() : Blocks.AIR.getDefaultState());
+						}
+					}
 				}
+
+				player.connection.setPlayerLocation(x, y, z, player.rotationYaw, 0.0F);
+				player.motionX = player.motionY = player.motionZ = 0.0D;
 			}
-		}
-		else
-		{
-			setPlayerLocation(player, posX, posY, posZ, yaw, pitch);
-
-			return true;
-		}
-
-		return teleportPlayer(player, dim);
+		});
 	}
 
 	public static WorldInfo getWorldInfo(World world)
@@ -336,5 +370,13 @@ public class SkyUtils
 		}
 
 		return false;
+	}
+
+	public static void setDimensionChange(EntityPlayerMP player)
+	{
+		if (!player.capabilities.isCreativeMode)
+		{
+			ObfuscationReflectionHelper.setPrivateValue(EntityPlayerMP.class, player, true, "invulnerableDimensionChange", "field_184851_cj");
+		}
 	}
 }

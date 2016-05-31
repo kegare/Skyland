@@ -1,8 +1,6 @@
 package skyland.world;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -19,7 +17,6 @@ import org.apache.logging.log4j.Level;
 import com.google.common.base.Joiner;
 
 import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
@@ -36,6 +33,7 @@ import net.minecraft.world.storage.WorldInfo;
 import net.minecraftforge.client.IRenderHandler;
 import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.relauncher.Side;
@@ -52,20 +50,7 @@ import skyland.util.SkyUtils;
 
 public class WorldProviderSkyland extends WorldProviderSurface
 {
-	private static NBTTagCompound dimData;
-	private static long dimensionSeed;
-
 	private static final Random rand = new Random();
-
-	public static NBTTagCompound getDimData()
-	{
-		if (dimData == null)
-		{
-			dimData = readDimData();
-		}
-
-		return dimData;
-	}
 
 	public static File getDimDir()
 	{
@@ -84,77 +69,6 @@ public class WorldProviderSkyland extends WorldProviderSurface
 		}
 
 		return dir.isDirectory() ? dir : null;
-	}
-
-	private static NBTTagCompound readDimData()
-	{
-		NBTTagCompound data;
-		File dir = getDimDir();
-
-		if (dir == null)
-		{
-			data = null;
-		}
-		else
-		{
-			File file = new File(dir, "skyland.dat");
-
-			if (!file.exists() || !file.isFile() || !file.canRead())
-			{
-				data = null;
-			}
-			else try (FileInputStream input = new FileInputStream(file))
-			{
-				data = CompressedStreamTools.readCompressed(input);
-			}
-			catch (Exception e)
-			{
-				SkyLog.log(Level.ERROR, e, "An error occurred trying to reading Skyland dimension data");
-
-				data = null;
-			}
-		}
-
-		return data == null ? new NBTTagCompound() : data;
-	}
-
-	private static void writeDimData()
-	{
-		File dir = getDimDir();
-
-		if (dir == null)
-		{
-			return;
-		}
-
-		try (FileOutputStream output = new FileOutputStream(new File(dir, "skyland.dat")))
-		{
-			CompressedStreamTools.writeCompressed(getDimData(), output);
-		}
-		catch (Exception e)
-		{
-			SkyLog.log(Level.ERROR, e, "An error occurred trying to writing Skyland dimension data");
-		}
-	}
-
-	public static void loadDimData(NBTTagCompound data)
-	{
-		if (!data.hasKey("Seed"))
-		{
-			data.setLong("Seed", rand.nextLong());
-		}
-
-		dimensionSeed = data.getLong("Seed");
-	}
-
-	public static void saveDimData()
-	{
-		if (dimData != null)
-		{
-			writeDimData();
-
-			dimData = null;
-		}
 	}
 
 	public static void regenerate(boolean backup)
@@ -193,6 +107,11 @@ public class WorldProviderSkyland extends WorldProviderSurface
 			{
 				world.saveAllChunks(true, null);
 				world.flush();
+
+				if (world.provider instanceof WorldProviderSkyland)
+				{
+					((WorldProviderSkyland)world.provider).setSeed(rand.nextLong());
+				}
 
 				MinecraftForge.EVENT_BUS.post(new WorldEvent.Unload(world));
 
@@ -337,6 +256,16 @@ public class WorldProviderSkyland extends WorldProviderSurface
 		return Skyland.DIM_SKYLAND;
 	}
 
+	public NBTTagCompound getDimensionData()
+	{
+		return worldObj.getWorldInfo().getDimensionData(getDimensionType());
+	}
+
+	public void saveDimensionData()
+	{
+		worldObj.getWorldInfo().setDimensionData(getDimensionType(), getDimensionData());
+	}
+
 	@Override
 	public String getWelcomeMessage()
 	{
@@ -439,12 +368,30 @@ public class WorldProviderSkyland extends WorldProviderSurface
 	@Override
 	public long getSeed()
 	{
-		if (!worldObj.isRemote && dimData == null)
+		long seed = super.getSeed();
+
+		if (!worldObj.isRemote)
 		{
-			loadDimData(getDimData());
+			NBTTagCompound data = getDimensionData();
+
+			if (!data.hasKey("Seed", NBT.TAG_ANY_NUMERIC))
+			{
+				data.setLong("Seed", rand.nextLong());
+
+				saveDimensionData();
+			}
+
+			seed = data.getLong("Seed");
 		}
 
-		return dimensionSeed;
+		return seed;
+	}
+
+	public void setSeed(long seed)
+	{
+		getDimensionData().setLong("Seed", seed);
+
+		saveDimensionData();
 	}
 
 	@Override

@@ -1,6 +1,7 @@
 package skyland.item;
 
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockPortal;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
@@ -10,7 +11,6 @@ import net.minecraft.util.EnumHand;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-import skyland.block.SkyBlocks;
 
 public class ItemSkyPortal extends ItemBlock
 {
@@ -25,13 +25,13 @@ public class ItemSkyPortal extends ItemBlock
 	{
 		BlockPos blockpos = pos.offset(side);
 
-		if (SkyBlocks.sky_portal.trySpawnPortal(world, blockpos))
+		if (((BlockPortal)block).trySpawnPortal(world, blockpos))
 		{
-			world.playSound(null, blockpos.getX() + 0.5D, blockpos.getY() + 0.5D, blockpos.getZ() + 0.5D, SkyBlocks.sky_portal.getSoundType().getPlaceSound(), SoundCategory.BLOCKS, 1.0F, 2.0F);
+			world.playSound(null, blockpos.getX() + 0.5D, blockpos.getY() + 0.5D, blockpos.getZ() + 0.5D, block.getSoundType().getPlaceSound(), SoundCategory.BLOCKS, 1.0F, 2.0F);
 
-			if (!player.capabilities.isCreativeMode && --stack.stackSize <= 0)
+			if (!player.capabilities.isCreativeMode)
 			{
-				player.inventory.setInventorySlotContents(player.inventory.currentItem, null);
+				--stack.stackSize;
 			}
 
 			return EnumActionResult.SUCCESS;

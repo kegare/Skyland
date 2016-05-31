@@ -4,9 +4,8 @@ import net.minecraft.item.ItemAxe;
 
 public class ItemAxeSkyland extends ItemAxe
 {
-	public ItemAxeSkyland(ToolMaterial material)
+	public ItemAxeSkyland(ToolMaterial material, float damage, float speed)
 	{
-		super(ToolMaterial.DIAMOND);
-		this.toolMaterial = material;
+		super(material, damage, speed);
 	}
 }

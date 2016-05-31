@@ -95,7 +95,7 @@ public class GuiRegeneration extends GuiScreen
 	}
 
 	@Override
-	protected void keyTyped(char c, int code)
+	protected void keyTyped(char c, int code) throws IOException
 	{
 		if (code == Keyboard.KEY_ESCAPE)
 		{

@@ -34,6 +34,10 @@ import skyland.world.gen.MapGenCavesSkyland;
 
 public class ChunkProviderSkyland implements IChunkGenerator
 {
+	protected static final IBlockState AIR = Blocks.AIR.getDefaultState();
+	protected static final IBlockState STONE = Blocks.STONE.getDefaultState();
+	protected static final IBlockState SANDSTONE = Blocks.SANDSTONE.getDefaultState();
+
 	private final World worldObj;
 	private final Random rand;
 
@@ -70,14 +74,14 @@ public class ChunkProviderSkyland implements IChunkGenerator
 		this.noiseGen5 = new NoiseGeneratorOctaves(rand, 16);
 	}
 
-	public void generateTerrain(int chunkX, int chunkZ, ChunkPrimer data)
+	public void setBlocksInChunk(int chunkX, int chunkZ, ChunkPrimer data)
 	{
 		byte b0 = 2;
 		byte b1 = 1;
 		int sizeX = b0 + b1;
 		byte sizeY = 35;
 		int sizeZ = b0 + b1;
-		densities = initializeNoiseField(densities, chunkX * b0, 0, chunkZ * b0, sizeX, sizeY, sizeZ);
+		densities = getHeights(densities, chunkX * b0, 0, chunkZ * b0, sizeX, sizeY, sizeZ);
 
 		for (int i = 0; i < b0; ++i)
 		{
@@ -111,11 +115,11 @@ public class ChunkProviderSkyland implements IChunkGenerator
 
 							for (int n = 0; n < 8; ++n)
 							{
-								IBlockState state = null;
+								IBlockState state = AIR;
 
 								if (d15 > 0.0D)
 								{
-									state = Blocks.STONE.getDefaultState();
+									state = STONE;
 								}
 
 								int x = m + i * 8;
@@ -139,7 +143,7 @@ public class ChunkProviderSkyland implements IChunkGenerator
 		}
 	}
 
-	private double[] initializeNoiseField(double[] densities, int posX, int posY, int posZ, int sizeX, int sizeY, int sizeZ)
+	private double[] getHeights(double[] densities, int posX, int posY, int posZ, int sizeX, int sizeY, int sizeZ)
 	{
 		if (densities == null)
 		{
@@ -275,7 +279,7 @@ public class ChunkProviderSkyland implements IChunkGenerator
 		return densities;
 	}
 
-	public void replaceBiomeBlocks(int chunkX, int chunkZ, ChunkPrimer data, Biome[] biomes)
+	public void buildSurfaces(ChunkPrimer data)
 	{
 		for (int x = 0; x < 16; ++x)
 		{
@@ -283,7 +287,7 @@ public class ChunkProviderSkyland implements IChunkGenerator
 			{
 				byte b = 1;
 				int i = -1;
-				Biome biome = biomes[z + x * 16];
+				Biome biome = biomesForGeneration[z + x * 16];
 				IBlockState top = biome.topBlock;
 				IBlockState filler = biome.fillerBlock;
 
@@ -301,7 +305,7 @@ public class ChunkProviderSkyland implements IChunkGenerator
 						{
 							if (b <= 0)
 							{
-								top = Blocks.AIR.getDefaultState();
+								top = AIR;
 								filler = biome.fillerBlock;
 							}
 
@@ -324,7 +328,7 @@ public class ChunkProviderSkyland implements IChunkGenerator
 							if (i == 0 && filler.getBlock() == Blocks.SAND)
 							{
 								i = rand.nextInt(4) + Math.max(0, y - 63);
-								filler = Blocks.SANDSTONE.getDefaultState();
+								filler = SANDSTONE;
 							}
 						}
 					}
@@ -340,8 +344,8 @@ public class ChunkProviderSkyland implements IChunkGenerator
 
 		ChunkPrimer data = new ChunkPrimer();
 		biomesForGeneration = worldObj.getBiomeProvider().loadBlockGeneratorData(biomesForGeneration, chunkX * 16, chunkZ * 16, 16, 16);
-		generateTerrain(chunkX, chunkZ, data);
-		replaceBiomeBlocks(chunkX, chunkZ, data, biomesForGeneration);
+		setBlocksInChunk(chunkX, chunkZ, data);
+		buildSurfaces(data);
 
 		if (Config.generateCaves)
 		{

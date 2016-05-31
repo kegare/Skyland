@@ -33,13 +33,13 @@ public class BiomeProviderSkyland extends BiomeProvider
 		this.biomesToSpawnIn = Lists.newArrayList(allowedBiomes);
 	}
 
-	public BiomeProviderSkyland(long seed, WorldType worldTypeIn, String options)
+	public BiomeProviderSkyland(long seed, WorldType worldType, String options)
 	{
 		this();
-		GenLayer[] agenlayer = GenLayer.initializeAllBiomeGenerators(seed, worldTypeIn, options);
-		agenlayer = getModdedBiomeerators(worldTypeIn, seed, agenlayer);
-		this.genBiomes = agenlayer[0];
-		this.biomeIndexLayer = agenlayer[1];
+		GenLayer[] layers = GenLayer.initializeAllBiomeGenerators(seed, worldType, options);
+		layers = getModdedBiomeerators(worldType, seed, layers);
+		this.genBiomes = layers[0];
+		this.biomeIndexLayer = layers[1];
 	}
 
 	@Override
@@ -49,21 +49,9 @@ public class BiomeProviderSkyland extends BiomeProvider
 	}
 
 	@Override
-	public Biome getBiomeGenerator(BlockPos pos)
+	public Biome getBiomeGenerator(BlockPos pos, Biome biome)
 	{
-		return getBiomeGenerator(pos, null);
-	}
-
-	@Override
-	public Biome getBiomeGenerator(BlockPos pos, Biome biomeGenBaseIn)
-	{
-		return biomeCache.getBiome(pos.getX(), pos.getZ(), biomeGenBaseIn);
-	}
-
-	@Override
-	public float getTemperatureAtHeight(float p_76939_1_, int p_76939_2_)
-	{
-		return p_76939_1_;
+		return biomeCache.getBiome(pos.getX(), pos.getZ(), biome);
 	}
 
 	@Override
@@ -76,7 +64,7 @@ public class BiomeProviderSkyland extends BiomeProvider
 			biomes = new Biome[width * height];
 		}
 
-		int[] aint = this.genBiomes.getInts(x, z, width, height);
+		int[] aint = genBiomes.getInts(x, z, width, height);
 
 		try
 		{
@@ -87,40 +75,37 @@ public class BiomeProviderSkyland extends BiomeProvider
 
 			return biomes;
 		}
-		catch (Throwable throwable)
+		catch (Throwable e)
 		{
-			CrashReport crashreport = CrashReport.makeCrashReport(throwable, "Invalid Biome id");
-			CrashReportCategory crashreportcategory = crashreport.makeCategory("RawBiomeBlock");
-			crashreportcategory.addCrashSection("biomes[] size", Integer.valueOf(biomes.length));
-			crashreportcategory.addCrashSection("x", Integer.valueOf(x));
-			crashreportcategory.addCrashSection("z", Integer.valueOf(z));
-			crashreportcategory.addCrashSection("w", Integer.valueOf(width));
-			crashreportcategory.addCrashSection("h", Integer.valueOf(height));
-			throw new ReportedException(crashreport);
+			CrashReport report = CrashReport.makeCrashReport(e, "Invalid Biome id");
+			CrashReportCategory category = report.makeCategory("RawBiomeBlock");
+
+			category.addCrashSection("biomes[] size", Integer.valueOf(biomes.length));
+			category.addCrashSection("x", Integer.valueOf(x));
+			category.addCrashSection("z", Integer.valueOf(z));
+			category.addCrashSection("w", Integer.valueOf(width));
+			category.addCrashSection("h", Integer.valueOf(height));
+
+			throw new ReportedException(report);
 		}
 	}
 
 	@Override
-	public Biome[] loadBlockGeneratorData(@Nullable Biome[] oldBiomeList, int x, int z, int width, int depth)
-	{
-		return getBiomeGenAt(oldBiomeList, x, z, width, depth, true);
-	}
-
-	@Override
-	public Biome[] getBiomeGenAt(@Nullable Biome[] listToReuse, int x, int z, int width, int length, boolean cacheFlag)
+	public Biome[] getBiomeGenAt(@Nullable Biome[] biomes, int x, int z, int width, int length, boolean cache)
 	{
 		IntCache.resetIntCache();
 
-		if (listToReuse == null || listToReuse.length < width * length)
+		if (biomes == null || biomes.length < width * length)
 		{
-			listToReuse = new Biome[width * length];
+			biomes = new Biome[width * length];
 		}
 
-		if (cacheFlag && width == 16 && length == 16 && (x & 15) == 0 && (z & 15) == 0)
+		if (cache && width == 16 && length == 16 && (x & 15) == 0 && (z & 15) == 0)
 		{
-			Biome[] abiome = biomeCache.getCachedBiomes(x, z);
-			System.arraycopy(abiome, 0, listToReuse, 0, width * length);
-			return listToReuse;
+			Biome[] cachedBiomes = biomeCache.getCachedBiomes(x, z);
+			System.arraycopy(cachedBiomes, 0, biomes, 0, width * length);
+
+			return biomes;
 		}
 		else
 		{
@@ -128,10 +113,10 @@ public class BiomeProviderSkyland extends BiomeProvider
 
 			for (int i = 0; i < width * length; ++i)
 			{
-				listToReuse[i] = Biome.getBiome(aint[i], Biomes.DEFAULT);
+				biomes[i] = Biome.getBiome(aint[i], Biomes.DEFAULT);
 			}
 
-			return listToReuse;
+			return biomes;
 		}
 	}
 
@@ -139,6 +124,7 @@ public class BiomeProviderSkyland extends BiomeProvider
 	public boolean areBiomesViable(int x, int z, int radius, List<Biome> allowed)
 	{
 		IntCache.resetIntCache();
+
 		int i = x - radius >> 2;
 		int j = z - radius >> 2;
 		int k = x + radius >> 2;
@@ -163,14 +149,16 @@ public class BiomeProviderSkyland extends BiomeProvider
 		}
 		catch (Throwable throwable)
 		{
-			CrashReport crashreport = CrashReport.makeCrashReport(throwable, "Invalid Biome id");
-			CrashReportCategory crashreportcategory = crashreport.makeCategory("Layer");
-			crashreportcategory.addCrashSection("Layer", this.genBiomes.toString());
-			crashreportcategory.addCrashSection("x", Integer.valueOf(x));
-			crashreportcategory.addCrashSection("z", Integer.valueOf(z));
-			crashreportcategory.addCrashSection("radius", Integer.valueOf(radius));
-			crashreportcategory.addCrashSection("allowed", allowed);
-			throw new ReportedException(crashreport);
+			CrashReport report = CrashReport.makeCrashReport(throwable, "Invalid Biome id");
+			CrashReportCategory category = report.makeCategory("Layer");
+
+			category.addCrashSection("Layer", genBiomes.toString());
+			category.addCrashSection("x", Integer.valueOf(x));
+			category.addCrashSection("z", Integer.valueOf(z));
+			category.addCrashSection("radius", Integer.valueOf(radius));
+			category.addCrashSection("allowed", allowed);
+
+			throw new ReportedException(report);
 		}
 	}
 
@@ -179,6 +167,7 @@ public class BiomeProviderSkyland extends BiomeProvider
 	public BlockPos findBiomePosition(int x, int z, int range, List<Biome> biomes, Random random)
 	{
 		IntCache.resetIntCache();
+
 		int i = x - range >> 2;
 		int j = z - range >> 2;
 		int k = x + range >> 2;
@@ -191,13 +180,13 @@ public class BiomeProviderSkyland extends BiomeProvider
 
 		for (int l1 = 0; l1 < i1 * j1; ++l1)
 		{
-			int i2 = i + l1 % i1 << 2;
-			int j2 = j + l1 / i1 << 2;
+			int blockX = i + l1 % i1 << 2;
+			int blockZ = j + l1 / i1 << 2;
 			Biome biome = Biome.getBiome(aint[l1]);
 
 			if (biomes.contains(biome) && (blockpos == null || random.nextInt(k1 + 1) == 0))
 			{
-				blockpos = new BlockPos(i2, 0, j2);
+				blockpos = new BlockPos(blockX, 0, blockZ);
 				++k1;
 			}
 		}
@@ -208,6 +197,6 @@ public class BiomeProviderSkyland extends BiomeProvider
 	@Override
 	public void cleanupCache()
 	{
-		this.biomeCache.cleanupCache();
+		biomeCache.cleanupCache();
 	}
 }

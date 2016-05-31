@@ -21,10 +21,10 @@ import net.minecraftforge.common.util.EnumHelper;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraftforge.oredict.OreDictionary;
 import net.minecraftforge.oredict.ShapedOreRecipe;
 import net.minecraftforge.oredict.ShapelessOreRecipe;
 import skyland.core.Skyland;
-import skyland.util.SkyUtils;
 
 public class SkyItems
 {
@@ -36,7 +36,7 @@ public class SkyItems
 	public static final ItemSword skyrite_sword = (ItemSword)new ItemSword(SKYRITE).setUnlocalizedName("swordSkyrite").setCreativeTab(Skyland.tabSkyland);
 	public static final ItemSpade skyrite_shovel = (ItemSpade)new ItemSpade(SKYRITE).setUnlocalizedName("shovelSkyrite").setCreativeTab(Skyland.tabSkyland);
 	public static final ItemPickaxe skyrite_pickaxe = (ItemPickaxe)new ItemPickaxeSkyland(SKYRITE).setUnlocalizedName("pickaxeSkyrite").setCreativeTab(Skyland.tabSkyland);
-	public static final ItemAxe skyrite_axe = (ItemAxe)new ItemAxeSkyland(SKYRITE).setUnlocalizedName("axeSkyrite").setCreativeTab(Skyland.tabSkyland);
+	public static final ItemAxe skyrite_axe = (ItemAxe)new ItemAxeSkyland(SKYRITE, 6.0F, -3.0F).setUnlocalizedName("axeSkyrite").setCreativeTab(Skyland.tabSkyland);
 	public static final ItemHoe skyrite_hoe = (ItemHoe)new ItemHoe(SKYRITE).setUnlocalizedName("hoeSkyrite").setCreativeTab(Skyland.tabSkyland);
 
 	public static void registerItems()
@@ -57,8 +57,7 @@ public class SkyItems
 		GameRegistry.register(skyrite_axe);
 		GameRegistry.register(skyrite_hoe);
 
-		SkyUtils.registerOreDict(sky_feather, "feather", "skyFeather");
-		SkyUtils.registerOreDict(skyrite, "skyrite", "gemSkyrite");
+		OreDictionary.registerOre("gemSkyrite", skyrite);
 	}
 
 	@SideOnly(Side.CLIENT)
@@ -99,38 +98,38 @@ public class SkyItems
 
 	public static void registerRecipes()
 	{
-		GameRegistry.addRecipe(new ShapelessOreRecipe(new ItemStack(SkyItems.skyrite, 9), "blockSkyrite"));
+		GameRegistry.addRecipe(new ShapelessOreRecipe(new ItemStack(skyrite, 9), "blockSkyrite"));
 
-		GameRegistry.addRecipe(new ShapedOreRecipe(SkyItems.skyrite_sword,
+		GameRegistry.addRecipe(new ShapedOreRecipe(skyrite_sword,
 			"X", "X", "Y",
-			'X', "skyrite",
+			'X', skyrite,
 			'Y', "stickWood"
 		));
-		GameRegistry.addRecipe(new ShapedOreRecipe(SkyItems.skyrite_shovel,
+		GameRegistry.addRecipe(new ShapedOreRecipe(skyrite_shovel,
 			"X", "Y", "Y",
-			'X', "skyrite",
+			'X', skyrite,
 			'Y', "stickWood"
 		));
-		GameRegistry.addRecipe(new ShapedOreRecipe(SkyItems.skyrite_pickaxe,
+		GameRegistry.addRecipe(new ShapedOreRecipe(skyrite_pickaxe,
 			"XXX", " Y ", " Y ",
-			'X', "skyrite",
+			'X', skyrite,
 			'Y', "stickWood"
 		));
-		GameRegistry.addRecipe(new ShapedOreRecipe(SkyItems.skyrite_axe,
+		GameRegistry.addRecipe(new ShapedOreRecipe(skyrite_axe,
 			"XX", "XY", " Y",
-			'X', "skyrite",
+			'X', skyrite,
 			'Y', "stickWood"
 		));
-		GameRegistry.addRecipe(new ShapedOreRecipe(SkyItems.skyrite_hoe,
+		GameRegistry.addRecipe(new ShapedOreRecipe(skyrite_hoe,
 			"XX", " Y", " Y",
-			'X', "skyrite",
+			'X', skyrite,
 			'Y', "stickWood"
 		));
 		GameRegistry.addRecipe(new ShapedOreRecipe(Items.ARROW,
 			"X", "#", "Y",
 			'X', Items.FLINT,
 			'#', "stickWood",
-			'Y', "skyFeather"
+			'Y', sky_feather
 		));
 	}
 }

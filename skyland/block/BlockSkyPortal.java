@@ -152,6 +152,7 @@ public class BlockSkyPortal extends BlockPortal
 				}
 
 				Teleporter teleporter = new TeleporterSkyland(worldNew);
+				BlockPos prevPos = entity.getPosition();
 
 				entity.timeUntilPortal = entity.getPortalCooldown();
 
@@ -176,7 +177,7 @@ public class BlockSkyPortal extends BlockPortal
 						worldNew.playSound(null, x, y, z, SkySounds.sky_portal, SoundCategory.BLOCKS, 0.75F, 1.0F);
 
 						cache.setLastDim(0, dimOld);
-						cache.setLastPos(0, dimOld, pos);
+						cache.setLastPos(0, dimOld, prevPos);
 					}
 				}
 				else
@@ -216,7 +217,7 @@ public class BlockSkyPortal extends BlockPortal
 						target.forceSpawn = force;
 
 						cache.setLastDim(0, dimOld);
-						cache.setLastPos(0, dimOld, pos);
+						cache.setLastPos(0, dimOld, prevPos);
 					}
 
 					entity.setDead();
@@ -263,9 +264,9 @@ public class BlockSkyPortal extends BlockPortal
 				{
 					for (int j = 0; j < size.getHeight(); ++j)
 					{
-						BlockWorldState blockworldstate = pattern.translateOffset(i, j, 1);
+						BlockWorldState state = pattern.translateOffset(i, j, 1);
 
-						if (blockworldstate.getBlockState() != null && blockworldstate.getBlockState().getMaterial() != Material.AIR)
+						if (state.getBlockState() != null && state.getBlockState().getMaterial() != Material.AIR)
 						{
 							++values[direction.ordinal()];
 						}

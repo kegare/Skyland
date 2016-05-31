@@ -7,10 +7,10 @@ import net.minecraft.item.ItemStack;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraftforge.oredict.OreDictionary;
 import net.minecraftforge.oredict.ShapedOreRecipe;
 import skyland.item.ItemSkyPortal;
 import skyland.item.SkyItems;
-import skyland.util.SkyUtils;
 
 public class SkyBlocks
 {
@@ -33,8 +33,8 @@ public class SkyBlocks
 		GameRegistry.register(skyrite_block);
 		GameRegistry.register(new ItemBlock(skyrite_block), skyrite_block.getRegistryName());
 
-		SkyUtils.registerOreDict(skyrite_ore, "oreSkyrite");
-		SkyUtils.registerOreDict(skyrite_block, "blockSkyrite");
+		OreDictionary.registerOre("oreSkyrite", skyrite_ore);
+		OreDictionary.registerOre("blockSkyrite", skyrite_block);
 	}
 
 	@SideOnly(Side.CLIENT)
@@ -61,7 +61,7 @@ public class SkyBlocks
 	{
 		GameRegistry.addRecipe(new ShapedOreRecipe(SkyBlocks.skyrite_block,
 			"XXX", "XXX", "XXX",
-			'X', "skyrite"
+			'X', SkyItems.skyrite
 		));
 
 		GameRegistry.addSmelting(SkyBlocks.skyrite_ore, new ItemStack(SkyItems.skyrite), 1.0F);

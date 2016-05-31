@@ -66,9 +66,6 @@ public class Skyland
 			SkyItems.registerModels();
 		}
 
-		SkyBlocks.registerRecipes();
-		SkyItems.registerRecipes();
-
 		SkySounds.registerSounds();
 
 		SkyCapabilities.registerCapabilities();
@@ -79,6 +76,9 @@ public class Skyland
 	@EventHandler
 	public void init(FMLInitializationEvent event)
 	{
+		SkyBlocks.registerRecipes();
+		SkyItems.registerRecipes();
+
 		int id = Config.dimension;
 
 		if (id == 0)
