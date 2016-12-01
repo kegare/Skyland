@@ -21,13 +21,13 @@ public class ItemSkyFeather extends Item
 	public ItemSkyFeather()
 	{
 		this.setUnlocalizedName("skyFeather");
-		this.setCreativeTab(Skyland.tabSkyland);
+		this.setCreativeTab(Skyland.TAB_SKYLAND);
 	}
 
 	@Override
 	public EnumActionResult onItemUse(ItemStack stack, EntityPlayer player, World world, BlockPos pos, EnumHand hand, EnumFacing side, float hitX, float hitY, float hitZ)
 	{
-		return Item.getItemFromBlock(SkyBlocks.sky_portal).onItemUse(stack, player, world, pos, hand, side, hitX, hitY, hitZ);
+		return Item.getItemFromBlock(SkyBlocks.SKY_PORTAL).onItemUse(stack, player, world, pos, hand, side, hitX, hitY, hitZ);
 	}
 
 	@Override

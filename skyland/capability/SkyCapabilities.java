@@ -7,6 +7,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityInject;
+import net.minecraftforge.common.capabilities.ICapabilitySerializable;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -32,18 +33,18 @@ public class SkyCapabilities
 		return capability != null;
 	}
 
-	public static <T> boolean hasEntityCapability(Entity entity, Capability<T> capability)
+	public static <T> boolean hasCapability(ICapabilitySerializable<NBTTagCompound> entry, Capability<T> capability)
 	{
-		return entity != null && isValid(capability) && entity.hasCapability(capability, null);
+		return entry != null && isValid(capability) && entry.hasCapability(capability, null);
 	}
 
-	public static <T> T getEntityCapability(Entity entity, Capability<T> capability)
+	public static <T> T getCapability(ICapabilitySerializable<NBTTagCompound> entry, Capability<T> capability)
 	{
-		return hasEntityCapability(entity, capability) ? entity.getCapability(capability, null) : null;
+		return hasCapability(entry, capability) ? entry.getCapability(capability, null) : null;
 	}
 
 	@SubscribeEvent
-	public void onAttachEntityCapabilities(AttachCapabilitiesEvent.Entity event)
+	public void onAttachEntityCapabilities(AttachCapabilitiesEvent<Entity> event)
 	{
 		event.addCapability(PORTAL_CACHE_ID, new CapabilityPortalCache());
 	}
@@ -60,8 +61,8 @@ public class SkyCapabilities
 
 		EntityPlayer original = event.getOriginal();
 
-		IPortalCache originalPortalCache = getEntityCapability(original, PORTAL_CACHE);
-		IPortalCache portalCache = getEntityCapability(player, PORTAL_CACHE);
+		IPortalCache originalPortalCache = getCapability(original, PORTAL_CACHE);
+		IPortalCache portalCache = getCapability(player, PORTAL_CACHE);
 
 		if (originalPortalCache != null && portalCache != null)
 		{

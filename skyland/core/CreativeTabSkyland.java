@@ -17,7 +17,7 @@ public class CreativeTabSkyland extends CreativeTabs
 	@Override
 	public Item getTabIconItem()
 	{
-		return SkyItems.skyrite;
+		return SkyItems.SKYRITE;
 	}
 
 	@SideOnly(Side.CLIENT)

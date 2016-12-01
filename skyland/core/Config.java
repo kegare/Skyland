@@ -10,8 +10,8 @@ import com.google.common.collect.Lists;
 import net.minecraft.util.text.translation.I18n;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
-import net.minecraftforge.fml.common.FMLLog;
 import net.minecraftforge.fml.common.Loader;
+import skyland.util.SkyLog;
 
 public class Config
 {
@@ -28,31 +28,36 @@ public class Config
 
 	public static final String CATEGORY_DIMENSION = "dimension";
 
+	public static void loadConfig()
+	{
+		File file = new File(Loader.instance().getConfigDir(), "Skyland.cfg");
+
+		config = new Configuration(file, true);
+
+		try
+		{
+			config.load();
+		}
+		catch (Exception e)
+		{
+			File dest = new File(file.getParentFile(), file.getName() + ".bak");
+
+			if (dest.exists())
+			{
+				dest.delete();
+			}
+
+			file.renameTo(dest);
+
+			SkyLog.log(Level.ERROR, e, "A critical error occured reading the " + file.getName() + " file, defaults will be used - the invalid file is backed up at " + dest.getName());
+		}
+	}
+
 	public static void syncConfig()
 	{
 		if (config == null)
 		{
-			File file = new File(Loader.instance().getConfigDir(), "Skyland.cfg");
-
-			config = new Configuration(file, true);
-
-			try
-			{
-				config.load();
-			}
-			catch (Exception e)
-			{
-				File dest = new File(file.getParentFile(), file.getName() + ".bak");
-
-				if (dest.exists())
-				{
-					dest.delete();
-				}
-
-				file.renameTo(dest);
-
-				FMLLog.log(Level.ERROR, e, "A critical error occured reading the " + file.getName() + " file, defaults will be used - the invalid file is backed up at " + dest.getName());
-			}
+			loadConfig();
 		}
 
 		String category = Configuration.CATEGORY_GENERAL;

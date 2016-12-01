@@ -14,6 +14,6 @@ public class BlockSkyrite extends Block
 		this.setHardness(5.5F);
 		this.setResistance(10.0F);
 		this.setSoundType(SoundType.METAL);
-		this.setCreativeTab(Skyland.tabSkyland);
+		this.setCreativeTab(Skyland.TAB_SKYLAND);
 	}
 }

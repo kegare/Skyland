@@ -94,7 +94,7 @@ public class CommandSkyland extends CommandBase
 			{
 				try
 				{
-					backup = CommandBase.parseBoolean(args[1]);
+					backup = parseBoolean(args[1]);
 				}
 				catch (CommandException e)
 				{
@@ -131,6 +131,6 @@ public class CommandSkyland extends CommandBase
 	@Override
 	public List<String> getTabCompletionOptions(MinecraftServer server, ICommandSender sender, String[] args, BlockPos pos)
 	{
-		return args.length == 1 ? CommandBase.getListOfStringsMatchingLastWord(args, getCommands()) : null;
+		return args.length == 1 ? getListOfStringsMatchingLastWord(args, getCommands()) : null;
 	}
 }

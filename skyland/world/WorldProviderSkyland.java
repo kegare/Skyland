@@ -33,7 +33,6 @@ import net.minecraft.world.storage.WorldInfo;
 import net.minecraftforge.client.IRenderHandler;
 import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.relauncher.Side;
@@ -50,7 +49,7 @@ import skyland.util.SkyUtils;
 
 public class WorldProviderSkyland extends WorldProviderSurface
 {
-	private static final Random rand = new Random();
+	private static final Random RANDOM = new Random();
 
 	public static File getDimDir()
 	{
@@ -107,11 +106,7 @@ public class WorldProviderSkyland extends WorldProviderSurface
 			{
 				world.saveAllChunks(true, null);
 				world.flush();
-
-				if (world.provider instanceof WorldProviderSkyland)
-				{
-					((WorldProviderSkyland)world.provider).setSeed(rand.nextLong());
-				}
+				world.getWorldInfo().setDimensionData(Skyland.DIM_SKYLAND, null);
 
 				MinecraftForge.EVENT_BUS.post(new WorldEvent.Unload(world));
 
@@ -227,10 +222,7 @@ public class WorldProviderSkyland extends WorldProviderSurface
 		}
 	}
 
-	public WorldProviderSkyland()
-	{
-		this.setDimension(Config.dimension);
-	}
+	protected SkyDataManager dataManager;
 
 	@Override
 	public IChunkGenerator createChunkGenerator()
@@ -241,6 +233,7 @@ public class WorldProviderSkyland extends WorldProviderSurface
 	@Override
 	protected void createBiomeProvider()
 	{
+		dataManager = new SkyDataManager(worldObj.getWorldInfo().getDimensionData(getDimensionType()).getCompoundTag("WorldData"));
 		biomeProvider = new BiomeProviderSkyland(getSeed(), worldObj.getWorldType(), worldObj.getWorldInfo().getGeneratorOptions());
 	}
 
@@ -254,16 +247,6 @@ public class WorldProviderSkyland extends WorldProviderSurface
 	public DimensionType getDimensionType()
 	{
 		return Skyland.DIM_SKYLAND;
-	}
-
-	public NBTTagCompound getDimensionData()
-	{
-		return worldObj.getWorldInfo().getDimensionData(getDimensionType());
-	}
-
-	public void saveDimensionData()
-	{
-		worldObj.getWorldInfo().setDimensionData(getDimensionType(), getDimensionData());
 	}
 
 	@Override
@@ -284,7 +267,7 @@ public class WorldProviderSkyland extends WorldProviderSurface
 	{
 		if (super.getWeatherRenderer() == null)
 		{
-			setWeatherRenderer(EmptyRenderer.instance);
+			setWeatherRenderer(EmptyRenderer.INSTANCE);
 		}
 
 		return super.getWeatherRenderer();
@@ -293,7 +276,7 @@ public class WorldProviderSkyland extends WorldProviderSurface
 	@Override
 	public BlockPos getSpawnPoint()
 	{
-		return new BlockPos(0, 64, 0);
+		return BlockPos.ORIGIN.up(60);
 	}
 
 	@Override
@@ -368,30 +351,12 @@ public class WorldProviderSkyland extends WorldProviderSurface
 	@Override
 	public long getSeed()
 	{
-		long seed = super.getSeed();
-
-		if (!worldObj.isRemote)
+		if (dataManager != null)
 		{
-			NBTTagCompound data = getDimensionData();
-
-			if (!data.hasKey("Seed", NBT.TAG_ANY_NUMERIC))
-			{
-				data.setLong("Seed", rand.nextLong());
-
-				saveDimensionData();
-			}
-
-			seed = data.getLong("Seed");
+			return dataManager.getWorldSeed(RANDOM.nextLong());
 		}
 
-		return seed;
-	}
-
-	public void setSeed(long seed)
-	{
-		getDimensionData().setLong("Seed", seed);
-
-		saveDimensionData();
+		return super.getSeed();
 	}
 
 	@Override
@@ -422,5 +387,24 @@ public class WorldProviderSkyland extends WorldProviderSurface
 	public boolean canDoRainSnowIce(Chunk chunk)
 	{
 		return false;
+	}
+
+	@Override
+	public boolean canDropChunk(int x, int z)
+	{
+		return true;
+	}
+
+	@Override
+	public void onWorldSave()
+	{
+		NBTTagCompound compound = new NBTTagCompound();
+
+		if (dataManager != null)
+		{
+			compound.setTag("WorldData", dataManager.getCompound());
+		}
+
+		worldObj.getWorldInfo().setDimensionData(getDimensionType(), compound);
 	}
 }

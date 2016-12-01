@@ -39,7 +39,7 @@ public class FallTeleportMessage implements IMessage, IMessageHandler<FallTelepo
 	@Override
 	public IMessage onMessage(FallTeleportMessage message, MessageContext ctx)
 	{
-		SkyEventHooks.fallTeleportPlayers.get().add(message.uuid);
+		SkyEventHooks.FALL_TELEPORT_PLAYERS.get().add(message.uuid);
 
 		FMLClientHandler.instance().getClient().getSoundHandler().playSound(new MovingSoundSkyFalling());
 

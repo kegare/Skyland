@@ -37,7 +37,7 @@ public class BiomeProviderSkyland extends BiomeProvider
 	{
 		this();
 		GenLayer[] layers = GenLayer.initializeAllBiomeGenerators(seed, worldType, options);
-		layers = getModdedBiomeerators(worldType, seed, layers);
+		layers = getModdedBiomeGenerators(worldType, seed, layers);
 		this.genBiomes = layers[0];
 		this.biomeIndexLayer = layers[1];
 	}

@@ -18,7 +18,7 @@ public class MovingSoundSkyFalling extends MovingSound
 {
 	public MovingSoundSkyFalling()
 	{
-		super(SkySounds.falling, SoundCategory.PLAYERS);
+		super(SkySounds.FALLING, SoundCategory.PLAYERS);
 		this.repeat = true;
 		this.repeatDelay = 0;
 	}

@@ -104,7 +104,7 @@ public class TeleporterSkyland extends Teleporter
 		int i = MathHelper.floor_double(entity.posX);
 		int j = MathHelper.floor_double(entity.posZ);
 		boolean flag1 = true;
-		Object object = BlockPos.ORIGIN;
+		BlockPos object = BlockPos.ORIGIN;
 		long coord = ChunkPos.chunkXZ2Int(i, j);
 
 		if (coordCache.containsKey(coord))
@@ -129,9 +129,9 @@ public class TeleporterSkyland extends Teleporter
 					{
 						current = blockpos.down();
 
-						if (worldObj.getBlockState(blockpos).getBlock() == SkyBlocks.sky_portal)
+						if (worldObj.getBlockState(blockpos).getBlock() == SkyBlocks.SKY_PORTAL)
 						{
-							while (worldObj.getBlockState(current = blockpos.down()).getBlock() == SkyBlocks.sky_portal)
+							while (worldObj.getBlockState(current = blockpos.down()).getBlock() == SkyBlocks.SKY_PORTAL)
 							{
 								blockpos = current;
 							}
@@ -153,30 +153,30 @@ public class TeleporterSkyland extends Teleporter
 		{
 			if (flag1)
 			{
-				coordCache.put(coord, new PortalPosition((BlockPos)object, worldObj.getTotalWorldTime()));
+				coordCache.put(coord, new PortalPosition(object, worldObj.getTotalWorldTime()));
 			}
 
-			double posX = ((BlockPos)object).getX() + 0.5D;
-			double posY = ((BlockPos)object).getY() + 0.5D;
-			double posZ = ((BlockPos)object).getZ() + 0.5D;
+			double posX = object.getX() + 0.5D;
+			double posY = object.getY() + 0.5D;
+			double posZ = object.getZ() + 0.5D;
 			EnumFacing face = null;
 
-			if (worldObj.getBlockState(((BlockPos)object).west()).getBlock() == SkyBlocks.sky_portal)
+			if (worldObj.getBlockState(object.west()).getBlock() == SkyBlocks.SKY_PORTAL)
 			{
 				face = EnumFacing.NORTH;
 			}
 
-			if (worldObj.getBlockState(((BlockPos)object).east()).getBlock() == SkyBlocks.sky_portal)
+			if (worldObj.getBlockState(object.east()).getBlock() == SkyBlocks.SKY_PORTAL)
 			{
 				face = EnumFacing.SOUTH;
 			}
 
-			if (worldObj.getBlockState(((BlockPos)object).north()).getBlock() == SkyBlocks.sky_portal)
+			if (worldObj.getBlockState(object.north()).getBlock() == SkyBlocks.SKY_PORTAL)
 			{
 				face = EnumFacing.EAST;
 			}
 
-			if (worldObj.getBlockState(((BlockPos)object).south()).getBlock() == SkyBlocks.sky_portal)
+			if (worldObj.getBlockState(object.south()).getBlock() == SkyBlocks.SKY_PORTAL)
 			{
 				face = EnumFacing.WEST;
 			}
@@ -186,16 +186,16 @@ public class TeleporterSkyland extends Teleporter
 			if (face != null)
 			{
 				EnumFacing face1 = face.rotateYCCW();
-				BlockPos pos = ((BlockPos)object).offset(face);
+				BlockPos pos = object.offset(face);
 				boolean flag2 = isNotAir(pos);
 				boolean flag3 = isNotAir(pos.offset(face1));
 
 				if (flag3 && flag2)
 				{
-					object = ((BlockPos)object).offset(face1);
+					object = object.offset(face1);
 					face = face.getOpposite();
 					face1 = face1.getOpposite();
-					BlockPos blockpos = ((BlockPos)object).offset(face);
+					BlockPos blockpos = object.offset(face);
 					flag2 = isNotAir(blockpos);
 					flag3 = isNotAir(blockpos.offset(face1));
 				}
@@ -216,9 +216,9 @@ public class TeleporterSkyland extends Teleporter
 					f1 = 0.0F;
 				}
 
-				posX = ((BlockPos)object).getX() + 0.5D;
-				posY = ((BlockPos)object).getY() + 0.5D;
-				posZ = ((BlockPos)object).getZ() + 0.5D;
+				posX = object.getX() + 0.5D;
+				posY = object.getY() + 0.5D;
+				posZ = object.getZ() + 0.5D;
 				posX += face1.getFrontOffsetX() * f6 + face.getFrontOffsetX() * f1;
 				posZ += face1.getFrontOffsetZ() * f6 + face.getFrontOffsetZ() * f1;
 				float f2 = 0.0F;
@@ -480,7 +480,7 @@ public class TeleporterSkyland extends Teleporter
 			}
 		}
 
-		IBlockState state = SkyBlocks.sky_portal.getDefaultState().withProperty(BlockPortal.AXIS, l5 != 0 ? EnumFacing.Axis.X : EnumFacing.Axis.Z);
+		IBlockState state = SkyBlocks.SKY_PORTAL.getDefaultState().withProperty(BlockPortal.AXIS, l5 != 0 ? EnumFacing.Axis.X : EnumFacing.Axis.Z);
 
 		for (j3 = 0; j3 < 4; ++j3)
 		{

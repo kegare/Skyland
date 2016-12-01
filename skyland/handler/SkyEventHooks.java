@@ -1,5 +1,6 @@
 package skyland.handler;
 
+import java.util.Random;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
@@ -7,12 +8,14 @@ import org.apache.commons.lang3.StringUtils;
 import com.google.common.collect.Sets;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.audio.ISound;
+import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.passive.EntityChicken;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentString;
@@ -23,6 +26,7 @@ import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.storage.WorldInfo;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
+import net.minecraftforge.client.event.sound.PlaySoundEvent;
 import net.minecraftforge.common.ForgeVersion.Status;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
@@ -32,7 +36,6 @@ import net.minecraftforge.fml.client.FMLClientHandler;
 import net.minecraftforge.fml.client.event.ConfigChangedEvent.OnConfigChangedEvent;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerChangedDimensionEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedOutEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerRespawnEvent;
@@ -49,7 +52,6 @@ import skyland.item.ItemSkyFeather;
 import skyland.item.SkyItems;
 import skyland.network.DisplayGuiMessage;
 import skyland.network.FallTeleportMessage;
-import skyland.network.PlayMusicMessage;
 import skyland.network.SkyNetworkRegistry;
 import skyland.stats.IPortalCache;
 import skyland.stats.PortalCache;
@@ -58,8 +60,8 @@ import skyland.util.Version;
 
 public class SkyEventHooks
 {
-	public static final Set<String> firstJoinPlayers = Sets.newHashSet();
-	public static final ThreadLocal<Set<String>> fallTeleportPlayers = new ThreadLocal<Set<String>>()
+	public static final Set<String> FIRST_PLAYERS = Sets.newHashSet();
+	public static final ThreadLocal<Set<String>> FALL_TELEPORT_PLAYERS = new ThreadLocal<Set<String>>()
 	{
 		@Override
 		protected Set<String> initialValue()
@@ -67,6 +69,8 @@ public class SkyEventHooks
 			return Sets.newHashSet();
 		}
 	};
+
+	protected static final Random RANDOM = new Random();
 
 	@SideOnly(Side.CLIENT)
 	@SubscribeEvent
@@ -156,7 +160,7 @@ public class SkyEventHooks
 			}
 		}
 
-		firstJoinPlayers.add(uuid);
+		FIRST_PLAYERS.add(uuid);
 	}
 
 	@SubscribeEvent
@@ -166,7 +170,7 @@ public class SkyEventHooks
 		{
 			EntityPlayerMP player = (EntityPlayerMP)event.player;
 
-			if (firstJoinPlayers.contains(player.getUniqueID().toString()))
+			if (FIRST_PLAYERS.contains(player.getUniqueID().toString()))
 			{
 				WorldServer world = player.getServerWorld();
 
@@ -178,10 +182,9 @@ public class SkyEventHooks
 				{
 					SkyUtils.teleportPlayer(player, Config.dimension);
 				}
+				else return;
 
 				player.setSpawnChunk(player.getPosition(), true, player.dimension);
-
-				SkyNetworkRegistry.sendTo(new PlayMusicMessage(SkySounds.skyland), player);
 			}
 		}
 	}
@@ -192,8 +195,8 @@ public class SkyEventHooks
 		EntityPlayer player = event.player;
 		String uuid = player.getUniqueID().toString();
 
-		firstJoinPlayers.remove(uuid);
-		fallTeleportPlayers.get().remove(uuid);
+		FIRST_PLAYERS.remove(uuid);
+		FALL_TELEPORT_PLAYERS.get().remove(uuid);
 	}
 
 	@SubscribeEvent
@@ -209,29 +212,6 @@ public class SkyEventHooks
 				{
 					SkyUtils.teleportPlayer(player, player.dimension);
 				}
-			}
-		}
-	}
-
-	@SubscribeEvent
-	public void onPlayerChangedDimension(PlayerChangedDimensionEvent event)
-	{
-		if (event.player instanceof EntityPlayerMP)
-		{
-			EntityPlayerMP player = (EntityPlayerMP)event.player;
-
-			if (event.toDim == Config.dimension)
-			{
-				WorldServer world = player.getServerWorld();
-				NBTTagCompound data = player.getEntityData();
-				String key = "Skyland:LastTeleportTime";
-
-				if (!data.hasKey(key) || data.getLong(key) + 18000L < world.getTotalWorldTime())
-				{
-					SkyNetworkRegistry.sendTo(new PlayMusicMessage(SkySounds.skyland), player);
-				}
-
-				data.setLong(key, world.getTotalWorldTime());
 			}
 		}
 	}
@@ -285,6 +265,22 @@ public class SkyEventHooks
 		}
 	}
 
+	@SideOnly(Side.CLIENT)
+	@SubscribeEvent
+	public void onPlaySound(PlaySoundEvent event)
+	{
+		Minecraft mc = FMLClientHandler.instance().getClient();
+		ISound sound = event.getSound();
+
+		if (sound != null && sound.getCategory() == SoundCategory.MUSIC && SkyUtils.isEntityInSkyland(mc.thePlayer))
+		{
+			if (RANDOM.nextDouble() < 0.35D)
+			{
+				event.setResultSound(PositionedSoundRecord.getMusicRecord(SkySounds.SKYLAND));
+			}
+		}
+	}
+
 	@SubscribeEvent
 	public void onLivingUpdate(LivingUpdateEvent event)
 	{
@@ -331,7 +327,7 @@ public class SkyEventHooks
 
 					player.connection.setPlayerLocation(player.posX, 350.5D, player.posZ, player.rotationYaw, player.rotationPitch);
 
-					fallTeleportPlayers.get().add(player.getUniqueID().toString());
+					FALL_TELEPORT_PLAYERS.get().add(player.getUniqueID().toString());
 
 					SkyNetworkRegistry.sendTo(new FallTeleportMessage(player), player);
 
@@ -398,7 +394,7 @@ public class SkyEventHooks
 
 		EntityLivingBase entity = event.getEntityLiving();
 
-		if (entity instanceof EntityPlayer && fallTeleportPlayers.get().remove(entity.getUniqueID().toString()))
+		if (entity instanceof EntityPlayer && FALL_TELEPORT_PLAYERS.get().remove(entity.getUniqueID().toString()))
 		{
 			event.setCanceled(true);
 		}
@@ -431,7 +427,7 @@ public class SkyEventHooks
 
 				if (rate > 0 && entity.getRNG().nextInt(rate) == 0)
 				{
-					entity.dropItem(SkyItems.sky_feather, 1);
+					entity.dropItem(SkyItems.SKY_FEATHER, 1);
 				}
 			}
 		}

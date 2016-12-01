@@ -20,7 +20,7 @@ public class SkyConfigGui extends GuiConfig
 {
 	public SkyConfigGui(GuiScreen parent)
 	{
-		super(parent, getConfigElements(), Skyland.MODID, false, false, I18n.format(Skyland.CONFIG_LANG + "title"));
+		super(parent, getConfigElements(), Skyland.MODID, false, false, I18n.format(Config.LANG_KEY + "title"));
 	}
 
 	private static List<IConfigElement> getConfigElements()

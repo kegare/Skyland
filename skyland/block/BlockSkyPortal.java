@@ -51,7 +51,7 @@ public class BlockSkyPortal extends BlockPortal
 		this.setTickRandomly(false);
 		this.setBlockUnbreakable();
 		this.disableStats();
-		this.setCreativeTab(Skyland.tabSkyland);
+		this.setCreativeTab(Skyland.TAB_SKYLAND);
 	}
 
 	@Override
@@ -166,7 +166,7 @@ public class BlockSkyPortal extends BlockPortal
 						double y = player.posY + player.getEyeHeight();
 						double z = player.posZ;
 
-						worldOld.playSound(player, x, y, z, SkySounds.sky_portal, SoundCategory.BLOCKS, 0.5F, 1.0F);
+						worldOld.playSound(player, x, y, z, SkySounds.SKY_PORTAL, SoundCategory.BLOCKS, 0.5F, 1.0F);
 
 						server.getPlayerList().transferPlayerToDimension(player, dimNew, teleporter);
 
@@ -174,7 +174,7 @@ public class BlockSkyPortal extends BlockPortal
 						y = player.posY + player.getEyeHeight();
 						z = player.posZ;
 
-						worldNew.playSound(null, x, y, z, SkySounds.sky_portal, SoundCategory.BLOCKS, 0.75F, 1.0F);
+						worldNew.playSound(null, x, y, z, SkySounds.SKY_PORTAL, SoundCategory.BLOCKS, 0.75F, 1.0F);
 
 						cache.setLastDim(0, dimOld);
 						cache.setLastPos(0, dimOld, prevPos);
@@ -186,7 +186,7 @@ public class BlockSkyPortal extends BlockPortal
 					double y = entity.posY + entity.getEyeHeight();
 					double z = entity.posZ;
 
-					worldOld.playSound(null, x, y, z, SkySounds.sky_portal, SoundCategory.BLOCKS, 0.25F, 1.15F);
+					worldOld.playSound(null, x, y, z, SkySounds.SKY_PORTAL, SoundCategory.BLOCKS, 0.25F, 1.15F);
 
 					server.getPlayerList().transferEntityToWorld(entity, dimOld, worldOld, worldNew, teleporter);
 
@@ -212,7 +212,7 @@ public class BlockSkyPortal extends BlockPortal
 						y = target.posY + target.getEyeHeight();
 						z = target.posZ;
 
-						worldNew.playSound(null, x, y, z, SkySounds.sky_portal, SoundCategory.BLOCKS, 0.5F, 1.15F);
+						worldNew.playSound(null, x, y, z, SkySounds.SKY_PORTAL, SoundCategory.BLOCKS, 0.5F, 1.15F);
 
 						target.forceSpawn = force;
 

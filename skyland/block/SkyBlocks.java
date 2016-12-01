@@ -5,6 +5,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fml.common.registry.GameRegistry;
+import net.minecraftforge.fml.common.registry.IForgeRegistry;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraftforge.oredict.OreDictionary;
@@ -14,35 +15,30 @@ import skyland.item.SkyItems;
 
 public class SkyBlocks
 {
-	public static final BlockSkyPortal sky_portal = new BlockSkyPortal();
-	public static final BlockSkyriteOre skyrite_ore = new BlockSkyriteOre();
-	public static final Block skyrite_block = new BlockSkyrite();
+	public static final BlockSkyPortal SKY_PORTAL = new BlockSkyPortal();
+	public static final BlockSkyriteOre SKYRITE_ORE = new BlockSkyriteOre();
+	public static final Block SKYRITE_BLOCK = new BlockSkyrite();
 
-	public static void registerBlocks()
+	public static void registerBlocks(IForgeRegistry<Block> registry)
 	{
-		sky_portal.setRegistryName("sky_portal");
-		skyrite_ore.setRegistryName("skyrite_ore");
-		skyrite_block.setRegistryName("skyrite_block");
+		registry.register(SKY_PORTAL.setRegistryName("sky_portal"));
+		registry.register(SKYRITE_ORE.setRegistryName("skyrite_ore"));
+		registry.register(SKYRITE_BLOCK.setRegistryName("skyrite_block"));
+	}
 
-		GameRegistry.register(sky_portal);
-		GameRegistry.register(new ItemSkyPortal(sky_portal), sky_portal.getRegistryName());
-
-		GameRegistry.register(skyrite_ore);
-		GameRegistry.register(new ItemBlock(skyrite_ore), skyrite_ore.getRegistryName());
-
-		GameRegistry.register(skyrite_block);
-		GameRegistry.register(new ItemBlock(skyrite_block), skyrite_block.getRegistryName());
-
-		OreDictionary.registerOre("oreSkyrite", skyrite_ore);
-		OreDictionary.registerOre("blockSkyrite", skyrite_block);
+	public static void registerItemBlocks(IForgeRegistry<Item> registry)
+	{
+		registry.register(new ItemSkyPortal(SKY_PORTAL).setRegistryName(SKY_PORTAL.getRegistryName()));
+		registry.register(new ItemBlock(SKYRITE_ORE).setRegistryName(SKYRITE_ORE.getRegistryName()));
+		registry.register(new ItemBlock(SKYRITE_BLOCK).setRegistryName(SKYRITE_BLOCK.getRegistryName()));
 	}
 
 	@SideOnly(Side.CLIENT)
 	public static void registerModels()
 	{
-		registerModel(sky_portal, "sky_portal");
-		registerModel(skyrite_ore, "skyrite_ore");
-		registerModel(skyrite_block, "skyrite_block");
+		registerModel(SKY_PORTAL, "sky_portal");
+		registerModel(SKYRITE_ORE, "skyrite_ore");
+		registerModel(SKYRITE_BLOCK, "skyrite_block");
 	}
 
 	@SideOnly(Side.CLIENT)
@@ -57,13 +53,19 @@ public class SkyBlocks
 		SkyItems.registerModelWithMeta(Item.getItemFromBlock(block), modelName);
 	}
 
+	public static void registerOreDicts()
+	{
+		OreDictionary.registerOre("oreSkyrite", SKYRITE_ORE);
+		OreDictionary.registerOre("blockSkyrite", SKYRITE_BLOCK);
+	}
+
 	public static void registerRecipes()
 	{
-		GameRegistry.addRecipe(new ShapedOreRecipe(SkyBlocks.skyrite_block,
+		GameRegistry.addRecipe(new ShapedOreRecipe(SkyBlocks.SKYRITE_BLOCK,
 			"XXX", "XXX", "XXX",
-			'X', SkyItems.skyrite
+			'X', "gemSkyrite"
 		));
 
-		GameRegistry.addSmelting(SkyBlocks.skyrite_ore, new ItemStack(SkyItems.skyrite), 1.0F);
+		GameRegistry.addSmelting(SkyBlocks.SKYRITE_ORE, new ItemStack(SkyItems.SKYRITE), 1.0F);
 	}
 }

@@ -22,13 +22,13 @@ public class BlockSkyriteOre extends BlockOre
 		this.setHardness(3.0F);
 		this.setResistance(5.0F);
 		this.setSoundType(SoundType.STONE);
-		this.setCreativeTab(Skyland.tabSkyland);
+		this.setCreativeTab(Skyland.TAB_SKYLAND);
 	}
 
 	@Override
 	public Item getItemDropped(IBlockState state, Random rand, int fortune)
 	{
-		return SkyItems.skyrite;
+		return SkyItems.SKYRITE;
 	}
 
 	@Override

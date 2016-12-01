@@ -61,7 +61,7 @@ public class ChunkProviderSkyland implements IChunkGenerator
 	private final WorldGenerator worldGenIron = new WorldGenMinable(Blocks.IRON_ORE.getDefaultState(), 7);
 	private final WorldGenerator worldGenEmerald = new WorldGenMinable(Blocks.EMERALD_ORE.getDefaultState(), 4);
 	private final WorldGenerator worldGenDiamond = new WorldGenMinable(Blocks.DIAMOND_ORE.getDefaultState(), 3);
-	private final WorldGenerator worldGenSkyrite = new WorldGenMinable(SkyBlocks.skyrite_ore.getDefaultState(), 5);
+	private final WorldGenerator worldGenSkyrite = new WorldGenMinable(SkyBlocks.SKYRITE_ORE.getDefaultState(), 6);
 
 	public ChunkProviderSkyland(World world)
 	{
@@ -407,7 +407,7 @@ public class ChunkProviderSkyland implements IChunkGenerator
 
 		boolean doGen = TerrainGen.generateOre(worldObj, rand, worldGenIron, pos, EventType.IRON);
 
-		for (i = 0; doGen && i < 15; ++i)
+		for (i = 0; doGen && i < 18; ++i)
 		{
 			genX = rand.nextInt(16);
 			genY = rand.nextInt(50) + 20;
@@ -425,7 +425,7 @@ public class ChunkProviderSkyland implements IChunkGenerator
 			worldGenEmerald.generate(worldObj, rand, pos.add(genX, genY, genZ));
 		}
 
-		for (i = 0, doGen = TerrainGen.generateOre(worldObj, rand, worldGenDiamond, pos, EventType.DIAMOND); doGen && i < 7; ++i)
+		for (i = 0, doGen = TerrainGen.generateOre(worldObj, rand, worldGenDiamond, pos, EventType.DIAMOND); doGen && i < 8; ++i)
 		{
 			genX = rand.nextInt(16);
 			genY = rand.nextInt(50) + 10;

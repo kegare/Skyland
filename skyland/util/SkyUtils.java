@@ -199,7 +199,7 @@ public class SkyUtils
 					int range = 64;
 					BlockPos blockpos = null;
 
-					for (final BlockPos pos : BlockPos.getAllInBoxMutable(originPos.add(range, 0, range), originPos.add(-range, 0, -range)))
+					for (BlockPos pos : BlockPos.getAllInBoxMutable(originPos.add(range, 0, range), originPos.add(-range, 0, -range)))
 					{
 						blockpos = world.getHeight(pos);
 
@@ -289,7 +289,7 @@ public class SkyUtils
 				{
 					int range = 64;
 
-					for (final BlockPos pos : BlockPos.getAllInBoxMutable(originPos.add(range, 0, range), originPos.add(-range, 0, -range)))
+					for (BlockPos pos : BlockPos.getAllInBoxMutable(originPos.add(range, 0, range), originPos.add(-range, 0, -range)))
 					{
 						blockpos = world.getHeight(pos);
 

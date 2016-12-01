@@ -8,15 +8,13 @@
       "url": "http://kegare.github.io/skyland/",
       "updateJSON": "",
       "logoFile": "logo.png",
-      "version": "1.2.2",
+      "version": "1.3.0",
       "credits": "By kegare",
       "parent": "",
       "authorList": [
         "kegare"
       ],
-      "requiredMods": [
-        "Forge"
-      ],
+      "requiredMods": [],
       "dependencies": [],
       "dependants": [],
       "useDependencyInformation": "true"
