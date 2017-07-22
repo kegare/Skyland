@@ -1,7 +1,5 @@
 package skyland.capability;
 
-import java.util.concurrent.Callable;
-
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
@@ -78,14 +76,7 @@ public class CapabilityPortalCache implements ICapabilitySerializable<NBTTagComp
 					instance.readFromNBT((NBTTagCompound)nbt);
 				}
 			},
-			new Callable<PortalCache>()
-			{
-				@Override
-				public PortalCache call() throws Exception
-				{
-					return new PortalCache();
-				}
-			}
+			PortalCache::new
 		);
 	}
 }

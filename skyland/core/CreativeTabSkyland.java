@@ -1,7 +1,7 @@
 package skyland.core;
 
 import net.minecraft.creativetab.CreativeTabs;
-import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import skyland.item.SkyItems;
@@ -15,9 +15,9 @@ public class CreativeTabSkyland extends CreativeTabs
 
 	@SideOnly(Side.CLIENT)
 	@Override
-	public Item getTabIconItem()
+	public ItemStack getTabIconItem()
 	{
-		return SkyItems.SKYRITE;
+		return new ItemStack(SkyItems.SKY_FEATHER);
 	}
 
 	@SideOnly(Side.CLIENT)

@@ -1,12 +1,3 @@
-/*
- * Skyland
- *
- * Copyright (c) 2014 kegare
- * https://github.com/kegare
- *
- * This mod is distributed under the terms of the Minecraft Mod Public License Japanese Translation, or MMPL_J.
- */
-
 package skyland.world.gen;
 
 import java.util.Random;
@@ -17,7 +8,7 @@ import net.minecraft.world.World;
 import net.minecraft.world.chunk.ChunkPrimer;
 import net.minecraft.world.gen.MapGenCaves;
 
-public class MapGenCavesSkyland extends MapGenCaves
+public class MapGenSkyCaves extends MapGenCaves
 {
 	@Override
 	protected void addTunnel(long caveSeed, int chunkX, int chunkZ, ChunkPrimer data, double blockX, double blockY, double blockZ, float scale, float leftRightRadian, float upDownRadian, int currentY, int targetY, double scaleHeight)
@@ -92,12 +83,12 @@ public class MapGenCavesSkyland extends MapGenCaves
 
 				if (blockX >= centerX - 16.0D - roomWidth * 2.0D && blockZ >= centerZ - 16.0D - roomWidth * 2.0D && blockX <= centerX + 16.0D + roomWidth * 2.0D && blockZ <= centerZ + 16.0D + roomWidth * 2.0D)
 				{
-					int xLow = Math.max(MathHelper.floor_double(blockX - roomWidth) - chunkX * 16 - 1, 0);
-					int xHigh = Math.min(MathHelper.floor_double(blockX + roomWidth) - chunkX * 16 + 1, 16);
-					int yLow = Math.max(MathHelper.floor_double(blockY - roomHeight) - 1, 3);
-					int yHigh = Math.min(MathHelper.floor_double(blockY + roomHeight) + 1, 100);
-					int zLow = Math.max(MathHelper.floor_double(blockZ - roomWidth) - chunkZ * 16 - 1, 0);
-					int zHigh = Math.min(MathHelper.floor_double(blockZ + roomWidth) - chunkZ * 16 + 1, 16);
+					int xLow = Math.max(MathHelper.floor(blockX - roomWidth) - chunkX * 16 - 1, 0);
+					int xHigh = Math.min(MathHelper.floor(blockX + roomWidth) - chunkX * 16 + 1, 16);
+					int yLow = Math.max(MathHelper.floor(blockY - roomHeight) - 1, 3);
+					int yHigh = Math.min(MathHelper.floor(blockY + roomHeight) + 1, 100);
+					int zLow = Math.max(MathHelper.floor(blockZ - roomWidth) - chunkZ * 16 - 1, 0);
+					int zHigh = Math.min(MathHelper.floor(blockZ + roomWidth) - chunkZ * 16 + 1, 16);
 
 					for (int x = xLow; x < xHigh; ++x)
 					{

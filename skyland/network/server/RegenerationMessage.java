@@ -1,12 +1,10 @@
-package skyland.network;
+package skyland.network.server;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
-import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import skyland.world.WorldProviderSkyland;
 
-public class RegenerationMessage implements IMessage, IMessageHandler<RegenerationMessage, IMessage>
+public class RegenerationMessage implements ISimpleMessage<RegenerationMessage, IMessage>
 {
 	private boolean backup = true;
 
@@ -30,9 +28,9 @@ public class RegenerationMessage implements IMessage, IMessageHandler<Regenerati
 	}
 
 	@Override
-	public IMessage onMessage(RegenerationMessage message, MessageContext ctx)
+	public IMessage process()
 	{
-		WorldProviderSkyland.regenerate(message.backup);
+		WorldProviderSkyland.regenerate(backup);
 
 		return null;
 	}

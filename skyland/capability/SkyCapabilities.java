@@ -7,7 +7,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityInject;
-import net.minecraftforge.common.capabilities.ICapabilitySerializable;
+import net.minecraftforge.common.capabilities.ICapabilityProvider;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -33,12 +33,12 @@ public class SkyCapabilities
 		return capability != null;
 	}
 
-	public static <T> boolean hasCapability(ICapabilitySerializable<NBTTagCompound> entry, Capability<T> capability)
+	public static <T> boolean hasCapability(ICapabilityProvider entry, Capability<T> capability)
 	{
 		return entry != null && isValid(capability) && entry.hasCapability(capability, null);
 	}
 
-	public static <T> T getCapability(ICapabilitySerializable<NBTTagCompound> entry, Capability<T> capability)
+	public static <T> T getCapability(ICapabilityProvider entry, Capability<T> capability)
 	{
 		return hasCapability(entry, capability) ? entry.getCapability(capability, null) : null;
 	}
@@ -54,7 +54,7 @@ public class SkyCapabilities
 	{
 		EntityPlayer player = event.getEntityPlayer();
 
-		if (player.worldObj.isRemote)
+		if (player.world.isRemote)
 		{
 			return;
 		}

@@ -23,6 +23,7 @@ public class Config
 	public static boolean skyborn;
 
 	public static int dimension;
+	public static int islandsDensity;
 	public static boolean generateCaves;
 	public static boolean generateLakes;
 
@@ -98,6 +99,15 @@ public class Config
 		prop.setComment(comment);
 		propOrder.add(prop.getName());
 		dimension = prop.getInt(dimension);
+
+		prop = config.get(category, "islandsDensity", 2);
+		prop.setMinValue(0).setMaxValue(100);
+		prop.setLanguageKey(LANG_KEY + category + "." + prop.getName());
+		comment = I18n.translateToLocal(prop.getLanguageKey() + ".tooltip");
+		comment += " [default: " + prop.getDefault() + "]";
+		prop.setComment(comment);
+		propOrder.add(prop.getName());
+		islandsDensity = prop.getInt(islandsDensity);
 
 		prop = config.get(category, "generateCaves", true);
 		prop.setLanguageKey(LANG_KEY + category + "." + prop.getName());

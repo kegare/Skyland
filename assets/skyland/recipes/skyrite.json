@@ -1,0 +1,12 @@
+{
+    "type": "minecraft:crafting_shapeless",
+    "ingredients": [
+        {
+            "item": "skyland:skyrite_block"
+        }
+    ],
+    "result": {
+        "item": "skyland:skyrite",
+        "count": 9
+    }
+}

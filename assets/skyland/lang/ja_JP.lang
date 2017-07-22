@@ -1,4 +1,3 @@
-# Localization file : ja_JP
 
 skyland.version.message=%s の新しいバージョンが利用可能です
 skyland.version.message.beta=あなたは %s のベータバージョンを利用しています
@@ -7,10 +6,12 @@ skyland.version.message.alpha=あなたは %s のアルファバージョンを�
 skyland.config.title=Skylandの設定
 skyland.config.general.versionNotify=バージョン通知
 skyland.config.general.versionNotify.tooltip=Skylandの新しいバージョンが利用可能な場合、チャットログで通知します。
-skyland.config.general.skyborn=スカイボーンオプション
+skyland.config.general.skyborn=スカイボーン
 skyland.config.general.skyborn.tooltip=初めてワールドに入った際に、Skyland ディメンションへ転送します。
 skyland.config.dimension.dimension=Skyland ディメンションID
 skyland.config.dimension.dimension.tooltip=SkylandのディメンションIDを指定します。0を指定すると、Skylandのワールドタイプが追加され、Skyland ディメンションは追加されません。
+skyland.config.dimension.islandsDensity=島の生成間隔
+skyland.config.dimension.islandsDensity.tooltip=Skylandの島々の生成間隔を指定します。0を指定すると、Skylandは孤島になります。
 skyland.config.dimension.generateCaves=洞窟の生成
 skyland.config.dimension.generateCaves.tooltip=Skylandに洞窟を生成します。
 skyland.config.dimension.generateLakes=湖の生成
@@ -44,3 +45,7 @@ item.shovelSkyrite.name=スカイライトのシャベル
 item.pickaxeSkyrite.name=スカイライトのツルハシ
 item.axeSkyrite.name=スカイライトの斧
 item.hoeSkyrite.name=スカイライトのクワ
+item.helmetSkyrite.name=スカイライトのヘルメット
+item.chestplateSkyrite.name=スカイライトのチェストプレート
+item.leggingsSkyrite.name=スカイライトのレギンス
+item.bootsSkyrite.name=スカイライトのブーツ

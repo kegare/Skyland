@@ -1,4 +1,3 @@
-# Localization file : en_US
 
 generator.skyland=Skyland
 
@@ -9,10 +8,12 @@ skyland.version.message.alpha=You are using an Alpha version of %s
 skyland.config.title=Skyland Configuration
 skyland.config.general.versionNotify=Version Notify
 skyland.config.general.versionNotify.tooltip=Whether or not to notify when a new Skyland version is available.
-skyland.config.general.skyborn=Skyborn Option
+skyland.config.general.skyborn=Skyborn
 skyland.config.general.skyborn.tooltip=Transfer to the Skyland dimension when join to world for the first time.
 skyland.config.dimension.dimension=Skyland Dimension ID
 skyland.config.dimension.dimension.tooltip=Specify the dimension ID of Skyland. If you specify 0, adds the world type of Skyland, but the Skyland dimension is not added.
+skyland.config.dimension.islandsDensity=Islands Density
+skyland.config.dimension.islandsDensity.tooltip=Specify the density for Skyland islands. If you specify 0, Skyland will be a single island.
 skyland.config.dimension.generateCaves=Generate Caves
 skyland.config.dimension.generateCaves.tooltip=Whether or not to generate caves to Skyland.
 skyland.config.dimension.generateLakes=Generate Lakes
@@ -46,3 +47,7 @@ item.shovelSkyrite.name=Skyrite Shovel
 item.pickaxeSkyrite.name=Skyrite Pickaxe
 item.axeSkyrite.name=Skyrite Axe
 item.hoeSkyrite.name=Skyrite Hoe
+item.helmetSkyrite.name=Skyrite Helmet
+item.chestplateSkyrite.name=Skyrite Chestplate
+item.leggingsSkyrite.name=Skyrite Leggings
+item.bootsSkyrite.name=Skyrite Boots

@@ -8,11 +8,11 @@ import net.minecraft.item.Item;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.world.DimensionType;
 import net.minecraft.world.WorldType;
+import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.Mod.Metadata;
 import net.minecraftforge.fml.common.ModMetadata;
@@ -22,10 +22,14 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 import net.minecraftforge.fml.common.event.FMLServerStoppedEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.registry.IForgeRegistry;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraftforge.registries.IForgeRegistry;
 import skyland.block.SkyBlocks;
 import skyland.capability.SkyCapabilities;
+import skyland.client.handler.ClientEventHooks;
 import skyland.handler.SkyEventHooks;
+import skyland.handler.TerrainEventHooks;
 import skyland.item.SkyItems;
 import skyland.network.SkyNetworkRegistry;
 import skyland.util.SkyLog;
@@ -37,9 +41,8 @@ import skyland.world.WorldTypeSkyland;
 (
 	modid = Skyland.MODID,
 	guiFactory = "skyland.client.config.SkyGuiFactory",
-	updateJSON = "https://dl.dropboxusercontent.com/u/51943112/versions/skyland.json"
+	updateJSON = "https://raw.githubusercontent.com/kegare/Skyland/master/skyland.json"
 )
-@EventBusSubscriber
 public class Skyland
 {
 	public static final String MODID = "skyland";
@@ -56,10 +59,12 @@ public class Skyland
 	public void construct(FMLConstructionEvent event)
 	{
 		Version.initVersion();
+
+		MinecraftForge.EVENT_BUS.register(this);
 	}
 
 	@SubscribeEvent
-	public static void registerBlocks(RegistryEvent.Register<Block> event)
+	public void registerBlocks(RegistryEvent.Register<Block> event)
 	{
 		IForgeRegistry<Block> registry = event.getRegistry();
 
@@ -67,7 +72,7 @@ public class Skyland
 	}
 
 	@SubscribeEvent
-	public static void registerItems(RegistryEvent.Register<Item> event)
+	public void registerItems(RegistryEvent.Register<Item> event)
 	{
 		IForgeRegistry<Item> registry = event.getRegistry();
 
@@ -75,8 +80,17 @@ public class Skyland
 		SkyItems.registerItems(registry);
 	}
 
+	@SideOnly(Side.CLIENT)
 	@SubscribeEvent
-	public static void registerSounds(RegistryEvent.Register<SoundEvent> event)
+	public void registerModels(ModelRegistryEvent event)
+	{
+		SkyBlocks.registerModels();
+
+		SkyItems.registerModels();
+	}
+
+	@SubscribeEvent
+	public void registerSounds(RegistryEvent.Register<SoundEvent> event)
 	{
 		IForgeRegistry<SoundEvent> registry = event.getRegistry();
 
@@ -88,25 +102,26 @@ public class Skyland
 	{
 		Config.syncConfig();
 
-		if (event.getSide().isClient())
-		{
-			SkyBlocks.registerModels();
-			SkyItems.registerModels();
-		}
-
-		SkyBlocks.registerOreDicts();
-		SkyItems.registerOreDicts();
-
 		SkyCapabilities.registerCapabilities();
 
-		SkyNetworkRegistry.registerMessages();
+		if (event.getSide().isClient())
+		{
+			MinecraftForge.EVENT_BUS.register(new ClientEventHooks());
+		}
+
+		MinecraftForge.EVENT_BUS.register(new SkyEventHooks());
+		MinecraftForge.TERRAIN_GEN_BUS.register(new TerrainEventHooks());
 	}
 
 	@EventHandler
 	public void init(FMLInitializationEvent event)
 	{
-		SkyBlocks.registerRecipes();
-		SkyItems.registerRecipes();
+		SkyBlocks.registerOreDicts();
+		SkyItems.registerOreDicts();
+
+		SkyBlocks.registerSmeltingRecipes();
+
+		SkyNetworkRegistry.registerMessages();
 
 		int id = Config.dimension;
 
@@ -118,7 +133,7 @@ public class Skyland
 				{
 					SKYLAND = new WorldTypeSkyland();
 
-					SkyLog.info("Register the world type of Skyland (" + SKYLAND.getWorldTypeID() + ")");
+					SkyLog.info("Register the world type of Skyland (" + SKYLAND.getId() + ")");
 				}
 				catch (IllegalArgumentException e)
 				{
@@ -128,12 +143,10 @@ public class Skyland
 		}
 		else
 		{
-			DIM_SKYLAND = DimensionType.register("Skyland", "_skyland", id, WorldProviderSkyland.class, false);
+			DIM_SKYLAND = DimensionType.register("skyland", "_skyland", id, WorldProviderSkyland.class, false);
 
 			DimensionManager.registerDimension(id, DIM_SKYLAND);
 		}
-
-		MinecraftForge.EVENT_BUS.register(new SkyEventHooks());
 	}
 
 	@EventHandler
@@ -146,6 +159,6 @@ public class Skyland
 	public void serverStopping(FMLServerStoppedEvent event)
 	{
 		SkyEventHooks.FIRST_PLAYERS.clear();
-		SkyEventHooks.FALL_TELEPORT_PLAYERS.get().clear();
+		SkyEventHooks.FALL_CANCELABLE_PLAYERS.clear();
 	}
 }

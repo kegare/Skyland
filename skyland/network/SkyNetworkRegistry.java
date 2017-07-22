@@ -7,6 +7,10 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import net.minecraftforge.fml.relauncher.Side;
 import skyland.core.Skyland;
+import skyland.network.client.FallTeleportMessage;
+import skyland.network.client.RegenerationGuiMessage;
+import skyland.network.client.RegenerationOpenMessage;
+import skyland.network.server.RegenerationMessage;
 
 public class SkyNetworkRegistry
 {
@@ -47,9 +51,10 @@ public class SkyNetworkRegistry
 
 	public static void registerMessages()
 	{
-		registerMessage(DisplayGuiMessage.class, DisplayGuiMessage.class, Side.CLIENT);
 		registerMessage(FallTeleportMessage.class, FallTeleportMessage.class, Side.CLIENT);
-		registerMessage(RegenerationMessage.class, RegenerationMessage.class, Side.SERVER);
 		registerMessage(RegenerationGuiMessage.class, RegenerationGuiMessage.class, Side.CLIENT);
+		registerMessage(RegenerationOpenMessage.class, RegenerationOpenMessage.class, Side.CLIENT);
+
+		registerMessage(RegenerationMessage.class, RegenerationMessage.class, Side.SERVER);
 	}
 }

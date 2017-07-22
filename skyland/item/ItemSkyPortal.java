@@ -5,7 +5,6 @@ import net.minecraft.block.BlockPortal;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.item.ItemBlock;
-import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
@@ -22,7 +21,7 @@ public class ItemSkyPortal extends ItemBlock
 	}
 
 	@Override
-	public EnumActionResult onItemUse(ItemStack stack, EntityPlayer player, World world, BlockPos pos, EnumHand hand, EnumFacing side, float hitX, float hitY, float hitZ)
+	public EnumActionResult onItemUse(EntityPlayer player, World world, BlockPos pos, EnumHand hand, EnumFacing side, float hitX, float hitY, float hitZ)
 	{
 		BlockPos blockpos = pos.offset(side);
 
@@ -32,7 +31,7 @@ public class ItemSkyPortal extends ItemBlock
 
 			if (!player.capabilities.isCreativeMode)
 			{
-				--stack.stackSize;
+				player.getHeldItem(hand).shrink(1);
 			}
 
 			return EnumActionResult.SUCCESS;

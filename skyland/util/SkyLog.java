@@ -8,6 +8,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.ThreadContext;
 
 import net.minecraftforge.fml.relauncher.FMLLaunchHandler;
+import skyland.core.Skyland;
 
 public class SkyLog
 {
@@ -19,7 +20,7 @@ public class SkyLog
 
 	private static void configureLogging()
 	{
-		log.myLog = LogManager.getLogger("Skyland");
+		log.myLog = LogManager.getLogger(Skyland.metadata.name);
 		ThreadContext.put("side", FMLLaunchHandler.side().name().toLowerCase(Locale.ENGLISH));
 
 		configured = true;

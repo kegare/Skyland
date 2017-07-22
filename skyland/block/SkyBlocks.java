@@ -5,11 +5,10 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fml.common.registry.GameRegistry;
-import net.minecraftforge.fml.common.registry.IForgeRegistry;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraftforge.oredict.OreDictionary;
-import net.minecraftforge.oredict.ShapedOreRecipe;
+import net.minecraftforge.registries.IForgeRegistry;
 import skyland.item.ItemSkyPortal;
 import skyland.item.SkyItems;
 
@@ -59,13 +58,8 @@ public class SkyBlocks
 		OreDictionary.registerOre("blockSkyrite", SKYRITE_BLOCK);
 	}
 
-	public static void registerRecipes()
+	public static void registerSmeltingRecipes()
 	{
-		GameRegistry.addRecipe(new ShapedOreRecipe(SkyBlocks.SKYRITE_BLOCK,
-			"XXX", "XXX", "XXX",
-			'X', "gemSkyrite"
-		));
-
 		GameRegistry.addSmelting(SkyBlocks.SKYRITE_ORE, new ItemStack(SkyItems.SKYRITE), 1.0F);
 	}
 }

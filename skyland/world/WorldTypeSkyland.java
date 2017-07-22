@@ -4,7 +4,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.WorldType;
-import net.minecraft.world.chunk.IChunkGenerator;
+import net.minecraft.world.gen.IChunkGenerator;
 
 public class WorldTypeSkyland extends WorldType
 {
@@ -16,7 +16,7 @@ public class WorldTypeSkyland extends WorldType
 	@Override
 	public IChunkGenerator getChunkGenerator(World world, String generatorOptions)
 	{
-		return new ChunkProviderSkyland(world);
+		return new ChunkGeneratorSkyland(world);
 	}
 
 	@Override

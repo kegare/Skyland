@@ -8,7 +8,6 @@ import net.minecraftforge.common.util.Constants.NBT;
 public class SkyDataManager
 {
 	private long worldSeed = -1L;
-	private int worldHeight;
 
 	public SkyDataManager(@Nullable NBTTagCompound compound)
 	{
@@ -18,11 +17,6 @@ public class SkyDataManager
 			{
 				worldSeed = compound.getLong("Seed");
 			}
-
-			if (compound.hasKey("Height", NBT.TAG_ANY_NUMERIC))
-			{
-				worldHeight = compound.getInteger("Height");
-			}
 		}
 	}
 
@@ -31,7 +25,6 @@ public class SkyDataManager
 		NBTTagCompound compound = new NBTTagCompound();
 
 		compound.setLong("Seed", worldSeed);
-		compound.setInteger("Height", worldHeight);
 
 		return compound;
 	}
@@ -54,25 +47,5 @@ public class SkyDataManager
 	public void setWorldSeed(long seed)
 	{
 		worldSeed = seed;
-	}
-
-	public int getWorldHeight()
-	{
-		return worldHeight;
-	}
-
-	public int getWorldHeight(int defaultHeight)
-	{
-		if (worldHeight <= 0)
-		{
-			setWorldHeight(defaultHeight);
-		}
-
-		return worldHeight;
-	}
-
-	public void setWorldHeight(int height)
-	{
-		worldHeight = height;
 	}
 }

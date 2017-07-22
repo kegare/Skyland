@@ -15,20 +15,20 @@ public class SkyGuiFactory implements IModGuiFactory
 	public void initialize(Minecraft mc) {}
 
 	@Override
-	public Class<? extends GuiScreen> mainConfigGuiClass()
+	public boolean hasConfigGui()
 	{
-		return SkyConfigGui.class;
-	}
-
-	@Override
-	public RuntimeOptionGuiHandler getHandlerFor(RuntimeOptionCategoryElement element)
-	{
-		return null;
+		return true;
 	}
 
 	@Override
 	public Set<RuntimeOptionCategoryElement> runtimeGuiCategories()
 	{
 		return null;
+	}
+
+	@Override
+	public GuiScreen createConfigGui(GuiScreen parentScreen)
+	{
+		return new SkyConfigGui(parentScreen);
 	}
 }

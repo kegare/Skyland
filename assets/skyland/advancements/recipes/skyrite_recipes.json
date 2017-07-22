@@ -1,0 +1,26 @@
+{
+    "parent": "minecraft:recipes/root",
+    "criteria": {
+        "skyrite": {
+            "trigger": "minecraft:inventory_changed",
+            "conditions": {
+                "items": [
+                    {
+                        "item": "skyland:skyrite"
+                    }
+                ]
+            }
+        }
+    },
+    "rewards": {
+        "recipes": [
+            "skyland:skyrite",
+            "skyland:skyrite_block",
+            "skyland:skyrite_sword",
+            "skyland:skyrite_pickaxe",
+            "skyland:skyrite_axe",
+            "skyland:skyrite_shovel",
+            "skyland:skyrite_hoe"
+        ]
+    }
+}

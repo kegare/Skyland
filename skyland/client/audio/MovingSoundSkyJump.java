@@ -13,6 +13,8 @@ import skyland.core.SkySounds;
 @SideOnly(Side.CLIENT)
 public class MovingSoundSkyJump extends MovingSound
 {
+	public static MovingSoundSkyJump prevSound;
+
 	public MovingSoundSkyJump()
 	{
 		super(SkySounds.FALLING, SoundCategory.PLAYERS);
@@ -24,7 +26,7 @@ public class MovingSoundSkyJump extends MovingSound
 	public void update()
 	{
 		Minecraft mc = FMLClientHandler.instance().getClient();
-		EntityPlayer player = mc.thePlayer;
+		EntityPlayer player = mc.player;
 
 		if (player == null || player.isDead || player.onGround || player.getEntityBoundingBox().minY >= 348.0D)
 		{
@@ -36,9 +38,9 @@ public class MovingSoundSkyJump extends MovingSound
 			yPosF = (float)player.posY;
 			zPosF = (float)player.posZ;
 
-			if (MathHelper.sqrt_double(player.motionY * player.motionY) >= 0.01D)
+			if (MathHelper.sqrt(player.motionY * player.motionY) >= 0.01D)
 			{
-				volume = MathHelper.clamp_float((348.0F - yPosF) * 0.05F, 0.0F, 1.0F);
+				volume = MathHelper.clamp((348.0F - yPosF) * 0.05F, 0.0F, 1.0F);
 			}
 			else
 			{

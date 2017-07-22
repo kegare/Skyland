@@ -1,21 +1,27 @@
 package skyland.stats;
 
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.DimensionType;
 
 public interface IPortalCache
 {
-	public int getLastDim(int type);
+	public DimensionType getLastDim(ResourceLocation key);
 
-	public void setLastDim(int type, int dim);
+	public DimensionType getLastDim(ResourceLocation key, DimensionType nullDefault);
 
-	public BlockPos getLastPos(int type, int dim);
+	public void setLastDim(ResourceLocation key, DimensionType type);
 
-	public BlockPos getLastPos(int type, int dim, BlockPos pos);
+	public BlockPos getLastPos(ResourceLocation key, DimensionType type);
 
-	public boolean hasLastPos(int type, int dim);
+	public BlockPos getLastPos(ResourceLocation key, DimensionType type, BlockPos pos);
 
-	public void setLastPos(int type, int dim, BlockPos pos);
+	public boolean hasLastPos(ResourceLocation key, DimensionType type);
+
+	public void setLastPos(ResourceLocation key, DimensionType type, BlockPos pos);
+
+	public void clearLastPos(ResourceLocation key, DimensionType type);
 
 	public void writeToNBT(NBTTagCompound nbt);
 

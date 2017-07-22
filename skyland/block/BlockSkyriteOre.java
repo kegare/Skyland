@@ -36,6 +36,6 @@ public class BlockSkyriteOre extends BlockOre
 	{
 		Random rand = world instanceof World ? ((World)world).rand : new Random();
 
-		return MathHelper.getRandomIntegerInRange(rand, 5, 8);
+		return MathHelper.getInt(rand, 5, 8);
 	}
 }

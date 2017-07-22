@@ -1,0 +1,20 @@
+{
+    "type": "forge:ore_shaped",
+    "pattern": [
+        "##",
+        "#X",
+        " X"
+    ],
+    "key": {
+        "#": {
+            "item": "skyland:skyrite"
+        },
+        "X": {
+            "type": "forge:ore_dict",
+            "ore": "stickWood"
+        }
+    },
+    "result": {
+        "item": "skyland:skyrite_axe"
+    }
+}

@@ -15,15 +15,15 @@ import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.event.ClickEvent;
 import net.minecraftforge.fml.common.Loader;
-import skyland.network.DisplayGuiMessage;
 import skyland.network.SkyNetworkRegistry;
+import skyland.network.client.RegenerationOpenMessage;
 import skyland.util.Version;
 import skyland.world.WorldProviderSkyland;
 
 public class CommandSkyland extends CommandBase
 {
 	@Override
-	public String getCommandName()
+	public String getName()
 	{
 		return "skyland";
 	}
@@ -35,9 +35,9 @@ public class CommandSkyland extends CommandBase
 	}
 
 	@Override
-	public String getCommandUsage(ICommandSender sender)
+	public String getUsage(ICommandSender sender)
 	{
-		return String.format("/%s <%s>", getCommandName(), Joiner.on('|').join(getCommands()));
+		return String.format("/%s <%s>", getName(), Joiner.on('|').join(getCommands()));
 	}
 
 	public String[] getCommands()
@@ -72,19 +72,19 @@ public class CommandSkyland extends CommandBase
 			component.getStyle().setColor(TextFormatting.GRAY);
 			message.appendSibling(component);
 			message.getStyle().setClickEvent(click);
-			sender.addChatMessage(message);
+			sender.sendMessage(message);
 
 			message = new TextComponentString("  ");
 			component = new TextComponentString(Skyland.metadata.description);
 			component.getStyle().setClickEvent(click);
 			message.appendSibling(component);
-			sender.addChatMessage(message);
+			sender.sendMessage(message);
 
 			message = new TextComponentString("  ");
 			component = new TextComponentString(Skyland.metadata.url);
 			component.getStyle().setColor(TextFormatting.DARK_GRAY).setClickEvent(click);
 			message.appendSibling(component);
-			sender.addChatMessage(message);
+			sender.sendMessage(message);
 		}
 		else if (args[0].equalsIgnoreCase("regenerate") && Skyland.SKYLAND == null)
 		{
@@ -108,7 +108,7 @@ public class CommandSkyland extends CommandBase
 
 				if (player.mcServer.isSinglePlayer() || player.mcServer.getPlayerList().canSendCommands(player.getGameProfile()))
 				{
-					SkyNetworkRegistry.sendTo(new DisplayGuiMessage(backup ? 0 : 1), player);
+					SkyNetworkRegistry.sendTo(new RegenerationOpenMessage(backup), player);
 				}
 				else
 				{
@@ -129,7 +129,7 @@ public class CommandSkyland extends CommandBase
 	}
 
 	@Override
-	public List<String> getTabCompletionOptions(MinecraftServer server, ICommandSender sender, String[] args, BlockPos pos)
+	public List<String> getTabCompletions(MinecraftServer server, ICommandSender sender, String[] args, BlockPos pos)
 	{
 		return args.length == 1 ? getListOfStringsMatchingLastWord(args, getCommands()) : null;
 	}

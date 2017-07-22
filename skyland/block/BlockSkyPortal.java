@@ -13,18 +13,19 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.block.state.pattern.BlockPattern;
 import net.minecraft.block.state.pattern.BlockPattern.PatternHelper;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityList;
+import net.minecraft.entity.IProjectile;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.MobEffects;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.DimensionType;
 import net.minecraft.world.Teleporter;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
@@ -33,12 +34,10 @@ import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import skyland.client.gui.GuiRegeneration;
-import skyland.core.Config;
 import skyland.core.SkySounds;
 import skyland.core.Skyland;
 import skyland.stats.IPortalCache;
 import skyland.stats.PortalCache;
-import skyland.util.SkyUtils;
 import skyland.world.TeleporterSkyland;
 
 public class BlockSkyPortal extends BlockPortal
@@ -55,12 +54,12 @@ public class BlockSkyPortal extends BlockPortal
 	}
 
 	@Override
-	public void updateTick(World worldIn, BlockPos pos, IBlockState state, Random rand) {}
+	public void updateTick(World world, BlockPos pos, IBlockState state, Random rand) {}
 
 	@Override
-	public boolean trySpawnPortal(World worldIn, BlockPos pos)
+	public boolean trySpawnPortal(World world, BlockPos pos)
 	{
-		Size size = new Size(worldIn, pos, EnumFacing.Axis.X);
+		Size size = new Size(world, pos, EnumFacing.Axis.X);
 
 		if (size.isValid() && size.portalBlockCount == 0)
 		{
@@ -70,7 +69,7 @@ public class BlockSkyPortal extends BlockPortal
 		}
 		else
 		{
-			Size size1 = new Size(worldIn, pos, EnumFacing.Axis.Z);
+			Size size1 = new Size(world, pos, EnumFacing.Axis.Z);
 
 			if (size1.isValid() && size1.portalBlockCount == 0)
 			{
@@ -83,7 +82,7 @@ public class BlockSkyPortal extends BlockPortal
 	}
 
 	@Override
-	public void neighborChanged(IBlockState state, World world, BlockPos pos, Block block)
+	public void neighborChanged(IBlockState state, World world, BlockPos pos, Block block, BlockPos fromPos)
 	{
 		EnumFacing.Axis axis = state.getValue(AXIS);
 		Size size;
@@ -109,18 +108,18 @@ public class BlockSkyPortal extends BlockPortal
 	}
 
 	@Override
-	public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand, ItemStack heldItem, EnumFacing side, float hitX, float hitY, float hitZ)
+	public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand, EnumFacing side, float hitX, float hitY, float hitZ)
 	{
 		if (world.isRemote)
 		{
-			displayGui(world, pos, state, player, hand, heldItem, side);
+			displayGui(world, pos, state, player, hand, side);
 		}
 
 		return true;
 	}
 
 	@SideOnly(Side.CLIENT)
-	public void displayGui(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand, ItemStack heldItem, EnumFacing side)
+	public void displayGui(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand, EnumFacing side)
 	{
 		FMLClientHandler.instance().showGuiScreen(new GuiRegeneration(true));
 	}
@@ -128,108 +127,88 @@ public class BlockSkyPortal extends BlockPortal
 	@Override
 	public void onEntityCollidedWithBlock(World world, BlockPos pos, IBlockState state, Entity entity)
 	{
-		if (!world.isRemote && entity.isEntityAlive())
+		if (world.isRemote || Skyland.DIM_SKYLAND == null)
 		{
-			if (entity.timeUntilPortal <= 0)
+			return;
+		}
+
+		if (entity.isDead || entity.isRiding() || entity.isBeingRidden() || !entity.isNonBoss() || entity instanceof IProjectile)
+		{
+			return;
+		}
+
+		if (entity.timeUntilPortal <= 0)
+		{
+			ResourceLocation key = TeleporterSkyland.KEY_PORTAL;
+			IPortalCache cache = PortalCache.get(entity);
+			MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
+			DimensionType dimOld = world.provider.getDimensionType();
+			DimensionType dimNew = dimOld == Skyland.DIM_SKYLAND ? cache.getLastDim(key) : Skyland.DIM_SKYLAND;
+			WorldServer worldOld = server.getWorld(dimOld.getId());
+			WorldServer worldNew = server.getWorld(dimNew.getId());
+
+			if (worldOld == null || worldNew == null)
 			{
-				IPortalCache cache = PortalCache.get(entity);
-				MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
-				int dimOld = entity.dimension;
-				int dimNew = SkyUtils.isEntityInSkyland(entity) ? cache.getLastDim(0) : Config.dimension;
+				return;
+			}
 
-				if (dimOld == dimNew)
+			Teleporter teleporter = new TeleporterSkyland(worldNew);
+			BlockPos prevPos = entity.getPosition();
+
+			entity.timeUntilPortal = entity.getPortalCooldown();
+
+			if (entity instanceof EntityPlayerMP)
+			{
+				EntityPlayerMP player = (EntityPlayerMP)entity;
+
+				if (!player.isSneaking() && !player.isPotionActive(MobEffects.BLINDNESS))
 				{
-					dimOld = Config.dimension;
-					dimNew = 0;
-				}
+					double x = player.posX;
+					double y = player.posY + player.getEyeHeight();
+					double z = player.posZ;
 
-				WorldServer worldOld = server.worldServerForDimension(dimOld);
-				WorldServer worldNew = server.worldServerForDimension(dimNew);
+					worldOld.playSound(player, x, y, z, SkySounds.SKY_PORTAL, SoundCategory.BLOCKS, 0.5F, 1.0F);
 
-				if (worldOld == null || worldNew == null)
-				{
-					return;
-				}
+					server.getPlayerList().transferPlayerToDimension(player, dimNew.getId(), teleporter);
 
-				Teleporter teleporter = new TeleporterSkyland(worldNew);
-				BlockPos prevPos = entity.getPosition();
+					x = player.posX;
+					y = player.posY + player.getEyeHeight();
+					z = player.posZ;
 
-				entity.timeUntilPortal = entity.getPortalCooldown();
+					worldNew.playSound(null, x, y, z, SkySounds.SKY_PORTAL, SoundCategory.BLOCKS, 0.75F, 1.0F);
 
-				if (entity instanceof EntityPlayerMP)
-				{
-					EntityPlayerMP player = (EntityPlayerMP)entity;
-
-					if (!player.isSneaking() && !player.isPotionActive(MobEffects.BLINDNESS))
-					{
-						double x = player.posX;
-						double y = player.posY + player.getEyeHeight();
-						double z = player.posZ;
-
-						worldOld.playSound(player, x, y, z, SkySounds.SKY_PORTAL, SoundCategory.BLOCKS, 0.5F, 1.0F);
-
-						server.getPlayerList().transferPlayerToDimension(player, dimNew, teleporter);
-
-						x = player.posX;
-						y = player.posY + player.getEyeHeight();
-						z = player.posZ;
-
-						worldNew.playSound(null, x, y, z, SkySounds.SKY_PORTAL, SoundCategory.BLOCKS, 0.75F, 1.0F);
-
-						cache.setLastDim(0, dimOld);
-						cache.setLastPos(0, dimOld, prevPos);
-					}
-				}
-				else
-				{
-					double x = entity.posX;
-					double y = entity.posY + entity.getEyeHeight();
-					double z = entity.posZ;
-
-					worldOld.playSound(null, x, y, z, SkySounds.SKY_PORTAL, SoundCategory.BLOCKS, 0.25F, 1.15F);
-
-					server.getPlayerList().transferEntityToWorld(entity, dimOld, worldOld, worldNew, teleporter);
-
-					Entity target = EntityList.createEntityByName(EntityList.getEntityString(entity), worldNew);
-
-					if (target != null)
-					{
-						NBTTagCompound nbt = new NBTTagCompound();
-
-						entity.writeToNBT(nbt);
-						nbt.removeTag("Dimension");
-
-						target.readFromNBT(nbt);
-
-						boolean force = target.forceSpawn;
-
-						target.forceSpawn = true;
-
-						worldNew.spawnEntityInWorld(target);
-						worldNew.updateEntityWithOptionalForce(target, false);
-
-						x = target.posX;
-						y = target.posY + target.getEyeHeight();
-						z = target.posZ;
-
-						worldNew.playSound(null, x, y, z, SkySounds.SKY_PORTAL, SoundCategory.BLOCKS, 0.5F, 1.15F);
-
-						target.forceSpawn = force;
-
-						cache.setLastDim(0, dimOld);
-						cache.setLastPos(0, dimOld, prevPos);
-					}
-
-					entity.setDead();
-
-					worldOld.resetUpdateEntityTick();
-					worldNew.resetUpdateEntityTick();
+					cache.setLastDim(key, dimOld);
+					cache.setLastPos(key, dimOld, prevPos);
 				}
 			}
 			else
 			{
-				entity.timeUntilPortal = entity.getPortalCooldown();
+				double x = entity.posX;
+				double y = entity.posY + entity.getEyeHeight();
+				double z = entity.posZ;
+
+				worldOld.playSound(null, x, y, z, SkySounds.SKY_PORTAL, SoundCategory.BLOCKS, 0.25F, 1.15F);
+
+				entity.dimension = dimNew.getId();
+				world.removeEntityDangerously(entity);
+
+				entity.isDead = false;
+
+				server.getPlayerList().transferEntityToWorld(entity, dimOld.getId(), worldOld, worldNew, teleporter);
+
+				x = entity.posX;
+				y = entity.posY + entity.getEyeHeight();
+				z = entity.posZ;
+
+				worldNew.playSound(null, x, y, z, SkySounds.SKY_PORTAL, SoundCategory.BLOCKS, 0.5F, 1.15F);
+
+				cache.setLastDim(key, dimOld);
+				cache.setLastPos(key, dimOld, prevPos);
 			}
+		}
+		else
+		{
+			entity.timeUntilPortal = entity.getPortalCooldown();
 		}
 	}
 
@@ -290,10 +269,10 @@ public class BlockSkyPortal extends BlockPortal
 
 	@SideOnly(Side.CLIENT)
 	@Override
-	public void randomDisplayTick(IBlockState state, World worldIn, BlockPos pos, Random rand) {}
+	public void randomDisplayTick(IBlockState state, World world, BlockPos pos, Random rand) {}
 
 	@Override
-	public ItemStack getItem(World worldIn, BlockPos pos, IBlockState state)
+	public ItemStack getItem(World world, BlockPos pos, IBlockState state)
 	{
 		return new ItemStack(this);
 	}

@@ -1,16 +1,13 @@
-package skyland.network;
+package skyland.network.client;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
-import net.minecraftforge.fml.client.FMLClientHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
-import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import skyland.client.gui.GuiRegeneration;
 
-public class RegenerationGuiMessage implements IMessage, IMessageHandler<RegenerationGuiMessage, IMessage>
+public class RegenerationGuiMessage implements IClientMessage<RegenerationGuiMessage, IMessage>
 {
 	private int type;
 
@@ -35,16 +32,21 @@ public class RegenerationGuiMessage implements IMessage, IMessageHandler<Regener
 
 	@SideOnly(Side.CLIENT)
 	@Override
-	public IMessage onMessage(RegenerationGuiMessage message, MessageContext ctx)
+	public IMessage process(Minecraft mc)
 	{
-		Minecraft mc = FMLClientHandler.instance().getClient();
-		EnumType type = EnumType.get(message.type);
+		EnumType action = EnumType.get(type);
 
 		if (mc.currentScreen != null && mc.currentScreen instanceof GuiRegeneration)
 		{
 			GuiRegeneration gui = (GuiRegeneration)mc.currentScreen;
 
-			gui.updateProgress(type);
+			gui.updateProgress(action);
+
+			if (action == EnumType.SUCCESS)
+			{
+				mc.displayGuiScreen(null);
+				mc.setIngameFocus();
+			}
 		}
 
 		return null;

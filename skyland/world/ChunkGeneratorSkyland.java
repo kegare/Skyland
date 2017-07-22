@@ -16,7 +16,7 @@ import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.Biome.SpawnListEntry;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkPrimer;
-import net.minecraft.world.chunk.IChunkGenerator;
+import net.minecraft.world.gen.IChunkGenerator;
 import net.minecraft.world.gen.MapGenBase;
 import net.minecraft.world.gen.NoiseGeneratorOctaves;
 import net.minecraft.world.gen.feature.WorldGenLakes;
@@ -30,15 +30,15 @@ import net.minecraftforge.event.terraingen.PopulateChunkEvent.Populate;
 import net.minecraftforge.event.terraingen.TerrainGen;
 import skyland.block.SkyBlocks;
 import skyland.core.Config;
-import skyland.world.gen.MapGenCavesSkyland;
+import skyland.world.gen.MapGenSkyCaves;
 
-public class ChunkProviderSkyland implements IChunkGenerator
+public class ChunkGeneratorSkyland implements IChunkGenerator
 {
 	protected static final IBlockState AIR = Blocks.AIR.getDefaultState();
 	protected static final IBlockState STONE = Blocks.STONE.getDefaultState();
 	protected static final IBlockState SANDSTONE = Blocks.SANDSTONE.getDefaultState();
 
-	private final World worldObj;
+	private final World world;
 	private final Random rand;
 
 	private NoiseGeneratorOctaves noiseGen1;
@@ -47,15 +47,15 @@ public class ChunkProviderSkyland implements IChunkGenerator
 	private NoiseGeneratorOctaves noiseGen4;
 	private NoiseGeneratorOctaves noiseGen5;
 
-	private double[] densities;
 	private Biome[] biomesForGeneration;
+	private double[] buffer;
 	private double[] noise1;
 	private double[] noise2;
 	private double[] noise3;
 	private double[] noise4;
 	private double[] noise5;
 
-	private final MapGenBase caveGenerator = new MapGenCavesSkyland();
+	private final MapGenBase caveGenerator = new MapGenSkyCaves();
 	private final WorldGenerator lakeWaterGen = new WorldGenLakes(Blocks.WATER);
 	private final WorldGenerator lakeLavaGen = new WorldGenLakes(Blocks.LAVA);
 	private final WorldGenerator worldGenIron = new WorldGenMinable(Blocks.IRON_ORE.getDefaultState(), 7);
@@ -63,9 +63,9 @@ public class ChunkProviderSkyland implements IChunkGenerator
 	private final WorldGenerator worldGenDiamond = new WorldGenMinable(Blocks.DIAMOND_ORE.getDefaultState(), 3);
 	private final WorldGenerator worldGenSkyrite = new WorldGenMinable(SkyBlocks.SKYRITE_ORE.getDefaultState(), 6);
 
-	public ChunkProviderSkyland(World world)
+	public ChunkGeneratorSkyland(World world)
 	{
-		this.worldObj = world;
+		this.world = world;
 		this.rand = new Random(world.getSeed());
 		this.noiseGen1 = new NoiseGeneratorOctaves(rand, 16);
 		this.noiseGen2 = new NoiseGeneratorOctaves(rand, 16);
@@ -74,14 +74,34 @@ public class ChunkProviderSkyland implements IChunkGenerator
 		this.noiseGen5 = new NoiseGeneratorOctaves(rand, 16);
 	}
 
-	public void setBlocksInChunk(int chunkX, int chunkZ, ChunkPrimer data)
+	public void setBlocksInChunk(int chunkX, int chunkZ, ChunkPrimer primer)
 	{
+		if (Config.islandsDensity > 0)
+		{
+			int density = Config.islandsDensity * 10;
+
+			if (Math.abs(chunkX) >= density)
+			{
+				int rx = Math.abs(chunkX) % density - density / 2;
+
+				chunkX = chunkX < 0 ? -rx : rx;
+			}
+
+			if (Math.abs(chunkZ) >= density)
+			{
+				int rz = Math.abs(chunkZ) % density - density / 2;
+
+				chunkZ = chunkZ < 0 ? -rz : rz;
+			}
+		}
+
 		byte b0 = 2;
 		byte b1 = 1;
 		int sizeX = b0 + b1;
-		byte sizeY = 35;
+		int sizeY = 35;
 		int sizeZ = b0 + b1;
-		densities = getHeights(densities, chunkX * b0, 0, chunkZ * b0, sizeX, sizeY, sizeZ);
+
+		buffer = getHeights(buffer, chunkX * b0, 0, chunkZ * b0, sizeX, sizeY, sizeZ);
 
 		for (int i = 0; i < b0; ++i)
 		{
@@ -90,14 +110,14 @@ public class ChunkProviderSkyland implements IChunkGenerator
 				for (int k = 0; k < 32; ++k)
 				{
 					double d0 = 0.25D;
-					double d1 = densities[((i + 0) * sizeZ + j + 0) * sizeY + k + 0];
-					double d2 = densities[((i + 0) * sizeZ + j + 1) * sizeY + k + 0];
-					double d3 = densities[((i + 1) * sizeZ + j + 0) * sizeY + k + 0];
-					double d4 = densities[((i + 1) * sizeZ + j + 1) * sizeY + k + 0];
-					double d5 = (densities[((i + 0) * sizeZ + j + 0) * sizeY + k + 1] - d1) * d0;
-					double d6 = (densities[((i + 0) * sizeZ + j + 1) * sizeY + k + 1] - d2) * d0;
-					double d7 = (densities[((i + 1) * sizeZ + j + 0) * sizeY + k + 1] - d3) * d0;
-					double d8 = (densities[((i + 1) * sizeZ + j + 1) * sizeY + k + 1] - d4) * d0;
+					double d1 = buffer[((i + 0) * sizeZ + j + 0) * sizeY + k + 0];
+					double d2 = buffer[((i + 0) * sizeZ + j + 1) * sizeY + k + 0];
+					double d3 = buffer[((i + 1) * sizeZ + j + 0) * sizeY + k + 0];
+					double d4 = buffer[((i + 1) * sizeZ + j + 1) * sizeY + k + 0];
+					double d5 = (buffer[((i + 0) * sizeZ + j + 0) * sizeY + k + 1] - d1) * d0;
+					double d6 = (buffer[((i + 0) * sizeZ + j + 1) * sizeY + k + 1] - d2) * d0;
+					double d7 = (buffer[((i + 1) * sizeZ + j + 0) * sizeY + k + 1] - d3) * d0;
+					double d8 = (buffer[((i + 1) * sizeZ + j + 1) * sizeY + k + 1] - d4) * d0;
 
 					for (int l = 0; l < 4; ++l)
 					{
@@ -125,7 +145,7 @@ public class ChunkProviderSkyland implements IChunkGenerator
 								int x = m + i * 8;
 								int y = l + k * 4;
 								int z = n + j * 8;
-								data.setBlockState(x, y, z, state);
+								primer.setBlockState(x, y, z, state);
 								d15 += d16;
 							}
 
@@ -143,11 +163,11 @@ public class ChunkProviderSkyland implements IChunkGenerator
 		}
 	}
 
-	private double[] getHeights(double[] densities, int posX, int posY, int posZ, int sizeX, int sizeY, int sizeZ)
+	private double[] getHeights(double[] buffer, int posX, int posY, int posZ, int sizeX, int sizeY, int sizeZ)
 	{
-		if (densities == null)
+		if (buffer == null)
 		{
-			densities = new double[sizeX * sizeY * sizeZ];
+			buffer = new double[sizeX * sizeY * sizeZ];
 		}
 
 		double d0 = 684.412D;
@@ -183,7 +203,7 @@ public class ChunkProviderSkyland implements IChunkGenerator
 				d3 = d3 * 3.0D - 2.0D;
 				float f = (x + posX - 0) / 1.0F;
 				float f1 = (z + posZ - 0) / 1.0F;
-				float f2 = 100.0F - MathHelper.sqrt_float(f * f + f1 * f1) * 8.0F;
+				float f2 = 100.0F - MathHelper.sqrt(f * f + f1 * f1) * 8.0F;
 
 				if (f2 > 80.0F)
 				{
@@ -270,64 +290,64 @@ public class ChunkProviderSkyland implements IChunkGenerator
 						d5 = d5 * (1.0D - d10) + -30.0D * d10;
 					}
 
-					densities[i] = d5;
+					buffer[i] = d5;
 					++i;
 				}
 			}
 		}
 
-		return densities;
+		return buffer;
 	}
 
-	public void buildSurfaces(ChunkPrimer data)
+	public void buildSurfaces(ChunkPrimer primer)
 	{
 		for (int x = 0; x < 16; ++x)
 		{
 			for (int z = 0; z < 16; ++z)
 			{
-				byte b = 1;
-				int i = -1;
+				int i = 1;
+				int j = -1;
 				Biome biome = biomesForGeneration[z + x * 16];
 				IBlockState top = biome.topBlock;
 				IBlockState filler = biome.fillerBlock;
 
 				for (int y = 127; y >= 0; --y)
 				{
-					IBlockState block = data.getBlockState(x, y, z);
+					IBlockState state = primer.getBlockState(x, y, z);
 
-					if (block.getMaterial() == Material.AIR)
+					if (state.getMaterial() == Material.AIR)
 					{
-						i = -1;
+						j = -1;
 					}
-					else if (block.getBlock() == Blocks.STONE)
+					else if (state.getBlock() == Blocks.STONE)
 					{
-						if (i == -1)
+						if (j == -1)
 						{
-							if (b <= 0)
+							if (i <= 0)
 							{
 								top = AIR;
 								filler = biome.fillerBlock;
 							}
 
-							i = b;
+							j = i;
 
 							if (y >= 0)
 							{
-								data.setBlockState(x, y, z, top);
+								primer.setBlockState(x, y, z, top);
 							}
 							else
 							{
-								data.setBlockState(x, y, z, filler);
+								primer.setBlockState(x, y, z, filler);
 							}
 						}
-						else if (i > 0)
+						else if (j > 0)
 						{
-							--i;
-							data.setBlockState(x, y, z, filler);
+							--j;
+							primer.setBlockState(x, y, z, filler);
 
-							if (i == 0 && filler.getBlock() == Blocks.SAND)
+							if (j == 0 && filler.getBlock() == Blocks.SAND)
 							{
-								i = rand.nextInt(4) + Math.max(0, y - 63);
+								j = rand.nextInt(4) + Math.max(0, y - 63);
 								filler = SANDSTONE;
 							}
 						}
@@ -338,21 +358,21 @@ public class ChunkProviderSkyland implements IChunkGenerator
 	}
 
 	@Override
-	public Chunk provideChunk(int chunkX, int chunkZ)
+	public Chunk generateChunk(int chunkX, int chunkZ)
 	{
 		rand.setSeed(chunkX * 341873128712L + chunkZ * 132897987541L);
 
-		ChunkPrimer data = new ChunkPrimer();
-		biomesForGeneration = worldObj.getBiomeProvider().loadBlockGeneratorData(biomesForGeneration, chunkX * 16, chunkZ * 16, 16, 16);
-		setBlocksInChunk(chunkX, chunkZ, data);
-		buildSurfaces(data);
+		ChunkPrimer primer = new ChunkPrimer();
+		biomesForGeneration = world.getBiomeProvider().getBiomes(biomesForGeneration, chunkX * 16, chunkZ * 16, 16, 16);
+		setBlocksInChunk(chunkX, chunkZ, primer);
+		buildSurfaces(primer);
 
 		if (Config.generateCaves)
 		{
-			caveGenerator.generate(worldObj, chunkX, chunkZ, data);
+			caveGenerator.generate(world, chunkX, chunkZ, primer);
 		}
 
-		Chunk chunk = new Chunk(worldObj, data, chunkX, chunkZ);
+		Chunk chunk = new Chunk(world, primer, chunkX, chunkZ);
 		byte[] biomes = chunk.getBiomeArray();
 
 		for (int index = 0; index < biomes.length; ++index)
@@ -370,108 +390,108 @@ public class ChunkProviderSkyland implements IChunkGenerator
 	{
 		BlockFalling.fallInstantly = true;
 
-		ForgeEventFactory.onChunkPopulate(true, this, worldObj, rand, chunkX, chunkZ, false);
+		ForgeEventFactory.onChunkPopulate(true, this, world, rand, chunkX, chunkZ, false);
 
 		BlockPos pos = new BlockPos(chunkX * 16, 0, chunkZ * 16);
-		Biome biome = worldObj.getBiomeGenForCoords(pos.add(16, 0, 16));
-		rand.setSeed(worldObj.getSeed());
+		Biome biome = world.getBiome(pos.add(16, 0, 16));
+		rand.setSeed(world.getSeed());
 		long xSeed = rand.nextLong() / 2L * 2L + 1L;
 		long zSeed = rand.nextLong() / 2L * 2L + 1L;
-		rand.setSeed(chunkX * xSeed + chunkZ * zSeed ^ worldObj.getSeed());
+		rand.setSeed(chunkX * xSeed + chunkZ * zSeed ^ world.getSeed());
 		int i, genX, genY, genZ;
 
 		if (Config.generateLakes)
 		{
-			if (!BiomeDictionary.isBiomeOfType(biome, Type.SANDY) && rand.nextInt(4) == 0 && TerrainGen.populate(this, worldObj, rand, chunkX, chunkZ, false, Populate.EventType.LAKE))
+			if (!BiomeDictionary.hasType(biome, Type.SANDY) && rand.nextInt(4) == 0 && TerrainGen.populate(this, world, rand, chunkX, chunkZ, false, Populate.EventType.LAKE))
 			{
 				genX = rand.nextInt(16) + 8;
 				genZ = rand.nextInt(16) + 8;
-				genY = rand.nextInt(Math.max(worldObj.getHeight(pos.add(genX, 0, genZ)).getY() - 10, 1)) + 10;
+				genY = rand.nextInt(Math.max(world.getHeight(pos.add(genX, 0, genZ)).getY() - 10, 1)) + 10;
 
-				lakeWaterGen.generate(worldObj, rand, pos.add(genX, genY, genZ));
+				lakeWaterGen.generate(world, rand, pos.add(genX, genY, genZ));
 			}
 
-			if (rand.nextInt(8) == 0 && TerrainGen.populate(this, worldObj, rand, chunkX, chunkZ, false, Populate.EventType.LAVA))
+			if (rand.nextInt(8) == 0 && TerrainGen.populate(this, world, rand, chunkX, chunkZ, false, Populate.EventType.LAVA))
 			{
 				genX = rand.nextInt(16) + 8;
 				genZ = rand.nextInt(16) + 8;
-				i = worldObj.getHeight(pos.add(genX, 0, genZ)).getY();
+				i = world.getHeight(pos.add(genX, 0, genZ)).getY();
 				genY = rand.nextInt(Math.max(i - 10, 1)) + 10;
 
 				if (genY < i || rand.nextInt(10) == 0)
 				{
-					lakeLavaGen.generate(worldObj, rand, pos.add(genX, genY, genZ));
+					lakeLavaGen.generate(world, rand, pos.add(genX, genY, genZ));
 				}
 			}
 		}
 
-		boolean doGen = TerrainGen.generateOre(worldObj, rand, worldGenIron, pos, EventType.IRON);
+		boolean doGen = TerrainGen.generateOre(world, rand, worldGenIron, pos, EventType.IRON);
 
-		for (i = 0; doGen && i < 18; ++i)
+		for (i = 0; doGen && i < 20; ++i)
 		{
 			genX = rand.nextInt(16);
 			genY = rand.nextInt(50) + 20;
 			genZ = rand.nextInt(16);
 
-			worldGenIron.generate(worldObj, rand, pos.add(genX, genY, genZ));
+			worldGenIron.generate(world, rand, pos.add(genX, genY, genZ));
 		}
 
-		for (i = 0, doGen = TerrainGen.generateOre(worldObj, rand, worldGenEmerald, pos, EventType.CUSTOM); doGen && i < 6; ++i)
+		for (i = 0, doGen = TerrainGen.generateOre(world, rand, worldGenEmerald, pos, EventType.EMERALD); doGen && i < 6; ++i)
 		{
 			genX = rand.nextInt(16);
 			genY = rand.nextInt(50) + 10;
 			genZ = rand.nextInt(16);
 
-			worldGenEmerald.generate(worldObj, rand, pos.add(genX, genY, genZ));
+			worldGenEmerald.generate(world, rand, pos.add(genX, genY, genZ));
 		}
 
-		for (i = 0, doGen = TerrainGen.generateOre(worldObj, rand, worldGenDiamond, pos, EventType.DIAMOND); doGen && i < 8; ++i)
+		for (i = 0, doGen = TerrainGen.generateOre(world, rand, worldGenDiamond, pos, EventType.DIAMOND); doGen && i < 8; ++i)
 		{
 			genX = rand.nextInt(16);
 			genY = rand.nextInt(50) + 10;
 			genZ = rand.nextInt(16);
 
-			worldGenDiamond.generate(worldObj, rand, pos.add(genX, genY, genZ));
+			worldGenDiamond.generate(world, rand, pos.add(genX, genY, genZ));
 		}
 
-		for (i = 0, doGen = TerrainGen.generateOre(worldObj, rand, worldGenSkyrite, pos, EventType.CUSTOM); doGen && i < 10; ++i)
+		for (i = 0, doGen = TerrainGen.generateOre(world, rand, worldGenSkyrite, pos, EventType.CUSTOM); doGen && i < 10; ++i)
 		{
 			genX = rand.nextInt(16);
 			genY = rand.nextInt(50) + 10;
 			genZ = rand.nextInt(16);
 
-			worldGenSkyrite.generate(worldObj, rand, pos.add(genX, genY, genZ));
+			worldGenSkyrite.generate(world, rand, pos.add(genX, genY, genZ));
 		}
 
-		biome.decorate(worldObj, rand, pos);
+		biome.decorate(world, rand, pos);
 
-		if (TerrainGen.populate(this, worldObj, rand, chunkX, chunkZ, false, Populate.EventType.ANIMALS))
+		if (TerrainGen.populate(this, world, rand, chunkX, chunkZ, false, Populate.EventType.ANIMALS))
 		{
-			WorldEntitySpawner.performWorldGenSpawning(worldObj, biome, pos.getX() + 8, pos.getZ() + 8, 16, 16, rand);
+			WorldEntitySpawner.performWorldGenSpawning(world, biome, pos.getX() + 8, pos.getZ() + 8, 16, 16, rand);
 		}
 
 		pos = pos.add(8, 0, 8);
 
-		for (genX = 0, doGen = TerrainGen.populate(this, worldObj, rand, chunkX, chunkZ, false, Populate.EventType.ICE); doGen && genX < 16; ++genX)
+		for (genX = 0, doGen = TerrainGen.populate(this, world, rand, chunkX, chunkZ, false, Populate.EventType.ICE); doGen && genX < 16; ++genX)
 		{
 			for (genZ = 0; genZ < 16; ++ genZ)
 			{
-				BlockPos pos1 = worldObj.getPrecipitationHeight(pos.add(genX, 0, genZ)).down();
+				BlockPos top = world.getPrecipitationHeight(pos.add(genX, 0, genZ)).down();
 
-				if (worldObj.canBlockFreezeWater(pos1))
+				if (world.canBlockFreezeWater(top))
 				{
-					worldObj.setBlockState(pos1, Blocks.ICE.getDefaultState(), 2);
+					world.setBlockState(top, Blocks.ICE.getDefaultState(), 2);
 				}
 			}
 		}
 
-		ForgeEventFactory.onChunkPopulate(false, this, worldObj, rand, chunkX, chunkZ, false);
+		ForgeEventFactory.onChunkPopulate(false, this, world, rand, chunkX, chunkZ, false);
 
 		BlockFalling.fallInstantly = false;
 	}
 
 	@Override
-	public boolean generateStructures(Chunk chunkIn, int x, int z)
+	public boolean generateStructures(Chunk chunk, int x, int z)
 	{
 		return false;
 	}
@@ -479,17 +499,21 @@ public class ChunkProviderSkyland implements IChunkGenerator
 	@Override
 	public List<SpawnListEntry> getPossibleCreatures(EnumCreatureType type, BlockPos pos)
 	{
-		Biome biome = worldObj.getBiomeGenForCoords(pos);
-
-		return biome == null ? null : biome.getSpawnableList(type);
+		return world.getBiome(pos).getSpawnableList(type);
 	}
 
 	@Override
-	public BlockPos getStrongholdGen(World world, String name, BlockPos pos)
+	public BlockPos getNearestStructurePos(World world, String structureName, BlockPos position, boolean findUnexplored)
 	{
 		return null;
 	}
 
 	@Override
-	public void recreateStructures(Chunk chunkIn, int x, int z) {}
+	public boolean isInsideStructure(World world, String structureName, BlockPos pos)
+	{
+		return false;
+	}
+
+	@Override
+	public void recreateStructures(Chunk chunk, int x, int z) {}
 }
