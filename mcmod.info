@@ -2,7 +2,7 @@
   "modid": "skyland",
   "name": "Skyland",
   "description": "Adds the Skyland dimensions.",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "logoFile": "logo.png",
   "url": "https://kegare.github.io/skyland",
   "authorList": ["kegare"],

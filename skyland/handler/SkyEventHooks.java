@@ -136,7 +136,7 @@ public class SkyEventHooks
 				{
 					SkyUtils.teleportToDimension(player, DimensionType.OVERWORLD);
 
-					player.setPositionAndUpdate(player.posX, 305.0D, player.posZ);
+					player.connection.setPlayerLocation(player.posX, 305.0D, player.posZ, player.rotationYaw, 60.0F);
 
 					FALL_CANCELABLE_PLAYERS.add(player.getCachedUniqueIdString());
 

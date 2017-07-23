@@ -20,7 +20,11 @@
             "skyland:skyrite_pickaxe",
             "skyland:skyrite_axe",
             "skyland:skyrite_shovel",
-            "skyland:skyrite_hoe"
+            "skyland:skyrite_hoe",
+            "skyland:skyrite_helmet",
+            "skyland:skyrite_chestplate",
+            "skyland:skyrite_leggings",
+            "skyland:skyrite_boots"
         ]
     }
 }

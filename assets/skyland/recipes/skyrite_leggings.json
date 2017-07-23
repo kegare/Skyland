@@ -1,0 +1,16 @@
+{
+    "type": "minecraft:crafting_shaped",
+    "pattern": [
+        "###",
+        "# #",
+        "# #"
+    ],
+    "key": {
+        "#": {
+            "item": "skyland:skyrite"
+        }
+    },
+    "result": {
+        "item": "skyland:skyrite_leggings"
+    }
+}
