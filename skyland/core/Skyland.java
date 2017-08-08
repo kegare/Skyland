@@ -63,6 +63,22 @@ public class Skyland
 		MinecraftForge.EVENT_BUS.register(this);
 	}
 
+	@EventHandler
+	public void preInit(FMLPreInitializationEvent event)
+	{
+		Config.syncConfig();
+
+		SkyCapabilities.registerCapabilities();
+
+		if (event.getSide().isClient())
+		{
+			MinecraftForge.EVENT_BUS.register(new ClientEventHooks());
+		}
+
+		MinecraftForge.EVENT_BUS.register(new SkyEventHooks());
+		MinecraftForge.TERRAIN_GEN_BUS.register(new TerrainEventHooks());
+	}
+
 	@SubscribeEvent
 	public void registerBlocks(RegistryEvent.Register<Block> event)
 	{
@@ -95,22 +111,6 @@ public class Skyland
 		IForgeRegistry<SoundEvent> registry = event.getRegistry();
 
 		SkySounds.registerSounds(registry);
-	}
-
-	@EventHandler
-	public void preInit(FMLPreInitializationEvent event)
-	{
-		Config.syncConfig();
-
-		SkyCapabilities.registerCapabilities();
-
-		if (event.getSide().isClient())
-		{
-			MinecraftForge.EVENT_BUS.register(new ClientEventHooks());
-		}
-
-		MinecraftForge.EVENT_BUS.register(new SkyEventHooks());
-		MinecraftForge.TERRAIN_GEN_BUS.register(new TerrainEventHooks());
 	}
 
 	@EventHandler

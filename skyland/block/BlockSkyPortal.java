@@ -121,7 +121,7 @@ public class BlockSkyPortal extends BlockPortal
 	@SideOnly(Side.CLIENT)
 	public void displayGui(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand, EnumFacing side)
 	{
-		FMLClientHandler.instance().showGuiScreen(new GuiRegeneration(true));
+		FMLClientHandler.instance().showGuiScreen(new GuiRegeneration());
 	}
 
 	@Override

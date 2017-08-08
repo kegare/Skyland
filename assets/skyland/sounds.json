@@ -4,7 +4,7 @@
     "sounds": [
       {
         "name": "skyland:skyland",
-        "volume": 0.25,
+        "volume": 0.35,
         "stream": true
       }
     ]

@@ -3,6 +3,7 @@ package skyland.util;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
@@ -11,15 +12,19 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.Locale;
 import java.util.Map;
 
 import javax.annotation.Nullable;
+
+import org.apache.logging.log4j.Level;
 
 import com.google.common.collect.Maps;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.text.translation.I18n;
 import net.minecraft.world.DimensionType;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
@@ -53,8 +58,8 @@ public class SkyUtils
 
 	public static boolean archiveDirectory(File dir, File dest)
 	{
-		final Path dirPath = dir.toPath();
-		final String parent = dir.getName();
+		Path dirPath = dir.toPath();
+		String parent = dir.getName();
 		Map<String, String> env = Maps.newHashMap();
 		env.put("create", "true");
 		URI uri = dest.toURI();
@@ -63,7 +68,7 @@ public class SkyUtils
 		{
 			uri = new URI("jar:" + uri.getScheme(), uri.getPath(), null);
 		}
-		catch (Exception e)
+		catch (URISyntaxException e)
 		{
 			return false;
 		}
@@ -103,12 +108,12 @@ public class SkyUtils
 
 			return true;
 		}
-		catch (Exception e)
+		catch (IOException e)
 		{
-			e.printStackTrace();
-
-			return false;
+			SkyLog.log(Level.WARN, e, "An error occurred archiving the " + parent + "directory.");
 		}
+
+		return false;
 	}
 
 	public static int compareWithNull(Object o1, Object o2)
@@ -122,10 +127,17 @@ public class SkyUtils
 
 		if (worldInfo instanceof DerivedWorldInfo)
 		{
-			worldInfo = ObfuscationReflectionHelper.getPrivateValue(DerivedWorldInfo.class, (DerivedWorldInfo)worldInfo, "theWorldInfo", "field_76115_a");
+			worldInfo = ObfuscationReflectionHelper.getPrivateValue(DerivedWorldInfo.class, (DerivedWorldInfo)worldInfo, "delegate", "field_76115_a");
 		}
 
 		return worldInfo;
+	}
+
+	public static String getDimensionName(DimensionType type)
+	{
+		String key = "dimension." + type.getName() + ".name";
+
+		return I18n.canTranslate(key) ? I18n.translateToLocal(key) : type.getName().replaceAll(" ", "").toUpperCase(Locale.ENGLISH);
 	}
 
 	public static boolean isSkyland(@Nullable World world)

@@ -9,7 +9,6 @@ import net.minecraftforge.fml.relauncher.Side;
 import skyland.core.Skyland;
 import skyland.network.client.FallTeleportMessage;
 import skyland.network.client.RegenerationGuiMessage;
-import skyland.network.client.RegenerationOpenMessage;
 import skyland.network.server.RegenerationMessage;
 
 public class SkyNetworkRegistry
@@ -53,7 +52,6 @@ public class SkyNetworkRegistry
 	{
 		registerMessage(FallTeleportMessage.class, FallTeleportMessage.class, Side.CLIENT);
 		registerMessage(RegenerationGuiMessage.class, RegenerationGuiMessage.class, Side.CLIENT);
-		registerMessage(RegenerationOpenMessage.class, RegenerationOpenMessage.class, Side.CLIENT);
 
 		registerMessage(RegenerationMessage.class, RegenerationMessage.class, Side.SERVER);
 	}

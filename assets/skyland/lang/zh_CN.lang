@@ -15,21 +15,22 @@ skyland.config.dimension.generateCaves.tooltip=在维度中是否生成洞穴
 skyland.config.dimension.generateLakes=生成湖泊
 skyland.config.dimension.generateLakes.tooltip=是否生成湖泊
 
-skyland.regenerate.regenerating=重置 Skyland 维度中...
-skyland.regenerate.backingup=备份 Skyland 维度文件中...
-skyland.regenerate.backedup=Skyland 维度文件已备份
-skyland.regenerate.backup.failed=备份 Skyland 维度文件失败
-skyland.regenerate.regenerated=Skyland 维度已重置
-skyland.regenerate.failed=重置 Skyland 维度失败
-skyland.regenerate.gui.title=重置维度
-skyland.regenerate.gui.info=重置后不能取消
-skyland.regenerate.gui.regenerate=重置
-skyland.regenerate.gui.backup=备份
-skyland.regenerate.gui.backup.tooltip=如果选择此项，请备份重置前的维度数据
-skyland.regenerate.gui.progress.regenerating=重置中...
-skyland.regenerate.gui.progress.backingup=备份中..
-skyland.regenerate.gui.progress.regenerated=重置
-skyland.regenerate.gui.progress.failed=失败
+skyland.regeneration.regenerating=重置 %s 维度中...
+skyland.regeneration.backup=备份 %s 维度文件中...
+skyland.regeneration.backup.success=%s 维度文件已备份
+skyland.regeneration.backup.failed=备份 %s 维度文件失败
+skyland.regeneration.regenerated=%s 维度已重置
+skyland.regeneration.failed=重置 %s 维度失败
+
+skyland.regeneration.gui.title=重置维度
+skyland.regeneration.gui.info=重置后不能取消
+skyland.regeneration.gui.regenerate=重置
+skyland.regeneration.gui.backup=备份
+skyland.regeneration.gui.backup.tooltip=如果选择此项，请备份重置前的维度数据
+skyland.regeneration.gui.progress.start=重置中...
+skyland.regeneration.gui.progress.backup=备份中..
+skyland.regeneration.gui.progress.regenerated=重置
+skyland.regeneration.gui.progress.failed=失败
 
 tile.skyPortal.name=天空传送门
 tile.oreSkyrite.name=天空宝石矿

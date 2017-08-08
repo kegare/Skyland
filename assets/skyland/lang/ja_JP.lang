@@ -1,4 +1,6 @@
 
+skyland.description=空の冒険を始めよう
+
 skyland.version.message=%s の新しいバージョンが利用可能です
 skyland.version.message.beta=あなたは %s のベータバージョンを利用しています
 skyland.version.message.alpha=あなたは %s のアルファバージョンを利用しています
@@ -17,22 +19,22 @@ skyland.config.dimension.generateCaves.tooltip=Skylandに洞窟を生成しま�
 skyland.config.dimension.generateLakes=湖の生成
 skyland.config.dimension.generateLakes.tooltip=Skylandに湖を生成します。
 
-skyland.regenerate.regenerating=Skyland ディメンションを再生成しています...
-skyland.regenerate.backingup=Skyland ディメンションフォルダをバックアップしています...
-skyland.regenerate.backedup=Skyland ディメンションフォルダをバックアップしました
-skyland.regenerate.backup.failed=Skyland ディメンションフォルダのバックアップに失敗しました
-skyland.regenerate.regenerated=Skyland ディメンションを再生成しました
-skyland.regenerate.failed=Skyland ディメンションの再生成に失敗しました
-skyland.regenerate.gui.title=Skylandの再生成
-skyland.regenerate.gui.info=再生成開始後のキャンセルはできません
-skyland.regenerate.gui.regenerate=再生成
-skyland.regenerate.gui.backup=バックアップ
-skyland.regenerate.gui.backup.tooltip=再生成前にディメンションデータをバックアップします。
-skyland.regenerate.gui.backup.open=バックアップフォルダを開く
-skyland.regenerate.gui.progress.regenerating=再生成しています...
-skyland.regenerate.gui.progress.backingup=バックアップしています..
-skyland.regenerate.gui.progress.regenerated=再生成しました
-skyland.regenerate.gui.progress.failed=再生成に失敗しました
+skyland.regeneration.regenerating=%s ディメンションを再生成しています...
+skyland.regeneration.backup=%s ディメンションのフォルダをバックアップしています..
+skyland.regeneration.backup.success=%s ディメンションのフォルダをバックアップしました
+skyland.regeneration.backup.failed=%s ディメンションのフォルダのバックアップに失敗しました
+skyland.regeneration.regenerated=%s ディメンションを再生成しました
+skyland.regeneration.failed=%s ディメンションの再生成に失敗しました
+
+skyland.regeneration.gui.title=ディメンションの再生成
+skyland.regeneration.gui.info=再生成開始後のキャンセルはできません
+skyland.regeneration.gui.regenerate=再生成する
+skyland.regeneration.gui.backup=バックアップ
+skyland.regeneration.gui.backup.tooltip=再生成前にディメンションのフォルダをバックアップします
+skyland.regeneration.gui.progress.start=再生成しています...
+skyland.regeneration.gui.progress.backup=バックアップしています..
+skyland.regeneration.gui.progress.regenerated=再生成しました
+skyland.regeneration.gui.progress.failed=再生成に失敗しました
 
 tile.skyPortal.name=スカイポータル
 tile.oreSkyrite.name=スカイライト鉱石

@@ -1,5 +1,5 @@
 
-generator.skyland=Skyland
+skyland.description=Let's explore the sky islands!
 
 skyland.version.message=A new %s version is available
 skyland.version.message.beta=You are using a Beta version of %s
@@ -19,22 +19,22 @@ skyland.config.dimension.generateCaves.tooltip=Whether or not to generate caves 
 skyland.config.dimension.generateLakes=Generate Lakes
 skyland.config.dimension.generateLakes.tooltip=Whether or not to generate lakes to Skyland.
 
-skyland.regenerate.regenerating=Regenerating the Skyland dimension...
-skyland.regenerate.backingup=Backing up the Skyland dimension folder...
-skyland.regenerate.backedup=Skyland dimension folder was backed up
-skyland.regenerate.backup.failed=Failed to backing up the Skyland dimension folder
-skyland.regenerate.regenerated=Skyland dimension was regenerated
-skyland.regenerate.failed=Failed to regenerating the Skyland dimension
-skyland.regenerate.gui.title=Skyland Regeneration
-skyland.regenerate.gui.info=Cannot be canceled after the regeneration starts
-skyland.regenerate.gui.regenerate=Regenerate
-skyland.regenerate.gui.backup=Backup
-skyland.regenerate.gui.backup.tooltip=If checked, backing up the Skyland dimension data before the regeneration.
-skyland.regenerate.gui.backup.open=Open the backup folder...
-skyland.regenerate.gui.progress.regenerating=Regenerating...
-skyland.regenerate.gui.progress.backingup=Backing up..
-skyland.regenerate.gui.progress.regenerated=Regenerated
-skyland.regenerate.gui.progress.failed=Failed
+skyland.regeneration.regenerating=Regenerating the %s dimension...
+skyland.regeneration.backup=Backing up the %s dimension folder...
+skyland.regeneration.backup.success=%s dimension folder was backed up
+skyland.regeneration.backup.failed=Failed to backing up the %s dimension folder
+skyland.regeneration.regenerated=%s dimension was regenerated
+skyland.regeneration.failed=Failed to regenerating the %s dimension
+
+skyland.regeneration.gui.title=Dimension Regeneration
+skyland.regeneration.gui.info=Cannot be canceled after the regeneration starts
+skyland.regeneration.gui.regenerate=Regenerate
+skyland.regeneration.gui.backup=Backup
+skyland.regeneration.gui.backup.tooltip=If checked, backing up dimension data before the regeneration.
+skyland.regeneration.gui.progress.start=Regenerating...
+skyland.regeneration.gui.progress.backup=Backing up..
+skyland.regeneration.gui.progress.regenerated=Regenerated
+skyland.regeneration.gui.progress.failed=Failed
 
 tile.skyPortal.name=Sky Portal
 tile.oreSkyrite.name=Skyrite Ore
@@ -51,3 +51,7 @@ item.helmetSkyrite.name=Skyrite Helmet
 item.chestplateSkyrite.name=Skyrite Chestplate
 item.leggingsSkyrite.name=Skyrite Leggings
 item.bootsSkyrite.name=Skyrite Boots
+
+generator.skyland=Skyland
+
+dimension.skyland.name=Skyland

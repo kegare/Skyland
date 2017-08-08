@@ -1,8 +1,12 @@
 package skyland.client.handler;
 
+import com.google.common.base.Strings;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.ISound;
 import net.minecraft.client.audio.PositionedSoundRecord;
+import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.resources.I18n;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentString;
@@ -11,10 +15,12 @@ import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.event.ClickEvent;
 import net.minecraft.world.DimensionType;
 import net.minecraft.world.World;
+import net.minecraftforge.client.event.GuiOpenEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.sound.PlaySoundEvent;
 import net.minecraftforge.event.entity.living.LivingFallEvent;
 import net.minecraftforge.fml.client.FMLClientHandler;
+import net.minecraftforge.fml.client.GuiModList;
 import net.minecraftforge.fml.client.event.ConfigChangedEvent.OnConfigChangedEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
@@ -117,7 +123,23 @@ public class ClientEventHooks
 		{
 			if (mc.gameSettings.showDebugInfo)
 			{
-				event.getLeft().add("Dim: Skyland");
+				event.getLeft().add("Dim: " + SkyUtils.getDimensionName(Skyland.DIM_SKYLAND));
+			}
+		}
+	}
+
+	@SubscribeEvent
+	public void onGuiOpen(GuiOpenEvent event)
+	{
+		GuiScreen gui = event.getGui();
+
+		if (gui != null && GuiModList.class == gui.getClass())
+		{
+			String desc = I18n.format("skyland.description");
+
+			if (!Strings.isNullOrEmpty(desc))
+			{
+				Skyland.metadata.description = desc;
 			}
 		}
 	}
@@ -128,11 +150,18 @@ public class ClientEventHooks
 		Minecraft mc = FMLClientHandler.instance().getClient();
 		ISound sound = event.getSound();
 
-		if (sound != null && sound.getCategory() == SoundCategory.MUSIC && SkyUtils.isEntityInSkyland(mc.player))
+		if (sound.getCategory() == SoundCategory.MUSIC && SkyUtils.isEntityInSkyland(mc.player))
 		{
-			if (Math.random() < 0.35D)
+			ISound newMusic = null;
+
+			if (mc.world.isDaytime() && Math.random() < 0.45D)
 			{
-				event.setResultSound(PositionedSoundRecord.getMusicRecord(SkySounds.SKYLAND));
+				newMusic = PositionedSoundRecord.getMusicRecord(SkySounds.SKYLAND);
+			}
+
+			if (newMusic != null)
+			{
+				event.setResultSound(newMusic);
 			}
 		}
 	}

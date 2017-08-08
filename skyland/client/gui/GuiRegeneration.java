@@ -1,6 +1,5 @@
 package skyland.client.gui;
 
-import java.awt.Desktop;
 import java.io.IOException;
 
 import org.lwjgl.input.Keyboard;
@@ -9,7 +8,6 @@ import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.resources.I18n;
-import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.fml.client.config.GuiButtonExt;
 import net.minecraftforge.fml.client.config.GuiCheckBox;
 import net.minecraftforge.fml.client.config.HoverChecker;
@@ -19,43 +17,28 @@ import skyland.network.server.RegenerationMessage;
 
 public class GuiRegeneration extends GuiScreen
 {
-	private boolean backup;
+	private static boolean backup = true;
 
 	protected GuiButton regenButton;
-	protected GuiButton openButton;
 	protected GuiButton cancelButton;
 	protected GuiCheckBox backupCheckBox;
 
 	private HoverChecker backupHoverChecker;
-
-	public GuiRegeneration(boolean backup)
-	{
-		this.backup = backup;
-	}
 
 	@Override
 	public void initGui()
 	{
 		if (regenButton == null)
 		{
-			regenButton = new GuiButtonExt(0, 0, 0, I18n.format("skyland.regenerate.gui.regenerate"));
+			regenButton = new GuiButtonExt(0, 0, 0, I18n.format("skyland.regeneration.gui.regenerate"));
 		}
 
 		regenButton.x = width / 2 - 100;
 		regenButton.y = height / 4 + regenButton.height + 65;
 
-		if (openButton == null)
-		{
-			openButton = new GuiButtonExt(1, 0, 0, I18n.format("skyland.regenerate.gui.backup.open"));
-			openButton.visible = false;
-		}
-
-		openButton.x = regenButton.x;
-		openButton.y = regenButton.y;
-
 		if (cancelButton == null)
 		{
-			cancelButton = new GuiButtonExt(2, 0, 0, I18n.format("gui.cancel"));
+			cancelButton = new GuiButtonExt(1, 0, 0, I18n.format("gui.cancel"));
 		}
 
 		cancelButton.x = regenButton.x;
@@ -63,32 +46,19 @@ public class GuiRegeneration extends GuiScreen
 
 		if (backupCheckBox == null)
 		{
-			backupCheckBox = new GuiCheckBox(3, 10, 0, I18n.format("skyland.regenerate.gui.backup"), backup);
+			backupCheckBox = new GuiCheckBox(2, 10, 0, I18n.format("skyland.regeneration.gui.backup"), backup);
 		}
 
 		backupCheckBox.y = height - 20;
 
 		buttonList.clear();
 		buttonList.add(regenButton);
-		buttonList.add(openButton);
 		buttonList.add(cancelButton);
 		buttonList.add(backupCheckBox);
 
 		if (backupHoverChecker == null)
 		{
 			backupHoverChecker = new HoverChecker(backupCheckBox, 800);
-		}
-	}
-
-	@Override
-	public void handleKeyboardInput() throws IOException
-	{
-		super.handleKeyboardInput();
-
-		if (Keyboard.getEventKey() == Keyboard.KEY_LSHIFT || Keyboard.getEventKey() == Keyboard.KEY_RSHIFT)
-		{
-			openButton.visible = Keyboard.getEventKeyState();
-			regenButton.visible = !openButton.visible;
 		}
 	}
 
@@ -116,11 +86,11 @@ public class GuiRegeneration extends GuiScreen
 					cancelButton.visible = false;
 					break;
 				case 1:
-					Desktop.getDesktop().open(DimensionManager.getCurrentSaveRootDirectory());
-					break;
-				case 2:
 					mc.displayGuiScreen(null);
 					mc.setIngameFocus();
+					break;
+				case 2:
+					backup = backupCheckBox.isChecked();
 					break;
 			}
 		}
@@ -133,16 +103,16 @@ public class GuiRegeneration extends GuiScreen
 
 		GlStateManager.pushMatrix();
 		GlStateManager.scale(2.0F, 2.0F, 2.0F);
-		drawCenteredString(fontRenderer, I18n.format("skyland.regenerate.gui.title"), width / 4, 30, 0xFFFFFF);
+		drawCenteredString(fontRenderer, I18n.format("skyland.regeneration.gui.title"), width / 4, 30, 0xFFFFFF);
 		GlStateManager.popMatrix();
 
-		drawCenteredString(fontRenderer, I18n.format("skyland.regenerate.gui.info"), width / 2, 100, 0xEEEEEE);
+		drawCenteredString(fontRenderer, I18n.format("skyland.regeneration.gui.info"), width / 2, 100, 0xEEEEEE);
 
 		super.drawScreen(mouseX, mouseY, ticks);
 
 		if (backupHoverChecker.checkHover(mouseX, mouseY))
 		{
-			drawHoveringText(fontRenderer.listFormattedStringToWidth(I18n.format("skyland.regenerate.gui.backup.tooltip"), 300), mouseX, mouseY);
+			drawHoveringText(fontRenderer.listFormattedStringToWidth(I18n.format("skyland.regeneration.gui.backup.tooltip"), 300), mouseX, mouseY);
 		}
 	}
 
@@ -165,18 +135,18 @@ public class GuiRegeneration extends GuiScreen
 		else switch (type)
 		{
 			case START:
-				regenButton.displayString = I18n.format("skyland.regenerate.gui.progress.regenerating");
+				regenButton.displayString = I18n.format("skyland.regeneration.gui.progress.start");
 				break;
 			case BACKUP:
-				regenButton.displayString = I18n.format("skyland.regenerate.gui.progress.backingup");
+				regenButton.displayString = I18n.format("skyland.regeneration.gui.progress.backup");
 				break;
 			case SUCCESS:
-				regenButton.displayString = I18n.format("skyland.regenerate.gui.progress.regenerated");
+				regenButton.displayString = I18n.format("skyland.regeneration.gui.progress.regenerated");
 				cancelButton.displayString = I18n.format("gui.done");
 				cancelButton.visible = true;
 				break;
 			case FAILED:
-				regenButton.displayString = I18n.format("skyland.regenerate.gui.progress.failed");
+				regenButton.displayString = I18n.format("skyland.regeneration.gui.progress.failed");
 				cancelButton.visible = true;
 				break;
 		}

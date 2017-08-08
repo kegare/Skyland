@@ -2,23 +2,15 @@ package skyland.core;
 
 import java.util.List;
 
-import com.google.common.base.Joiner;
-
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TextComponentString;
-import net.minecraft.util.text.TextFormatting;
-import net.minecraft.util.text.event.ClickEvent;
-import net.minecraftforge.fml.common.Loader;
 import skyland.network.SkyNetworkRegistry;
-import skyland.network.client.RegenerationOpenMessage;
-import skyland.util.Version;
-import skyland.world.WorldProviderSkyland;
+import skyland.network.client.RegenerationGuiMessage;
+import skyland.network.server.RegenerationMessage;
 
 public class CommandSkyland extends CommandBase
 {
@@ -37,56 +29,18 @@ public class CommandSkyland extends CommandBase
 	@Override
 	public String getUsage(ICommandSender sender)
 	{
-		return String.format("/%s <%s>", getName(), Joiner.on('|').join(getCommands()));
+		return String.format("/%s <%s>", getName(), String.join("|", getCommands()));
 	}
 
 	public String[] getCommands()
 	{
-		return new String[] {"version", "regenerate"};
+		return new String[] {"regenerate"};
 	}
 
 	@Override
 	public void execute(MinecraftServer server, ICommandSender sender, final String[] args) throws CommandException
 	{
-		if (args.length <= 0 || args[0].equalsIgnoreCase("version"))
-		{
-			ClickEvent click = new ClickEvent(ClickEvent.Action.OPEN_URL, Skyland.metadata.url);
-			ITextComponent component;
-			ITextComponent message = new TextComponentString(" ");
-
-			component = new TextComponentString("Skyland");
-			component.getStyle().setColor(TextFormatting.AQUA);
-			message.appendSibling(component);
-			message.appendText(" " + Version.getCurrent());
-
-			if (Version.DEV_DEBUG)
-			{
-				message.appendText(" ");
-				component = new TextComponentString("dev");
-				component.getStyle().setColor(TextFormatting.RED);
-				message.appendSibling(component);
-			}
-
-			message.appendText(" for " + Loader.instance().getMCVersionString() + " ");
-			component = new TextComponentString("(Latest: " + Version.getLatest() + ")");
-			component.getStyle().setColor(TextFormatting.GRAY);
-			message.appendSibling(component);
-			message.getStyle().setClickEvent(click);
-			sender.sendMessage(message);
-
-			message = new TextComponentString("  ");
-			component = new TextComponentString(Skyland.metadata.description);
-			component.getStyle().setClickEvent(click);
-			message.appendSibling(component);
-			sender.sendMessage(message);
-
-			message = new TextComponentString("  ");
-			component = new TextComponentString(Skyland.metadata.url);
-			component.getStyle().setColor(TextFormatting.DARK_GRAY).setClickEvent(click);
-			message.appendSibling(component);
-			sender.sendMessage(message);
-		}
-		else if (args[0].equalsIgnoreCase("regenerate") && Skyland.SKYLAND == null)
+		if (args[0].equalsIgnoreCase("regenerate") && Skyland.SKYLAND == null)
 		{
 			boolean backup = true;
 
@@ -108,7 +62,7 @@ public class CommandSkyland extends CommandBase
 
 				if (player.mcServer.isSinglePlayer() || player.mcServer.getPlayerList().canSendCommands(player.getGameProfile()))
 				{
-					SkyNetworkRegistry.sendTo(new RegenerationOpenMessage(backup), player);
+					SkyNetworkRegistry.sendTo(new RegenerationGuiMessage(RegenerationGuiMessage.EnumType.OPEN), player);
 				}
 				else
 				{
@@ -117,7 +71,7 @@ public class CommandSkyland extends CommandBase
 			}
 			else
 			{
-				WorldProviderSkyland.regenerate(backup);
+				new RegenerationMessage(backup).regenerateDimension(Skyland.DIM_SKYLAND);
 			}
 		}
 	}

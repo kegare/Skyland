@@ -35,18 +35,18 @@ public class RegenerationGuiMessage implements IClientMessage<RegenerationGuiMes
 	public IMessage process(Minecraft mc)
 	{
 		EnumType action = EnumType.get(type);
+		boolean isOpen = mc.currentScreen != null && mc.currentScreen instanceof GuiRegeneration;
 
-		if (mc.currentScreen != null && mc.currentScreen instanceof GuiRegeneration)
+		if (action == EnumType.OPEN)
 		{
-			GuiRegeneration gui = (GuiRegeneration)mc.currentScreen;
-
-			gui.updateProgress(action);
-
-			if (action == EnumType.SUCCESS)
+			if (!isOpen)
 			{
-				mc.displayGuiScreen(null);
-				mc.setIngameFocus();
+				mc.displayGuiScreen(new GuiRegeneration());
 			}
+		}
+		else if (isOpen)
+		{
+			((GuiRegeneration)mc.currentScreen).updateProgress(action);
 		}
 
 		return null;
@@ -54,6 +54,7 @@ public class RegenerationGuiMessage implements IClientMessage<RegenerationGuiMes
 
 	public enum EnumType
 	{
+		OPEN,
 		START,
 		BACKUP,
 		SUCCESS,
