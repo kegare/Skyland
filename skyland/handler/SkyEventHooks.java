@@ -23,8 +23,6 @@ import net.minecraftforge.event.entity.living.LivingFallEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
-import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedOutEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.fml.common.gameevent.TickEvent.WorldTickEvent;
 import skyland.core.Config;
@@ -35,11 +33,10 @@ import skyland.network.SkyNetworkRegistry;
 import skyland.network.client.FallTeleportMessage;
 import skyland.stats.PortalCache;
 import skyland.util.SkyUtils;
-import skyland.world.TeleporterPersonal;
+import skyland.world.TeleporterSkyland;
 
 public class SkyEventHooks
 {
-	public static final Set<String> FIRST_PLAYERS = Sets.newHashSet();
 	public static final Set<String> FALL_CANCELABLE_PLAYERS = Sets.newHashSet();
 
 	@SubscribeEvent
@@ -55,33 +52,17 @@ public class SkyEventHooks
 			}
 		}
 
-		FIRST_PLAYERS.add(uuid);
-	}
-
-	@SubscribeEvent
-	public void onPlayerLoggedIn(PlayerLoggedInEvent event)
-	{
-		if (Skyland.DIM_SKYLAND == null || !(event.player instanceof EntityPlayerMP))
+		if (!Config.skyborn || Skyland.DIM_SKYLAND == null)
 		{
 			return;
 		}
 
-		EntityPlayerMP player = (EntityPlayerMP)event.player;
+		EntityPlayer player = event.getEntityPlayer();
 
-		if (Config.skyborn && FIRST_PLAYERS.contains(player.getCachedUniqueIdString()))
-		{
-			SkyUtils.teleportToDimension(player, Skyland.DIM_SKYLAND);
-		}
-	}
+		player.dimension = Skyland.DIM_SKYLAND.getId();
+		player.setLocationAndAngles(0.5D, 128.0D, 0.5D, player.rotationYaw, player.rotationPitch);
 
-	@SubscribeEvent
-	public void onPlayerLoggedOut(PlayerLoggedOutEvent event)
-	{
-		EntityPlayer player = event.player;
-		String uuid = player.getCachedUniqueIdString();
-
-		FIRST_PLAYERS.remove(uuid);
-		FALL_CANCELABLE_PLAYERS.remove(uuid);
+		FALL_CANCELABLE_PLAYERS.add(uuid);
 	}
 
 	@SubscribeEvent
@@ -123,7 +104,7 @@ public class SkyEventHooks
 			{
 				if (!player.onGround && player.getEntityBoundingBox().minY > 350.0D)
 				{
-					PortalCache.get(player).setLastPos(TeleporterPersonal.KEY_PERSONAL, type, world.getHeight(player.getPosition()));
+					PortalCache.get(player).setLastPos(TeleporterSkyland.KEY, type, world.getHeight(player.getPosition()));
 
 					SkyUtils.teleportToDimension(player, Skyland.DIM_SKYLAND);
 

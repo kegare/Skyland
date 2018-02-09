@@ -20,13 +20,13 @@ import net.minecraftforge.fml.common.event.FMLConstructionEvent;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
-import net.minecraftforge.fml.common.event.FMLServerStoppedEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraftforge.registries.IForgeRegistry;
 import skyland.block.SkyBlocks;
 import skyland.capability.SkyCapabilities;
+import skyland.client.SkyMusics;
 import skyland.client.handler.ClientEventHooks;
 import skyland.handler.SkyEventHooks;
 import skyland.handler.TerrainEventHooks;
@@ -123,6 +123,11 @@ public class Skyland
 
 		SkyNetworkRegistry.registerMessages();
 
+		if (event.getSide().isClient())
+		{
+			SkyMusics.registerMusics();
+		}
+
 		int id = Config.dimension;
 
 		if (id == 0)
@@ -153,12 +158,5 @@ public class Skyland
 	public void serverStarting(FMLServerStartingEvent event)
 	{
 		event.registerServerCommand(new CommandSkyland());
-	}
-
-	@EventHandler
-	public void serverStopping(FMLServerStoppedEvent event)
-	{
-		SkyEventHooks.FIRST_PLAYERS.clear();
-		SkyEventHooks.FALL_CANCELABLE_PLAYERS.clear();
 	}
 }

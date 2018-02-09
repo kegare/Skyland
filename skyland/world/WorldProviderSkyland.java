@@ -2,6 +2,7 @@ package skyland.world;
 
 import java.util.Random;
 
+import net.minecraft.client.audio.MusicTicker.MusicType;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.DimensionType;
@@ -12,6 +13,7 @@ import net.minecraft.world.storage.WorldInfo;
 import net.minecraftforge.client.IRenderHandler;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import skyland.client.SkyMusics;
 import skyland.client.renderer.EmptyRenderer;
 import skyland.core.Skyland;
 import skyland.util.SkyUtils;
@@ -89,6 +91,19 @@ public class WorldProviderSkyland extends WorldProviderSurface
 	public boolean shouldMapSpin(String entity, double x, double y, double z)
 	{
 		return false;
+	}
+
+	@Override
+	public boolean shouldClientCheckLighting()
+	{
+		return false;
+	}
+
+	@SideOnly(Side.CLIENT)
+	@Override
+	public MusicType getMusicType()
+	{
+		return SkyMusics.SKYLAND;
 	}
 
 	@SideOnly(Side.CLIENT)

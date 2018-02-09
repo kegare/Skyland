@@ -149,6 +149,7 @@ public class GuiRegeneration extends GuiScreen
 				regenButton.displayString = I18n.format("skyland.regeneration.gui.progress.failed");
 				cancelButton.visible = true;
 				break;
+			default:
 		}
 	}
 }

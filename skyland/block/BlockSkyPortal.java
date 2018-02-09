@@ -38,7 +38,8 @@ import skyland.core.SkySounds;
 import skyland.core.Skyland;
 import skyland.stats.IPortalCache;
 import skyland.stats.PortalCache;
-import skyland.world.TeleporterSkyland;
+import skyland.util.SkyUtils;
+import skyland.world.TeleporterSkyPortal;
 
 public class BlockSkyPortal extends BlockPortal
 {
@@ -139,7 +140,7 @@ public class BlockSkyPortal extends BlockPortal
 
 		if (entity.timeUntilPortal <= 0)
 		{
-			ResourceLocation key = TeleporterSkyland.KEY_PORTAL;
+			ResourceLocation key = TeleporterSkyPortal.KEY;
 			IPortalCache cache = PortalCache.get(entity);
 			MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
 			DimensionType dimOld = world.provider.getDimensionType();
@@ -152,7 +153,7 @@ public class BlockSkyPortal extends BlockPortal
 				return;
 			}
 
-			Teleporter teleporter = new TeleporterSkyland(worldNew);
+			Teleporter teleporter = new TeleporterSkyPortal(worldNew);
 			BlockPos prevPos = entity.getPosition();
 
 			entity.timeUntilPortal = entity.getPortalCooldown();
@@ -163,26 +164,29 @@ public class BlockSkyPortal extends BlockPortal
 
 				if (!player.isSneaking() && !player.isPotionActive(MobEffects.BLINDNESS))
 				{
+					cache.setLastDim(key, dimOld);
+					cache.setLastPos(key, dimOld, prevPos);
+
 					double x = player.posX;
 					double y = player.posY + player.getEyeHeight();
 					double z = player.posZ;
 
 					worldOld.playSound(player, x, y, z, SkySounds.SKY_PORTAL, SoundCategory.BLOCKS, 0.5F, 1.0F);
 
-					server.getPlayerList().transferPlayerToDimension(player, dimNew.getId(), teleporter);
+					SkyUtils.teleportToDimension(player, dimNew, teleporter);
 
 					x = player.posX;
 					y = player.posY + player.getEyeHeight();
 					z = player.posZ;
 
 					worldNew.playSound(null, x, y, z, SkySounds.SKY_PORTAL, SoundCategory.BLOCKS, 0.75F, 1.0F);
-
-					cache.setLastDim(key, dimOld);
-					cache.setLastPos(key, dimOld, prevPos);
 				}
 			}
 			else
 			{
+				cache.setLastDim(key, dimOld);
+				cache.setLastPos(key, dimOld, prevPos);
+
 				double x = entity.posX;
 				double y = entity.posY + entity.getEyeHeight();
 				double z = entity.posZ;
@@ -201,9 +205,6 @@ public class BlockSkyPortal extends BlockPortal
 				z = entity.posZ;
 
 				worldNew.playSound(null, x, y, z, SkySounds.SKY_PORTAL, SoundCategory.BLOCKS, 0.5F, 1.15F);
-
-				cache.setLastDim(key, dimOld);
-				cache.setLastPos(key, dimOld, prevPos);
 			}
 		}
 		else

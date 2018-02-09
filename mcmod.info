@@ -1,8 +1,8 @@
 [{
   "modid": "skyland",
   "name": "Skyland",
-  "description": "Adds the Skyland dimensions.",
-  "version": "1.5.2",
+  "description": "Are you ready to go sky islands?",
+  "version": "1.5.3",
   "logoFile": "logo.png",
   "url": "https://kegare.github.io/skyland",
   "authorList": ["kegare"],

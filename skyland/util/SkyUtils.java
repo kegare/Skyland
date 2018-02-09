@@ -26,8 +26,8 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.text.translation.I18n;
 import net.minecraft.world.DimensionType;
+import net.minecraft.world.Teleporter;
 import net.minecraft.world.World;
-import net.minecraft.world.WorldServer;
 import net.minecraft.world.storage.DerivedWorldInfo;
 import net.minecraft.world.storage.WorldInfo;
 import net.minecraftforge.fml.common.DummyModContainer;
@@ -35,7 +35,7 @@ import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.ModContainer;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import skyland.core.Skyland;
-import skyland.world.TeleporterPersonal;
+import skyland.world.TeleporterSkyland;
 
 public class SkyUtils
 {
@@ -182,15 +182,21 @@ public class SkyUtils
 
 	public static void teleportToDimension(EntityPlayerMP player, @Nullable DimensionType type)
 	{
+		teleportToDimension(player, type, null);
+	}
+
+	public static void teleportToDimension(EntityPlayerMP player, @Nullable DimensionType type, @Nullable Teleporter teleporter)
+	{
 		if (type == null)
 		{
 			return;
 		}
 
-		MinecraftServer server = player.mcServer;
-		WorldServer worldNew = server.getWorld(type.getId());
+		setDimensionChange(player);
 
-		server.getPlayerList().transferPlayerToDimension(player, type.getId(), new TeleporterPersonal(worldNew));
+		MinecraftServer server = player.mcServer;
+
+		server.getPlayerList().transferPlayerToDimension(player, type.getId(), teleporter == null ? new TeleporterSkyland(server.getWorld(type.getId())) : teleporter);
 
 		player.addExperienceLevel(0);
 	}
