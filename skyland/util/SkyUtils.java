@@ -22,11 +22,8 @@ import org.apache.logging.log4j.Level;
 import com.google.common.collect.Maps;
 
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.text.translation.I18n;
 import net.minecraft.world.DimensionType;
-import net.minecraft.world.Teleporter;
 import net.minecraft.world.World;
 import net.minecraft.world.storage.DerivedWorldInfo;
 import net.minecraft.world.storage.WorldInfo;
@@ -34,8 +31,8 @@ import net.minecraftforge.fml.common.DummyModContainer;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.ModContainer;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
+import net.minecraftforge.fml.relauncher.FMLLaunchHandler;
 import skyland.core.Skyland;
-import skyland.world.TeleporterSkyland;
 
 public class SkyUtils
 {
@@ -127,7 +124,7 @@ public class SkyUtils
 
 		if (worldInfo instanceof DerivedWorldInfo)
 		{
-			worldInfo = ObfuscationReflectionHelper.getPrivateValue(DerivedWorldInfo.class, (DerivedWorldInfo)worldInfo, "delegate", "field_76115_a");
+			worldInfo = getPrivateValue(DerivedWorldInfo.class, (DerivedWorldInfo)worldInfo, "delegate", "field_76115_a");
 		}
 
 		return worldInfo;
@@ -172,32 +169,13 @@ public class SkyUtils
 		return isSkyland(entity.world);
 	}
 
-	public static void setDimensionChange(EntityPlayerMP player)
+	public static <T, E> T getPrivateValue(Class<? super E> classToAccess, @Nullable E instance, String deobf, String reobf)
 	{
-		if (!player.capabilities.isCreativeMode)
+		if (FMLLaunchHandler.isDeobfuscatedEnvironment())
 		{
-			ObfuscationReflectionHelper.setPrivateValue(EntityPlayerMP.class, player, true, "invulnerableDimensionChange", "field_184851_cj");
-		}
-	}
-
-	public static void teleportToDimension(EntityPlayerMP player, @Nullable DimensionType type)
-	{
-		teleportToDimension(player, type, null);
-	}
-
-	public static void teleportToDimension(EntityPlayerMP player, @Nullable DimensionType type, @Nullable Teleporter teleporter)
-	{
-		if (type == null)
-		{
-			return;
+			return ObfuscationReflectionHelper.getPrivateValue(classToAccess, instance, deobf);
 		}
 
-		setDimensionChange(player);
-
-		MinecraftServer server = player.mcServer;
-
-		server.getPlayerList().transferPlayerToDimension(player, type.getId(), teleporter == null ? new TeleporterSkyland(server.getWorld(type.getId())) : teleporter);
-
-		player.addExperienceLevel(0);
+		return ObfuscationReflectionHelper.getPrivateValue(classToAccess, instance, reobf);
 	}
 }

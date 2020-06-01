@@ -6,7 +6,6 @@ import net.minecraft.util.EnumFacing;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.capabilities.ICapabilitySerializable;
-import skyland.stats.IPortalCache;
 import skyland.stats.PortalCache;
 
 public class CapabilityPortalCache implements ICapabilitySerializable<NBTTagCompound>
@@ -57,11 +56,11 @@ public class CapabilityPortalCache implements ICapabilitySerializable<NBTTagComp
 
 	public static void register()
 	{
-		CapabilityManager.INSTANCE.register(IPortalCache.class,
-			new Capability.IStorage<IPortalCache>()
+		CapabilityManager.INSTANCE.register(PortalCache.class,
+			new Capability.IStorage<PortalCache>()
 			{
 				@Override
-				public NBTBase writeNBT(Capability<IPortalCache> capability, IPortalCache instance, EnumFacing side)
+				public NBTBase writeNBT(Capability<PortalCache> capability, PortalCache instance, EnumFacing side)
 				{
 					NBTTagCompound nbt = new NBTTagCompound();
 
@@ -71,7 +70,7 @@ public class CapabilityPortalCache implements ICapabilitySerializable<NBTTagComp
 				}
 
 				@Override
-				public void readNBT(Capability<IPortalCache> capability, IPortalCache instance, EnumFacing side, NBTBase nbt)
+				public void readNBT(Capability<PortalCache> capability, PortalCache instance, EnumFacing side, NBTBase nbt)
 				{
 					instance.readFromNBT((NBTTagCompound)nbt);
 				}

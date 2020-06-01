@@ -16,9 +16,9 @@ import skyland.core.Config;
 import skyland.core.Skyland;
 
 @SideOnly(Side.CLIENT)
-public class SkyConfigGui extends GuiConfig
+public class GuiSkyConfig extends GuiConfig
 {
-	public SkyConfigGui(GuiScreen parent)
+	public GuiSkyConfig(GuiScreen parent)
 	{
 		super(parent, getConfigElements(), Skyland.MODID, false, false, I18n.format(Config.LANG_KEY + "title"));
 	}

@@ -29,6 +29,6 @@ public class SkyGuiFactory implements IModGuiFactory
 	@Override
 	public GuiScreen createConfigGui(GuiScreen parentScreen)
 	{
-		return new SkyConfigGui(parentScreen);
+		return new GuiSkyConfig(parentScreen);
 	}
 }

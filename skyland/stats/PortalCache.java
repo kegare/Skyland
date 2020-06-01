@@ -10,58 +10,56 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Table;
 import com.google.common.collect.Table.Cell;
 
-import net.minecraft.entity.Entity;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.nbt.NBTUtil;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.DimensionType;
+import net.minecraftforge.common.capabilities.ICapabilityProvider;
 import net.minecraftforge.common.util.Constants.NBT;
 import skyland.capability.SkyCapabilities;
 
-public class PortalCache implements IPortalCache
+public class PortalCache
 {
 	private final Map<ResourceLocation, DimensionType> lastDim = Maps.newHashMap();
 	private final Table<ResourceLocation, DimensionType, BlockPos> lastPos = HashBasedTable.create();
 
-	@Override
+	private Vec3d lastPortalVec;
+	private EnumFacing teleportDirection;
+
 	public DimensionType getLastDim(ResourceLocation key)
 	{
 		return getLastDim(key, DimensionType.OVERWORLD);
 	}
 
-	@Override
 	public DimensionType getLastDim(ResourceLocation key, DimensionType nullDefault)
 	{
 		return lastDim.getOrDefault(key, nullDefault);
 	}
 
-	@Override
 	public void setLastDim(ResourceLocation key, DimensionType type)
 	{
 		lastDim.put(key, type);
 	}
 
-	@Override
 	public BlockPos getLastPos(ResourceLocation key, DimensionType type)
 	{
 		return lastPos.get(key, type);
 	}
 
-	@Override
 	public BlockPos getLastPos(ResourceLocation key, DimensionType type, BlockPos pos)
 	{
 		return ObjectUtils.defaultIfNull(getLastPos(key, type), ObjectUtils.defaultIfNull(pos, BlockPos.ORIGIN));
 	}
 
-	@Override
 	public boolean hasLastPos(ResourceLocation key, DimensionType type)
 	{
 		return lastPos.contains(key, type);
 	}
 
-	@Override
 	public void setLastPos(ResourceLocation key, DimensionType type, BlockPos pos)
 	{
 		if (pos == null)
@@ -74,7 +72,6 @@ public class PortalCache implements IPortalCache
 		}
 	}
 
-	@Override
 	public void clearLastPos(ResourceLocation key, DimensionType type)
 	{
 		for (Cell<ResourceLocation, DimensionType, BlockPos> entry : lastPos.cellSet())
@@ -86,7 +83,26 @@ public class PortalCache implements IPortalCache
 		}
 	}
 
-	@Override
+	public Vec3d getLastPortalVec()
+	{
+		return lastPortalVec;
+	}
+
+	public void setLastPortalVec(Vec3d vec)
+	{
+		lastPortalVec = vec;
+	}
+
+	public EnumFacing getTeleportDirection()
+	{
+		return teleportDirection;
+	}
+
+	public void setTeleportDirection(EnumFacing direction)
+	{
+		teleportDirection = direction;
+	}
+
 	public void writeToNBT(NBTTagCompound nbt)
 	{
 		NBTTagList tagList = new NBTTagList();
@@ -131,7 +147,6 @@ public class PortalCache implements IPortalCache
 		nbt.setTag("LastPos", tagList);
 	}
 
-	@Override
 	public void readFromNBT(NBTTagCompound nbt)
 	{
 		NBTTagList tagList = nbt.getTagList("LastDim", NBT.TAG_COMPOUND);
@@ -182,8 +197,8 @@ public class PortalCache implements IPortalCache
 		}
 	}
 
-	public static IPortalCache get(Entity entity)
+	public static PortalCache get(ICapabilityProvider provider)
 	{
-		return ObjectUtils.defaultIfNull(SkyCapabilities.getCapability(entity, SkyCapabilities.PORTAL_CACHE), new PortalCache());
+		return ObjectUtils.defaultIfNull(SkyCapabilities.getCapability(provider, SkyCapabilities.PORTAL_CACHE), new PortalCache());
 	}
 }

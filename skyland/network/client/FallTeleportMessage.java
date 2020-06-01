@@ -13,8 +13,6 @@ public class FallTeleportMessage implements IClientMessage<FallTeleportMessage, 
 	@Override
 	public IMessage process(Minecraft mc)
 	{
-		ClientEventHooks.fallCancelable = true;
-
 		if (MovingSoundSkyFalling.prevSound == null || MovingSoundSkyFalling.prevSound.isDonePlaying())
 		{
 			MovingSoundSkyFalling sound = new MovingSoundSkyFalling();
@@ -22,6 +20,8 @@ public class FallTeleportMessage implements IClientMessage<FallTeleportMessage, 
 			mc.getSoundHandler().playSound(sound);
 
 			MovingSoundSkyFalling.prevSound = sound;
+
+			ClientEventHooks.fallCancelable = true;
 		}
 
 		return null;

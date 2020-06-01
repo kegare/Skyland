@@ -17,11 +17,11 @@ import net.minecraft.world.DimensionType;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.storage.WorldInfo;
+import net.minecraftforge.common.util.ITeleporter;
 import net.minecraftforge.event.entity.living.LivingDropsEvent;
 import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
 import net.minecraftforge.event.entity.living.LivingFallEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.fml.common.gameevent.TickEvent.WorldTickEvent;
@@ -60,7 +60,7 @@ public class SkyEventHooks
 		EntityPlayer player = event.getEntityPlayer();
 
 		player.dimension = Skyland.DIM_SKYLAND.getId();
-		player.setLocationAndAngles(0.5D, 128.0D, 0.5D, player.rotationYaw, player.rotationPitch);
+		player.setPositionAndUpdate(0.5D, 128.0D, 0.5D);
 
 		FALL_CANCELABLE_PLAYERS.add(uuid);
 	}
@@ -99,6 +99,7 @@ public class SkyEventHooks
 			EntityPlayerMP player = (EntityPlayerMP)entity;
 			WorldServer world = player.getServerWorld();
 			DimensionType type = world.provider.getDimensionType();
+			ITeleporter teleporter = new TeleporterSkyland();
 
 			if (type == DimensionType.OVERWORLD)
 			{
@@ -106,7 +107,7 @@ public class SkyEventHooks
 				{
 					PortalCache.get(player).setLastPos(TeleporterSkyland.KEY, type, world.getHeight(player.getPosition()));
 
-					SkyUtils.teleportToDimension(player, Skyland.DIM_SKYLAND);
+					player.changeDimension(Skyland.DIM_SKYLAND.getId(), teleporter);
 
 					return;
 				}
@@ -115,7 +116,7 @@ public class SkyEventHooks
 			{
 				if (!player.onGround && player.getEntityBoundingBox().minY <= -20.0D)
 				{
-					SkyUtils.teleportToDimension(player, DimensionType.OVERWORLD);
+					player.changeDimension(0, teleporter);
 
 					player.connection.setPlayerLocation(player.posX, 305.0D, player.posZ, player.rotationYaw, 60.0F);
 
@@ -143,7 +144,7 @@ public class SkyEventHooks
 
 				if (!stack.isEmpty())
 				{
-					int time = ObfuscationReflectionHelper.getPrivateValue(EntityPlayer.class, player, "sleepTimer", "field_71076_b");
+					int time = SkyUtils.getPrivateValue(EntityPlayer.class, player, "sleepTimer", "field_71076_b");
 
 					if (time >= 75)
 					{
@@ -154,7 +155,7 @@ public class SkyEventHooks
 							stack.shrink(1);
 						}
 
-						SkyUtils.teleportToDimension(player, type == Skyland.DIM_SKYLAND ? DimensionType.OVERWORLD : Skyland.DIM_SKYLAND);
+						player.changeDimension((type == Skyland.DIM_SKYLAND ? DimensionType.OVERWORLD : Skyland.DIM_SKYLAND).getId(), teleporter);
 
 						if (player.getServer().getPlayerList().getCurrentPlayerCount() <= 1)
 						{

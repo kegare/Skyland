@@ -15,30 +15,26 @@ import net.minecraft.block.state.pattern.BlockPattern.PatternHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.IProjectile;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
-import net.minecraft.init.MobEffects;
 import net.minecraft.item.ItemStack;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.DimensionType;
-import net.minecraft.world.Teleporter;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
+import net.minecraftforge.common.util.ITeleporter;
 import net.minecraftforge.fml.client.FMLClientHandler;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import skyland.client.gui.GuiRegeneration;
-import skyland.core.SkySounds;
 import skyland.core.Skyland;
-import skyland.stats.IPortalCache;
 import skyland.stats.PortalCache;
-import skyland.util.SkyUtils;
 import skyland.world.TeleporterSkyPortal;
 
 public class BlockSkyPortal extends BlockPortal
@@ -141,7 +137,7 @@ public class BlockSkyPortal extends BlockPortal
 		if (entity.timeUntilPortal <= 0)
 		{
 			ResourceLocation key = TeleporterSkyPortal.KEY;
-			IPortalCache cache = PortalCache.get(entity);
+			PortalCache cache = PortalCache.get(entity);
 			MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
 			DimensionType dimOld = world.provider.getDimensionType();
 			DimensionType dimNew = dimOld == Skyland.DIM_SKYLAND ? cache.getLastDim(key) : Skyland.DIM_SKYLAND;
@@ -153,59 +149,24 @@ public class BlockSkyPortal extends BlockPortal
 				return;
 			}
 
-			Teleporter teleporter = new TeleporterSkyPortal(worldNew);
+			ITeleporter teleporter = new TeleporterSkyPortal();
 			BlockPos prevPos = entity.getPosition();
 
 			entity.timeUntilPortal = entity.getPortalCooldown();
 
-			if (entity instanceof EntityPlayerMP)
-			{
-				EntityPlayerMP player = (EntityPlayerMP)entity;
+			cache.setLastDim(key, dimOld);
+			cache.setLastPos(key, dimOld, prevPos);
 
-				if (!player.isSneaking() && !player.isPotionActive(MobEffects.BLINDNESS))
-				{
-					cache.setLastDim(key, dimOld);
-					cache.setLastPos(key, dimOld, prevPos);
+			PatternHelper pattern = createPatternHelper(world, pos);
+			double d0 = pattern.getForwards().getAxis() == EnumFacing.Axis.X ? (double)pattern.getFrontTopLeft().getZ() : (double)pattern.getFrontTopLeft().getX();
+			double d1 = pattern.getForwards().getAxis() == EnumFacing.Axis.X ? entity.posZ : entity.posX;
+			d1 = Math.abs(MathHelper.pct(d1 - (pattern.getForwards().rotateY().getAxisDirection() == EnumFacing.AxisDirection.NEGATIVE ? 1 : 0), d0, d0 - pattern.getWidth()));
+			double d2 = MathHelper.pct(entity.posY - 1.0D, pattern.getFrontTopLeft().getY(), pattern.getFrontTopLeft().getY() - pattern.getHeight());
 
-					double x = player.posX;
-					double y = player.posY + player.getEyeHeight();
-					double z = player.posZ;
+			cache.setLastPortalVec(new Vec3d(d1, d2, 0.0D));
+			cache.setTeleportDirection(pattern.getForwards());
 
-					worldOld.playSound(player, x, y, z, SkySounds.SKY_PORTAL, SoundCategory.BLOCKS, 0.5F, 1.0F);
-
-					SkyUtils.teleportToDimension(player, dimNew, teleporter);
-
-					x = player.posX;
-					y = player.posY + player.getEyeHeight();
-					z = player.posZ;
-
-					worldNew.playSound(null, x, y, z, SkySounds.SKY_PORTAL, SoundCategory.BLOCKS, 0.75F, 1.0F);
-				}
-			}
-			else
-			{
-				cache.setLastDim(key, dimOld);
-				cache.setLastPos(key, dimOld, prevPos);
-
-				double x = entity.posX;
-				double y = entity.posY + entity.getEyeHeight();
-				double z = entity.posZ;
-
-				worldOld.playSound(null, x, y, z, SkySounds.SKY_PORTAL, SoundCategory.BLOCKS, 0.25F, 1.15F);
-
-				entity.dimension = dimNew.getId();
-				world.removeEntityDangerously(entity);
-
-				entity.isDead = false;
-
-				server.getPlayerList().transferEntityToWorld(entity, dimOld.getId(), worldOld, worldNew, teleporter);
-
-				x = entity.posX;
-				y = entity.posY + entity.getEyeHeight();
-				z = entity.posZ;
-
-				worldNew.playSound(null, x, y, z, SkySounds.SKY_PORTAL, SoundCategory.BLOCKS, 0.5F, 1.15F);
-			}
+			entity.changeDimension(dimNew.getId(), teleporter);
 		}
 		else
 		{

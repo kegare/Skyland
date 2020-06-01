@@ -8,25 +8,19 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockPos.MutableBlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.DimensionType;
-import net.minecraft.world.Teleporter;
-import net.minecraft.world.WorldServer;
-import skyland.stats.IPortalCache;
+import net.minecraft.world.World;
+import net.minecraftforge.common.util.ITeleporter;
 import skyland.stats.PortalCache;
 import skyland.util.SkyUtils;
 
-public class TeleporterSkyland extends Teleporter
+public class TeleporterSkyland implements ITeleporter
 {
 	public static final ResourceLocation KEY = new ResourceLocation("skyland", "teleporter");
 
-	public TeleporterSkyland(WorldServer world)
-	{
-		super(world);
-	}
-
 	@Override
-	public void placeInPortal(Entity entity, float rotationYaw)
+	public void placeEntity(World world, Entity entity, float rotationYaw)
 	{
-		if (attemptToLastPos(entity) || attemptRandomly(entity) || attemptToVoid(entity))
+		if (attemptToLastPos(world, entity) || attemptRandomly(world, entity) || attemptToVoid(world, entity))
 		{
 			entity.motionX = 0.0D;
 			entity.motionY = 0.0D;
@@ -34,9 +28,9 @@ public class TeleporterSkyland extends Teleporter
 		}
 	}
 
-	protected boolean attemptToLastPos(Entity entity)
+	protected boolean attemptToLastPos(World world, Entity entity)
 	{
-		IPortalCache cache = PortalCache.get(entity);
+		PortalCache cache = PortalCache.get(entity);
 		DimensionType type = world.provider.getDimensionType();
 
 		if (cache.hasLastPos(KEY, type))
@@ -46,7 +40,7 @@ public class TeleporterSkyland extends Teleporter
 
 			if ((material.isSolid() || material == Material.WATER) && world.getBlockState(pos).getBlock().canSpawnInBlock() && world.getBlockState(pos.up()).getBlock().canSpawnInBlock())
 			{
-				entity.moveToBlockPosAndAngles(pos, entity.rotationYaw, entity.rotationPitch);
+				entity.setPositionAndUpdate(pos.getX() + 0.5D, pos.getY() + 0.25D, pos.getZ() + 0.5D);
 
 				return true;
 			}
@@ -57,7 +51,7 @@ public class TeleporterSkyland extends Teleporter
 		return false;
 	}
 
-	protected boolean attemptRandomly(Entity entity)
+	protected boolean attemptRandomly(World world, Entity entity)
 	{
 		int originX = MathHelper.floor(entity.posX);
 		int originZ = MathHelper.floor(entity.posZ);
@@ -80,7 +74,7 @@ public class TeleporterSkyland extends Teleporter
 
 					if (material.isSolid() || material == Material.WATER)
 					{
-						entity.moveToBlockPosAndAngles(pos.up(), entity.rotationYaw, entity.rotationPitch);
+						entity.setPositionAndUpdate(pos.getX() + 0.5D, pos.getY() + 1.25D, pos.getZ() + 0.5D);
 
 						return true;
 					}
@@ -91,7 +85,7 @@ public class TeleporterSkyland extends Teleporter
 		return false;
 	}
 
-	protected boolean attemptToVoid(Entity entity)
+	protected boolean attemptToVoid(World world, Entity entity)
 	{
 		if (!SkyUtils.isEntityInSkyland(entity))
 		{
@@ -104,23 +98,8 @@ public class TeleporterSkyland extends Teleporter
 
 		BlockPos.getAllInBoxMutable(from, to).forEach(blockPos -> world.setBlockState(blockPos, Blocks.SNOW.getDefaultState(), 2));
 
-		entity.moveToBlockPosAndAngles(pos.up(), entity.rotationYaw, entity.rotationPitch);
+		entity.setPositionAndUpdate(pos.getX() + 0.5D, pos.getY() + 1.25D, pos.getZ() + 0.5D);
 
 		return true;
 	}
-
-	@Override
-	public boolean placeInExistingPortal(Entity entity, float rotationYaw)
-	{
-		return false;
-	}
-
-	@Override
-	public boolean makePortal(Entity entity)
-	{
-		return false;
-	}
-
-	@Override
-	public void removeStalePortalLocations(long worldTime) {}
 }
